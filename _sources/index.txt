@@ -8,11 +8,8 @@ Cogue
 
 Cogue is a package of crystal simulation tools:
 
-- Convenient tools to handle crystal structures
-  - Crsytal format converter
-- Wrappers of calculators and queueing systems for
-  - `VASP5 <http://cms.mpi.univie.ac.at/vasp/vasp/>`_
-  - `GridEngine <http://gridengine.org>`_
+- Convenient tools to handle crystal structures, e.g., Crsytal format converter
+- Wrappers of calculators and queueing systems for `VASP5 <http://cms.mpi.univie.ac.at/vasp/vasp/>`_ and `GridEngine <http://gridengine.org>`_
 - Automation tools for various tasks
 
 Tasks
@@ -57,7 +54,7 @@ Documentation
 Example: calculation of bulk modulus
 -------------------------------------
 
-.. literalinclude:: ../examples/SnO2-bulkmodulus.py
+.. literalinclude:: ./examples/SnO2-bulkmodulus.py
 
 
 About this code

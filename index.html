@@ -53,11 +53,8 @@
 <h1>Cogue<a class="headerlink" href="#cogue" title="Permalink to this headline">¶</a></h1>
 <p>Cogue is a package of crystal simulation tools:</p>
 <ul class="simple">
-<li>Convenient tools to handle crystal structures
-- Crsytal format converter</li>
-<li>Wrappers of calculators and queueing systems for
-- <a class="reference external" href="http://cms.mpi.univie.ac.at/vasp/vasp/">VASP5</a>
-- <a class="reference external" href="http://gridengine.org">GridEngine</a></li>
+<li>Convenient tools to handle crystal structures, e.g., Crsytal format converter</li>
+<li>Wrappers of calculators and queueing systems for <a class="reference external" href="http://cms.mpi.univie.ac.at/vasp/vasp/">VASP5</a> and <a class="reference external" href="http://gridengine.org">GridEngine</a></li>
 <li>Automation tools for various tasks</li>
 </ul>
 <div class="section" id="tasks">
@@ -103,6 +100,64 @@ Controller handles tasks and tasksets with the help of a queueing system.</p>
 </div>
 <div class="section" id="example-calculation-of-bulk-modulus">
 <span id="example-rutile"></span><h2>Example: calculation of bulk modulus<a class="headerlink" href="#example-calculation-of-bulk-modulus" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-python"><div class="highlight"><pre><span class="c">#!/usr/bin/env python</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">cogue</span>
+<span class="kn">import</span> <span class="nn">cogue.calculator.vasp</span> <span class="kn">as</span> <span class="nn">vasp</span>
+<span class="kn">import</span> <span class="nn">cogue.qsystem.gridengine</span> <span class="kn">as</span> <span class="nn">ge</span>
+
+<span class="n">task_name</span> <span class="o">=</span> <span class="s">&quot;sno2&quot;</span>
+
+<span class="c"># Crystal structure</span>
+<span class="n">symbols</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;Sn&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">+</span> <span class="p">[</span><span class="s">&#39;O&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="mi">4</span>
+<span class="n">lattice</span> <span class="o">=</span> <span class="p">[[</span><span class="mf">4.75</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+           <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">4.75</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+           <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">3.25</span><span class="p">]]</span>
+<span class="n">points</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">([[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+                     <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span>
+                     <span class="p">[</span><span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+                     <span class="p">[</span><span class="mf">0.7</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+                     <span class="p">[</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span>
+                     <span class="p">[</span><span class="mf">0.8</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">]])</span>
+<span class="n">cell</span> <span class="o">=</span> <span class="n">cogue</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">lattice</span><span class="o">=</span><span class="n">lattice</span><span class="p">,</span>
+                  <span class="n">points</span><span class="o">=</span><span class="n">points</span><span class="p">,</span>
+                  <span class="n">symbols</span><span class="o">=</span><span class="n">symbols</span><span class="p">)</span>
+
+<span class="c"># Vasp settings</span>
+<span class="n">ps_map</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;Sn&#39;</span><span class="p">:</span> <span class="s">&#39;Sn_PBE&#39;</span><span class="p">,</span>
+          <span class="s">&#39;O&#39;</span><span class="p">:</span> <span class="s">&#39;O_PBE&#39;</span><span class="p">}</span>
+<span class="n">incar</span> <span class="o">=</span> <span class="n">vasp</span><span class="o">.</span><span class="n">incar</span><span class="p">()</span>
+<span class="n">incar</span><span class="o">.</span><span class="n">set_structure_optimization</span><span class="p">()</span>
+<span class="n">incar</span><span class="o">.</span><span class="n">set_encut</span><span class="p">(</span><span class="mi">400</span><span class="p">)</span>
+<span class="n">incar</span><span class="o">.</span><span class="n">set_prec</span><span class="p">(</span><span class="s">&quot;Normal&quot;</span><span class="p">)</span>
+
+<span class="c"># Queue</span>
+<span class="n">job</span> <span class="o">=</span> <span class="n">ge</span><span class="o">.</span><span class="n">job</span><span class="p">(</span><span class="n">script</span><span class="o">=</span><span class="s">&quot;vasp5212serial&quot;</span><span class="p">,</span>
+             <span class="n">shell</span><span class="o">=</span><span class="s">&quot;/bin/zsh&quot;</span><span class="p">,</span>
+             <span class="n">jobname</span><span class="o">=</span><span class="n">task_name</span><span class="p">,</span>
+             <span class="n">stdout</span><span class="o">=</span><span class="s">&quot;std.log&quot;</span><span class="p">,</span>
+             <span class="n">stderr</span><span class="o">=</span><span class="s">&quot;err.log&quot;</span><span class="p">)</span>
+
+<span class="c"># Task</span>
+<span class="n">task</span> <span class="o">=</span> <span class="n">vasp</span><span class="o">.</span><span class="n">bulk_modulus</span><span class="p">(</span><span class="n">max_iteration</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                         <span class="n">cell</span><span class="o">=</span><span class="n">cell</span><span class="p">,</span>
+                         <span class="n">pseudo_potential_map</span><span class="o">=</span><span class="n">ps_map</span><span class="p">,</span>
+                         <span class="n">k_mesh</span><span class="o">=</span><span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">6</span><span class="p">],</span>
+                         <span class="n">incar</span><span class="o">=</span><span class="n">incar</span><span class="p">,</span>
+                         <span class="n">job</span><span class="o">=</span><span class="n">job</span><span class="p">)</span>
+
+<span class="c"># Automatic calculation</span>
+<span class="n">calc</span> <span class="o">=</span> <span class="n">cogue</span><span class="o">.</span><span class="n">autocalc</span><span class="p">()</span>
+<span class="n">calc</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">task_name</span><span class="p">,</span> <span class="n">task</span><span class="p">)</span> <span class="c"># More tasks can be appended.</span>
+<span class="n">calc</span><span class="o">.</span><span class="n">set_queue</span><span class="p">(</span><span class="n">ge</span><span class="o">.</span><span class="n">queue</span><span class="p">())</span>
+<span class="n">calc</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">check_period</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<span class="k">print</span> <span class="s">&quot;space group:&quot;</span><span class="p">,</span> <span class="n">cogue</span><span class="o">.</span><span class="n">symmetry</span><span class="p">(</span><span class="n">cell</span><span class="p">)[</span><span class="s">&#39;international&#39;</span><span class="p">]</span>
+<span class="k">print</span> <span class="s">&quot;status:&quot;</span><span class="p">,</span> <span class="n">task</span><span class="o">.</span><span class="n">get_status</span><span class="p">()</span>
+<span class="c"># 201.411956183 GPa</span>
+<span class="k">print</span> <span class="s">&quot;bulk modulus:&quot;</span><span class="p">,</span> <span class="n">task</span><span class="o">.</span><span class="n">get_bulk_modulus</span><span class="p">(),</span> <span class="s">&quot;GPa&quot;</span>
+</pre></div>
+</div>
 </div>
 <div class="section" id="about-this-code">
 <h2>About this code<a class="headerlink" href="#about-this-code" title="Permalink to this headline">¶</a></h2>
