@@ -1,0 +1,5 @@
+Run the following before 'make html'
+
+% sphinx-apidoc -H "Cogue code reference" -f -o . ../lib/python
+
+Togo
