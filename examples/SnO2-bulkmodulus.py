@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
 import numpy as np
-import qsushi
-import qsushi.calculator.vasp as vasp
-import qsushi.qsystem.gridengine as ge
+import cogue
+import cogue.calculator.vasp as vasp
+import cogue.qsystem.gridengine as ge
 
 task_name = "sno2"
 
@@ -18,9 +18,9 @@ points=np.transpose([[0.0, 0.0, 0.0],
                      [0.7, 0.7, 0.0],
                      [0.2, 0.8, 0.5],
                      [0.8, 0.2, 0.5]])
-cell = qsushi.cell(lattice=lattice,
-                   points=points,
-                   symbols=symbols)
+cell = cogue.cell(lattice=lattice,
+                  points=points,
+                  symbols=symbols)
 
 # Vasp settings
 ps_map = {'Sn': 'Sn_PBE',
@@ -46,11 +46,11 @@ task = vasp.bulk_modulus(max_iteration=2,
                          job=job)
 
 # Automatic calculation
-calc = qsushi.autocalc()
+calc = cogue.autocalc()
 calc.append(task_name, task) # More tasks can be appended.
 calc.set_queue(ge.queue())
 calc.run(check_period=5)
-print "space group:", qsushi.symmetry(cell)['international']
+print "space group:", cogue.symmetry(cell)['international']
 print "status:", task.get_status()
 # 201.411956183 GPa
 print "bulk modulus:", task.get_bulk_modulus(), "GPa"
