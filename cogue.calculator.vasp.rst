@@ -1,0 +1,27 @@
+vasp Package
+============
+
+:mod:`vasp` Package
+-------------------
+
+.. automodule:: cogue.calculator.vasp
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`task` Module
+------------------
+
+.. automodule:: cogue.calculator.vasp.task
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`vasp_io` Module
+---------------------
+
+.. automodule:: cogue.calculator.vasp.vasp_io
+    :members:
+    :undoc-members:
+    :show-inheritance:
+

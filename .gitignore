@@ -1,4 +1,7 @@
 /bin
 /build
+/_build
 /lib
 /potcar
+.doctrees
+.buildinfo
