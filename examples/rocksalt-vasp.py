@@ -16,7 +16,7 @@ points = np.transpose([[0.0, 0.0, 0.0],
                        [0.5, 0.5, 0.5],
                        [0.5, 0.0, 0.0],
                        [0.0, 0.5, 0.0],
-                       [0.0, 0.0, 0.5]], dtype=float)
+                       [0.0, 0.0, 0.5]])
 symbols = ['Na'] * 4 + ['Cl'] * 4
 cell = cogue.cell(lattice=lattice,
                   points=points,
@@ -44,7 +44,7 @@ task.set_configurations(cell=cell,
                         pseudo_potential_map=ps_map,
                         k_mesh=[4, 4, 4],
                         incar=incar)
-job = ge.job(script="vaspserial-togo",
+job = ge.job(script="vasp5212serial",
              shell="/bin/zsh",
              jobname=task_name,
              stdout="std.log",
