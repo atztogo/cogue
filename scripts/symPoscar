@@ -1,12 +1,78 @@
 #!/usr/bin/env python
 
 import sys
+import numpy as np
 import cogue.calculator.vasp as vasp
 import cogue.crystal.symmetry as symmetry
+import cogue.crystal.ui_utils as ui_utils
 
-cell = vasp.read_poscar(sys.argv[1])
-print symmetry.get_symmetry_dataset(cell)
-brv_cell = symmetry.get_crystallographic_cell(cell)
-vasp.write_poscar(brv_cell, "BRV_POSCAR")
-prim_cell = symmetry.get_primitive_cell(cell)
-vasp.write_poscar(prim_cell, "PRM_POSCAR")
+def get_parser():
+    from optparse import OptionParser
+    parser = OptionParser()
+    parser.set_defaults(symprec=1e-5,
+                        show_details=False,
+                        show_operations=False,
+                        is_bravais=False,
+                        is_primitive=False)
+    parser.add_option("-s", "--tolerance", dest="symprec", type="float",
+                      help="Symmetry tolerance to search")
+    parser.add_option("-d", "--detail",
+                      dest="show_details",
+                      action="store_true",
+                      help="Show detailed information.")
+    parser.add_option("-o", "--operations",
+                      dest="show_operations",
+                      action="store_true",
+                      help="Show symmetry operations.")
+    parser.add_option("--bravais",
+                      dest="is_bravais",
+                      action="store_true",
+                      help="Write crystalographical cell (BRV + filename) with Bravais lattice")
+    parser.add_option("--primitive",
+                      dest="is_primitive",
+                      action="store_true",
+                      help="Write a primitive cell (PRM + filename) where the lattice vectors and atomic points are not refined.")
+    return parser
+
+options, args = ui_utils.get_options(get_parser())
+tolerance = options.symprec
+cell = vasp.read_poscar(args[0])
+dataset = symmetry.get_symmetry_dataset(cell, tolerance)
+
+spg_type = dataset['international']
+spg_number = dataset['number']
+hall_symbol = dataset['hall']
+tmat = dataset['transformation_matrix']
+shift = dataset['origin_shift']
+rots = dataset['rotations']
+trans = dataset['translations']
+wyckoffs = dataset['wyckoffs']
+eqiv_atoms = dataset['equivalent_atoms']
+
+print "%s (%d)" % (spg_type, spg_number),
+
+if options.show_details:
+    print "/ %s" % hall_symbol
+    print
+    if not options.is_bravais:
+        print "Wyckoff positions, and atomic points and the equivalence:"
+        for i, (w, p, e) in enumerate(
+            zip(wyckoffs, cell.get_points().T, eqiv_atoms)):
+            print "%4d: %s  %f %f %f -> %d" % ((i + 1, w) + tuple(p) + (e + 1,))
+    
+print
+
+if options.show_operations:
+    print "Symmetry operations:"
+    for i, (r, t) in enumerate(zip(rots, trans)):
+        print "----%d----" % (i + 1)
+        for v in r:
+            print "%2d %2d %2d" % tuple(v)
+        print "%8.6f %8.6f %8.6f" % tuple(t + 1e-8 - np.floor(t + 1e-8))
+
+if options.is_bravais:
+    brv_cell = symmetry.get_crystallographic_cell(cell, tolerance)
+    vasp.write_poscar(brv_cell, "BRV" + args[0])
+elif options.is_primitive:
+    prim_cell = symmetry.get_primitive_cell(cell, tolerance)
+    vasp.write_poscar(prim_cell, "PRM" + args[0])
