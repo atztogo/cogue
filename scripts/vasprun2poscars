@@ -1,0 +1,75 @@
+#!/usr/bin/env python
+
+import numpy as np
+import cogue.crystal.ui_utils as ui_utils
+from cogue.crystal.cell import Cell
+
+def parse_vasprunxml(args,
+                     use_t_mat=False,
+                     s_mat=None,
+                     shift=np.zeros(3)):
+    from cogue.calculator.vasp.vasp_io import VasprunxmlExpat
+    from cogue.crystal.converter import write_cif_P1, atoms2cell, write_v_sim
+    from cogue.crystal.symmetry import get_symmetry_dataset
+    from phonopy.structure.atoms import Atoms
+    from phonopy.structure.cells import get_supercell
+    
+    vxml = VasprunxmlExpat(args[0])
+    if len(args) > 1:
+        count_shift = int(args[1])
+    else:
+        count_shift = 0
+    if vxml.parse():
+        print "Succeeded to parse vasprun.xml."
+    else:
+        print "Failed to parse full vasprun.xml."
+        
+    cells = vxml.get_cells()
+    symmetry = get_symmetry_dataset(cells[0])
+    if s_mat is not None:
+        t_mat = s_mat
+        o_shift = shift
+    elif use_t_mat:
+        t_mat = symmetry['transformation_matrix']
+        # convert t_mat to int
+        t_mat = ((abs(t_mat) + 1e-5) * np.sign(t_mat)).astype(int)
+        o_shift = symmetry['origin_shift']
+    else:
+        t_mat = np.eye(3, dtype=int)
+        o_shift = shift
+
+    print t_mat
+    print o_shift
+
+    transformed_cells = []
+    for i, cell in enumerate(cells):
+        cell_phonopy = Atoms(cell=cell.get_lattice().T.copy(),
+                             scaled_positions=cell.get_points().T.copy(),
+                             symbols=cell.get_symbols()[:],
+                             pbc=True)
+        scell_phonopy = get_supercell(cell_phonopy, list(t_mat))
+        scell = atoms2cell(scell_phonopy)
+        points = scell.get_points()
+        points -= o_shift.reshape(3, 1)
+        transformed_cells.append(Cell(lattice=scell.get_lattice(),
+                                      points=points,
+                                      symbols=scell.get_symbols()))
+
+    return transformed_cells
+        
+            
+
+options, args = ui_utils.get_options()
+if options.s_mat:
+    s_mat = np.array([int(x) for x in options.s_mat.split()])
+    s_mat = ui_utils.get_matrix(s_mat)
+else:
+    s_mat = None
+if options.shift:
+    shift = np.array([float(x) for x in options.shift.split()])
+else:
+    shift = np.zeros(3)
+
+cells = parse_vasprunxml(args, options.use_t_mat, s_mat, shift)
+write_cif_P1(scell, "scene%03d.cif" % (i + 1 + count_shift))
+write_v_sim(scell, "scene%03d.ascii" % (i + 1 + count_shift))

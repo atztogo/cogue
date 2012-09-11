@@ -1,0 +1,27 @@
+#!/usr/bin/env python
+
+def rotation_along_z():
+    import cogue.calculator.vasp as vasp
+    cell = vasp.read_poscar(sys.argv[1])
+    sketch = SketchCell(cell)
+    # picture box
+    p1 = [-5,-10]
+    p2 = [5, 10]
+    sketch.set_picturebox(p1, p2)
+    
+    f = open("template.tex", 'w')
+    f.write(get_tex_template(p2[0] - p1[0], p2[1] - p1[1]))
+    f.close()
+    num_div = 100
+    for i in range(num_div):
+        # eye = np.array([np.cos(2 * np.pi / num_div * i),
+        #                 np.sin(2 * np.pi / num_div * i),
+        #                 0])
+        # sketch.set_text(eye=eye * 10, look_at=(0,0,0), up_vector=[0,0,1])
+        sketch.set_text(transform="rotate (%f,(0,0,0),[0,0,1]) then rotate (90,(0,0,0),[1,0,0])" % (360.0 / num_div * i))
+        sketch.write("scene%03d.sk" % (i + 1))
+    
+
+sketch = SketchCell(scell, scale=0.5)
+sketch.set_text(transform="rotate (60,(0,0,0),[0,0,1]) then rotate (90,(0,0,0),[1,0,0])")
+sketch.write("scene%03d.sk" % (i + 1 + count_shift))

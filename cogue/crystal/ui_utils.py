@@ -1,15 +1,26 @@
 import numpy as np
 
 def get_options():
+    parser = get_parser()
+    (options, args) = parser.parse_args()
+    return options, args
+
+def get_parser():
     from optparse import OptionParser
     parser = OptionParser()
     parser.set_defaults(is_r2h=False,
+                        is_bravais=False,
                         s_mat=None,
-                        t_mat=False)
+                        t_mat=False,
+                        shift=None)
     parser.add_option("--r2h",
                       dest="is_r2h",
                       action="store_true",
                       help="Transform primitive Rhombohedral to hexagonal Rhombohedral. This has to be used exclusively to the other options.")
+    parser.add_option("--bravais",
+                      dest="is_bravais",
+                      action="store_true",
+                      help="Transform to cell with Bravais lattice.")
     parser.add_option("--tmat",
                       dest="t_mat",
                       action="store",
@@ -20,8 +31,12 @@ def get_options():
                       action="store",
                       type="string",                      
                       help="Supercell matrix")
-    (options, args) = parser.parse_args()
-    return options, args
+    parser.add_option("--shift",
+                      dest="shift",
+                      action="store",
+                      type="string",                      
+                      help="Origin shift")
+    return parser
 
 def get_matrix(mat):
     if len(mat) == 3:
