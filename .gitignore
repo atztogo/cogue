@@ -3,3 +3,6 @@
 /lib
 /potcar
 /_build
+*~
+.buildinfo
+/.doctrees

@@ -62,5 +62,7 @@ setup(name = 'cogue',
                   'cogue.controller',
                   'cogue.qsystem',
                   'cogue.task'],
-      scripts = ['scripts/get_eigenvals'],
+      scripts = ['scripts/get_eigenvals',
+                 'scripts/poscar2poscar',
+                 'scripts/poscar2cif'],
       ext_modules = [spglib, xtalcomp])
