@@ -68,5 +68,5 @@ setup(name = 'cogue',
                  'scripts/poscar2vsim',
                  'scripts/poscar2sketch',
                  'scripts/vasprun2poscars',
-                 'scripts/findSymPoscar'],
+                 'scripts/symPoscar'],
       ext_modules = [spglib, xtalcomp])

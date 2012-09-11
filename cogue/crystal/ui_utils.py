@@ -1,8 +1,11 @@
 import numpy as np
 
-def get_options():
-    parser = get_parser()
-    (options, args) = parser.parse_args()
+def get_options(parser=None):
+    if parser:
+        (options, args) = parser.parse_args()
+    else:
+        (options, args) = get_parser().parse_args()
+        
     return options, args
 
 def get_parser():
