@@ -206,7 +206,9 @@ class PhononRelaxBase(TaskElement):
         w.write("min_iteration: %d\n" % self._min_iteration)
         w.write("symmetry_tolerance: %d\n" % self._symmetry_tolerance)
         if self._restrict_offspring:
-            w.write("restrict_offspring: True\n")
+            w.write("restrict_offspring: %s\n" % self._restrict_offspring)
+        if self._max_offspring:
+            w.write("max_offspring: %s\n" % self._max_offspring)
         if self._energy:
             w.write("electric_total_energy: %20.10f\n" % self._energy)
         w.write("status: %s\n" % self._status)
