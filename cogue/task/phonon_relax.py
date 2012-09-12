@@ -144,33 +144,7 @@ class PhononRelaxBase(TaskElement):
                 if imag_modes: # Next phonon-relaxes
                     self._stage = 1
                     self._status = "offspring"
-                    self._tasks = []
-                    # If self._restrict_offspring == True and
-                    # number of imaginary modes at Gamma > 1,
-                    # offspring is restricted only at Gamma.
-                    # If self._restrict_offspring is a positive integer,
-                    # the restriction is set as number of imaginary modes
-                    # at Gamma > self._restrict_offspring.
-                    num_gamma = [x[3] for x in imag_modes].count(0)
-                    if (self._restrict_offspring and 
-                        num_gamma > self._restrict_offspring * 1):
-                        mod_modes = []
-                        for x in imag_modes:
-                            if x[3] == 0:
-                                mod_modes.append((x[0], x[2])) # cell & Im(freq)
-                    else:
-                        mod_modes = [(x[0], x[2]) for x in imag_modes]
-                    mod_cells = [x[0] for x in
-                                 sorted(mod_modes,
-                                        key=lambda mod_modes: -mod_modes[1])]
-                    if self._max_offspring:
-                        mod_cells = mod_cells[:self._max_offspring]
-                    for i, cell in enumerate(mod_cells):
-                        self._tasks.append(self._get_phonon_relax_task(
-                                cell,
-                                self._ancestral_cells,
-                                "phonon_relax-%d" % (i + 1)))
-                    self._phr_tasks += self._tasks
+                    self._set_offsprings(imag_modes)
                     return self._tasks
                 else: # No imaginary mode
                     self._status = "done"
@@ -190,6 +164,37 @@ class PhononRelaxBase(TaskElement):
                 self._status = "done"
             raise StopIteration
 
+    def _set_offsprings(self, imag_modes):
+        self._tasks = []
+        # If self._restrict_offspring == True and
+        # number of imaginary modes at Gamma > 1,
+        # offspring is restricted only at Gamma.
+        # If self._restrict_offspring is a positive integer,
+        # the restriction is set as number of imaginary modes
+        # at Gamma > self._restrict_offspring.
+        num_gamma = [x[3] for x in imag_modes].count(0)
+        if (self._restrict_offspring and 
+            num_gamma > self._restrict_offspring * 1):
+            mod_modes = []
+            for x in imag_modes:
+                if x[3] == 0:
+                    mod_modes.append((x[0], x[2])) # cell & Im(freq)
+        else:
+            mod_modes = [(x[0], x[2]) for x in imag_modes]
+        if self._max_offspring:
+            mod_cells = [x[0] for x in
+                         sorted(mod_modes,
+                                key=lambda mod_modes: -mod_modes[1])]
+            mod_cells = mod_cells[:min(self._max_offspring, len(mod_cells))]
+        else:
+            mod_cells = [x[0] for x in mod_modes]
+        for i, cell in enumerate(mod_cells):
+            self._tasks.append(self._get_phonon_relax_task(
+                    cell,
+                    self._ancestral_cells,
+                    "phonon_relax-%d" % (i + 1)))
+        self._phr_tasks += self._tasks
+        
     def _write_yaml(self):
         w = open("%s.yaml" % self._directory, 'w')
         w.write("lattice_tolerance: %f\n" % self._lattice_tolerance)
@@ -399,21 +404,13 @@ class PhononRelaxElementBase(TaskElement):
                 imaginary_modes = []
                 qpoints_done = [imag_mode[1]
                                 for imag_mode in self._imaginary_modes]
-                for imag_mode in get_unstable_modulations(
+                self._imaginary_modes += get_unstable_modulations(
                     phonon,
                     dimension,
                     max_displacement=self._symmetry_tolerance,
                     cutoff_eigenvalue=self._cutoff_eigenvalue,
-                    ndiv=180):
-                    qpt_exists = False
-                    for qpt in qpoints_done:
-                        if (abs(imag_mode[1] - qpt) < 1e-10).all():
-                            qpt_exists = True
-                            break
-                    if not qpt_exists:
-                        imaginary_modes.append(imag_mode)
-                        
-                self._imaginary_modes += imaginary_modes
+                    ndiv=20,
+                    excluded_qpoints=qpoints_done)
                 
     def _write_yaml(self):
         w = open("%s.yaml" % self._directory, 'w')
@@ -460,12 +457,21 @@ def get_unstable_modulations(phonon,
                              degeneracy_tolerance=DEGENERACY_TOLERANCE,
                              max_displacement=0.1,
                              cutoff_eigenvalue=None,
-                             ndiv=180):
+                             ndiv=180,
+                             excluded_qpoints=None):
     qpoints, weigths, frequencies, eigvecs = phonon.get_mesh()
     eigenvalues = frequencies ** 2 * np.sign(frequencies)
     imag_modes = []
 
     for i, (q, eigs_at_q) in enumerate(zip(qpoints, eigenvalues)):
+        qpt_exists = False
+        for qpt in excluded_qpoints:
+            if (abs(q - qpt) < 1e-10).all():
+                qpt_exists = True
+                break
+        if qpt_exists:
+            continue
+        
         indices_imaginary = np.where(eigs_at_q < cutoff_eigenvalue)[0]
         degeneracy_sets = get_degeneracy_sets(eigs_at_q,
                                               indices_imaginary,
