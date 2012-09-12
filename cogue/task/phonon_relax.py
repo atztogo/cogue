@@ -409,7 +409,7 @@ class PhononRelaxElementBase(TaskElement):
                     dimension,
                     max_displacement=self._symmetry_tolerance,
                     cutoff_eigenvalue=self._cutoff_eigenvalue,
-                    ndiv=20,
+                    ndiv=180,
                     excluded_qpoints=qpoints_done)
                 
     def _write_yaml(self):
