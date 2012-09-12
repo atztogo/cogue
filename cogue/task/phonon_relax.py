@@ -404,7 +404,7 @@ class PhononRelaxElementBase(TaskElement):
                     dimension,
                     max_displacement=self._symmetry_tolerance,
                     cutoff_eigenvalue=self._cutoff_eigenvalue,
-                    ndiv=20):
+                    ndiv=180):
                     qpt_exists = False
                     for qpt in qpoints_done:
                         if (abs(imag_mode[1] - qpt) < 1e-10).all():
