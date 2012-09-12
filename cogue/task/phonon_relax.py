@@ -49,6 +49,7 @@ class PhononRelaxBase(TaskElement):
                  min_iteration=None,
                  symmetry_tolerance=None,
                  restrict_offspring=False,
+                 max_offspring=None,
                  cutoff_eigenvalue=None,
                  traverse=False):
 
@@ -71,6 +72,7 @@ class PhononRelaxBase(TaskElement):
         self._min_iteration = min_iteration
         self._symmetry_tolerance = symmetry_tolerance
         self._restrict_offspring = restrict_offspring
+        self._max_offspring = max_offspring
         self._cutoff_eigenvalue = cutoff_eigenvalue
         self._traverse = traverse
 
@@ -117,7 +119,8 @@ class PhononRelaxBase(TaskElement):
         task = self._get_phonon_relax_element_task(self._cell)
         self._phr_tasks = [task]
         self._tasks = [task]
-        space_group = get_symmetry_dataset(self._cell)
+        space_group = get_symmetry_dataset(self._cell,
+                                           tolerance=self._symmetry_tolerance)
         self._comment = space_group['international']
 
     def end(self):
@@ -151,12 +154,17 @@ class PhononRelaxBase(TaskElement):
                     num_gamma = [x[3] for x in imag_modes].count(0)
                     if (self._restrict_offspring and 
                         num_gamma > self._restrict_offspring * 1):
-                        mod_cells = []
+                        mod_modes = []
                         for x in imag_modes:
                             if x[3] == 0:
-                                mod_cells.append(x[0])
+                                mod_modes.append((x[0], x[2])) # cell & Im(freq)
                     else:
-                        mod_cells = [x[0] for x in imag_modes]
+                        mod_modes = [(x[0], x[2]) for x in imag_modes]
+                    mod_cells = [x[0] for x in
+                                 sorted(mod_modes,
+                                        key=lambda mod_modes: -mod_modes[1])]
+                    if self._max_offspring:
+                        mod_cells = mod_cells[:self._max_offspring]
                     for i, cell in enumerate(mod_cells):
                         self._tasks.append(self._get_phonon_relax_task(
                                 cell,
@@ -346,8 +354,9 @@ class PhononRelaxElementBase(TaskElement):
             cell=self._cell,
             impose_symmetry=True,
             symmetry_tolerance=self._symmetry_tolerance)
-        self._space_group_type = \
-            get_symmetry_dataset(self._cell)['international']
+        symmetry = get_symmetry_dataset(self._cell,
+                                        tolerance=self._symmetry_tolerance)
+        self._space_group_type = symmetry['international']
         self._phre_tasks = [task]
         self._tasks = [task]
 
@@ -394,7 +403,8 @@ class PhononRelaxElementBase(TaskElement):
                     phonon,
                     dimension,
                     max_displacement=self._symmetry_tolerance,
-                    cutoff_eigenvalue=self._cutoff_eigenvalue):
+                    cutoff_eigenvalue=self._cutoff_eigenvalue,
+                    ndiv=20):
                     qpt_exists = False
                     for qpt in qpoints_done:
                         if (abs(imag_mode[1] - qpt) < 1e-10).all():
@@ -422,7 +432,8 @@ class PhononRelaxElementBase(TaskElement):
         if self._imaginary_modes:
             w.write("imaginary_modes:\n")
             for imag_mode in self._imaginary_modes:
-                spg = get_symmetry_dataset(imag_mode[0])
+                spg = get_symmetry_dataset(imag_mode[0],
+                                           tolerance=self._symmetry_tolerance)
                 q = imag_mode[1]
                 freq = imag_mode[2]
                 q_index = imag_mode[3] + 1
@@ -448,7 +459,8 @@ def get_unstable_modulations(phonon,
                              supercell_dimension,
                              degeneracy_tolerance=DEGENERACY_TOLERANCE,
                              max_displacement=0.1,
-                             cutoff_eigenvalue=None):
+                             cutoff_eigenvalue=None,
+                             ndiv=180):
     qpoints, weigths, frequencies, eigvecs = phonon.get_mesh()
     eigenvalues = frequencies ** 2 * np.sign(frequencies)
     imag_modes = []
@@ -477,7 +489,7 @@ def get_unstable_modulations(phonon,
                 q,
                 deg_set,
                 modulation_dimension,
-                ndiv=180,
+                ndiv=ndiv,
                 symmetry_tolerance=max_displacement * 0.9,
                 max_displacement=max_displacement,
                 store_all=False)

@@ -644,6 +644,7 @@ class PhononRelax(TaskVasp, PhononRelaxBase):
                  min_iteration=5,
                  symmetry_tolerance=0.1,
                  restrict_offspring=False,
+                 max_offspring=None,
                  cutoff_eigenvalue=-0.02,
                  traverse=False):
 
@@ -662,6 +663,7 @@ class PhononRelax(TaskVasp, PhononRelaxBase):
             min_iteration=min_iteration,
             symmetry_tolerance=symmetry_tolerance,
             restrict_offspring=restrict_offspring,
+            max_offspring=max_offspring,
             cutoff_eigenvalue=cutoff_eigenvalue,
             traverse=traverse)
 
@@ -705,6 +707,7 @@ class PhononRelax(TaskVasp, PhononRelaxBase):
                            min_iteration=self._min_iteration,
                            symmetry_tolerance=self._symmetry_tolerance,
                            restrict_offspring=self._restrict_offspring,
+                           max_offspring=self._max_offspring,
                            traverse=self._traverse)
 
         task.set_configurations(
