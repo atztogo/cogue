@@ -143,10 +143,14 @@ class PhononRelaxBase(TaskElement):
                     self._status = "offspring"
                     self._tasks = []
                     # If self._restrict_offspring == True and
-                    #    number of imagimanry modes at Gamma > 1,
+                    # number of imaginary modes at Gamma > 1,
                     # offspring is restricted only at Gamma.
+                    # If self._restrict_offspring is a positive integer,
+                    # the restriction is set as number of imaginary modes
+                    # at Gamma > self._restrict_offspring.
                     num_gamma = [x[3] for x in imag_modes].count(0)
-                    if num_gamma > 1 and self._restrict_offspring:
+                    if (self._restrict_offspring and 
+                        num_gamma > self._restrict_offspring * 1):
                         mod_cells = []
                         for x in imag_modes:
                             if x[3] == 0:
