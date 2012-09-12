@@ -176,23 +176,19 @@ class PhononRelaxBase(TaskElement):
         if (self._restrict_offspring and 
             num_gamma > self._restrict_offspring * 1):
             mod_modes = []
-            for x in imag_modes:
+            for i, x in enumerate(imag_modes):
                 if x[3] == 0:
-                    mod_modes.append((x[0], x[2])) # cell & Im(freq)
+                    mod_modes.append((x[0], x[2], i)) # cell & Im(freq)
         else:
-            mod_modes = [(x[0], x[2]) for x in imag_modes]
+            mod_modes = [(x[0], x[2], i) for i, x in enumerate(imag_modes)]
+        mod_modes.sort(key=lambda mod_modes: -mod_modes[1])
         if self._max_offspring:
-            mod_cells = [x[0] for x in
-                         sorted(mod_modes,
-                                key=lambda mod_modes: -mod_modes[1])]
-            mod_cells = mod_cells[:min(self._max_offspring, len(mod_cells))]
-        else:
-            mod_cells = [x[0] for x in mod_modes]
-        for i, cell in enumerate(mod_cells):
+            mod_modes = mod_modes[:min(self._max_offspring, len(mod_modes))]
+        for (cell, freq, index) in mod_modes:
             self._tasks.append(self._get_phonon_relax_task(
                     cell,
                     self._ancestral_cells,
-                    "phonon_relax-%d" % (i + 1)))
+                    "phonon_relax-%d" % (index + 1)))
         self._phr_tasks += self._tasks
         
     def _write_yaml(self):
