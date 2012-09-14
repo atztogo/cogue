@@ -1,3 +1,4 @@
+import sys
 import numpy as np
 
 def get_options(parser=None):
@@ -13,6 +14,8 @@ def get_parser():
     parser = OptionParser()
     parser.set_defaults(is_r2h=False,
                         is_bravais=False,
+                        is_verbose=False,
+                        output_filename=None,
                         s_mat=None,
                         t_mat=False,
                         shift=None)
@@ -39,6 +42,15 @@ def get_parser():
                       action="store",
                       type="string",                      
                       help="Origin shift")
+    parser.add_option("-o",
+                      dest="output_filename",
+                      action="store",
+                      type="string",                      
+                      help="Output filename")
+    parser.add_option("-v",
+                      dest="is_verbose",
+                      action="store_true",
+                      help="More information is output.")
     return parser
 
 def get_matrix(mat):
@@ -54,11 +66,12 @@ def get_tmat_cell(cell, options):
     t_mat = np.array([float(x) for x in options.t_mat.split()])
     t_mat = get_matrix(t_mat)
     if t_mat is False:
-        print "Transformation matrix is not correctly set."
+        sys.stderr.write("Transformation matrix is not correctly set.\n")
         return False
     else:
-        print "Transform cell using transformation matrix:"
-        print t_mat
+        if options.is_verbose:
+            print "Transform cell using transformation matrix:"
+            print t_mat
         return reduce_points(t_mat, cell)
 
 def get_smat_cell(cell, options):
@@ -69,11 +82,12 @@ def get_smat_cell(cell, options):
     s_mat = np.array([int(x) for x in options.s_mat.split()])
     s_mat = get_matrix(s_mat)
     if s_mat is False:
-        print "Supercell matrix is not correctly set."
+        sys.stderr.write("Supercell matrix is not correctly set.\n")
         return False
     else:
-        print "Transform cell using supercell matrix:"
-        print s_mat
+        if options.is_verbose:
+            print "Transform cell using supercell matrix:"
+            print s_mat
         cell_phonopy = Atoms(cell=cell.get_lattice().T.copy(),
                              scaled_positions=cell.get_points().T.copy(),
                              symbols=cell.get_symbols()[:],
@@ -83,7 +97,6 @@ def get_smat_cell(cell, options):
 
 def transform_cell(cell, options):
     if options.is_r2h:
-        print "Transform to hexagonal rrhombohedral cell."
         cell = rhomb2hex(cell)
     else:
         if options.t_mat:

@@ -49,11 +49,23 @@ trans = dataset['translations']
 wyckoffs = dataset['wyckoffs']
 eqiv_atoms = dataset['equivalent_atoms']
 
+plat = cell.get_lattice()
+blat = np.dot(plat, tmat)
+
 print "%s (%d)" % (spg_type, spg_number),
 
 if options.show_details:
     print "/ %s" % hall_symbol
     print
+    print "Original lattice vecs      Bravais lattice vecs"
+    for vp, vb, arrow in zip(plat, blat, ("     ", " --> ", "     ")):
+        print "[%6.3f %6.3f %6.3f]%s[%6.3f %6.3f %6.3f]" % (tuple(vp) + (arrow,) + tuple(vb))
+    print 
+    print "Transformation matrix:"
+    for v in tmat:
+        print "[%6.3f %6.3f %6.3f]" % tuple(v)
+    print
+    
     if not options.is_bravais:
         print "Wyckoff positions, and atomic points and the equivalence:"
         for i, (w, p, e) in enumerate(

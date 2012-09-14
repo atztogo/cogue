@@ -7,7 +7,10 @@ from cogue.crystal.converter import write_v_sim
 options, args = ui_utils.get_options()
 cell = ui_utils.transform_cell(vasp.read_poscar(args[0]), options)
 if cell:
-    print "Transformed cell is written to %s.ascii" % args[0]
-    write_v_sim(cell, args[0] + ".ascii")
+    if options.output_filename:
+        print "Transformed cell is written %s" % options.output_filename
+        write_v_sim(cell, options.output_filename)
+    else:
+        write_v_sim(cell)
 else:
     print "Transformation failed."

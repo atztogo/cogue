@@ -74,8 +74,11 @@ def read_poscar(filename="POSCAR"):
 
 
 
-def write_poscar(cell, filename="POSCAR"):
-    w = open(filename, 'w')
+def write_poscar(cell, filename=None):
+    if filename:
+        w = open(filename, 'w')
+    else:
+        w = sys.stdout
     
     symbols = cell.get_symbols()
     symbols_compressed = []
@@ -111,8 +114,8 @@ def write_poscar(cell, filename="POSCAR"):
                         v16[i] -= 1
                 w.write(" %20.16f%20.16f%20.16f\n" % tuple(v16))
 
-
-    w.close()
+    if filename:
+        w.close()
 
 def write_potcar(names, filename="POTCAR"):
     if 'COGUE_POTCAR_PATH' in os.environ:
