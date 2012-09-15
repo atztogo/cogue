@@ -11,39 +11,35 @@ except ImportError:
     print "python-lxml is required."
     sys.exit(1)
 
-def read_poscar(filename="POSCAR"):
+def parse_poscar(lines):
     isvasp5 = False
     symbols = []
 
-    texts = open(filename).readlines()
-    if not texts:
-        return None
-
-    for w in texts[0].split():
+    for w in lines[0].split():
         if w.strip() in atomic_symbols:
             symbols.append(w)
 
-    for w in texts[5].split():
+    for w in lines[5].split():
         if not w.isdigit():
             isvasp5 = True
             break
 
     if isvasp5:
         symbols_vasp5 = []
-        for w in texts[5].split():
+        for w in lines[5].split():
             if w.strip() in atomic_symbols:
                 symbols_vasp5.append(w)
-        texts.pop(5)
+        lines.pop(5)
 
     # Read lines in VASP 4 style
-    scale = float(texts[1])
+    scale = float(lines[1])
     lattice = np.zeros((3, 3), dtype=float)
-    lattice[:, 0] = [float(x) for x in texts[2].split()]
-    lattice[:, 1] = [float(x) for x in texts[3].split()]
-    lattice[:, 2] = [float(x) for x in texts[4].split()]
+    lattice[:, 0] = [float(x) for x in lines[2].split()]
+    lattice[:, 1] = [float(x) for x in lines[3].split()]
+    lattice[:, 2] = [float(x) for x in lines[4].split()]
 
     lattice *= scale
-    num_atoms = np.array([int(x) for x in texts[5].split()])
+    num_atoms = np.array([int(x) for x in lines[5].split()])
 
     # Check if symbols in VASP 5 style is valid
     if isvasp5:
@@ -51,13 +47,13 @@ def read_poscar(filename="POSCAR"):
             symbols = symbols_vasp5
 
     # Assume Direct
-    if texts[6][0] in 'CcKk':
+    if lines[6][0] in 'CcKk':
         print "Cartesian is not supported"
         raise
 
     points = np.zeros((3, num_atoms.sum()), dtype=float)
     for i in range(num_atoms.sum()):
-        points[:, i] = [float(x) for x in texts[i + 7].split()]
+        points[:, i] = [float(x) for x in lines[i + 7].split()]
 
     # Expand symbols
     symbols_expanded = []
@@ -71,7 +67,10 @@ def read_poscar(filename="POSCAR"):
     return Cell(lattice=lattice,
                 points=points,
                 symbols=symbols_expanded)
+    
 
+def read_poscar(filename="POSCAR"):
+    return parse_poscar(open(filename).readlines())
 
 
 def write_poscar(cell, filename=None):

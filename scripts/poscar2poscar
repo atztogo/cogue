@@ -4,11 +4,6 @@ import cogue.calculator.vasp as vasp
 import cogue.crystal.ui_utils as ui_utils
 
 options, args = ui_utils.get_options()
-cell = ui_utils.transform_cell(vasp.read_poscar(args[0]), options)
-if cell:
-    if options.output_filename:
-        vasp.write_poscar(cell, options.output_filename)
-    else:
-        vasp.write_poscar(cell)
-else:
-    print "Transformation failed."
+cells = [ui_utils.transform_cell(vasp.parse_poscar(filelines), options)
+         for filelines in ui_utils.get_lines(args)]
+ui_utils.write_cells(vasp.write_poscar, cells, args, options.output_filename)

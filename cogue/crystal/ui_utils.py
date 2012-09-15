@@ -6,11 +6,12 @@ def get_options(parser=None):
         (options, args) = parser.parse_args()
     else:
         (options, args) = get_parser().parse_args()
-        
+
     return options, args
 
 def get_parser():
     from optparse import OptionParser
+
     parser = OptionParser()
     parser.set_defaults(is_r2h=False,
                         is_bravais=False,
@@ -52,6 +53,20 @@ def get_parser():
                       action="store_true",
                       help="More information is output.")
     return parser
+
+def get_lines(filenames):
+    import fileinput
+    file_obj = fileinput.input(filenames)
+    lines = []
+    filelines = []
+    for line in file_obj:
+        if file_obj.filelineno() == 1:
+            if filelines:
+                lines.append(filelines)
+            filelines = []
+        filelines.append(line)
+    lines.append(filelines)
+    return lines
 
 def get_matrix(mat):
     if len(mat) == 3:
@@ -105,3 +120,20 @@ def transform_cell(cell, options):
             cell = get_smat_cell(cell, options)
     return cell
 
+def write_cells(write_func, cells,
+                input_filenames=None, output_filename=None):
+    for i, cell in enumerate(cells):
+        if len(cells) > 1:
+            if output_filename:
+                write_func(cell, output_filename + "%d" % (i + 1))
+            else:
+                print "-" * len(input_filenames[i])
+                print input_filenames[i]
+                print "-" * len(input_filenames[i])
+                write_func(cell)
+        else:
+            if output_filename:
+                write_func(cell, output_filename)
+            else:
+                write_func(cell)
+    
