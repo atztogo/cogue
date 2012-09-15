@@ -8,7 +8,6 @@ options, args = ui_utils.get_options()
 cell = ui_utils.transform_cell(vasp.read_poscar(args[0]), options)
 if cell:
     if options.output_filename:
-        print "Transformed cell is written to %s" % options.output_filename
         write_cif_P1(cell, options.output_filename)
     else:
         write_cif_P1(cell)

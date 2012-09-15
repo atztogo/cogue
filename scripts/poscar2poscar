@@ -7,7 +7,6 @@ options, args = ui_utils.get_options()
 cell = ui_utils.transform_cell(vasp.read_poscar(args[0]), options)
 if cell:
     if options.output_filename:
-        print "Transformed cell is written to %s" % options.output_filename
         vasp.write_poscar(cell, options.output_filename)
     else:
         vasp.write_poscar(cell)
