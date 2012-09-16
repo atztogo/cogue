@@ -110,6 +110,14 @@ def get_smat_cell(cell, options):
         scell_phonopy = get_supercell(cell_phonopy, list(s_mat))
         return atoms2cell(scell_phonopy)
 
+def set_shift(cell, options):
+    shift = np.array([float(x) for x in options.shift.split()])
+    if len(shift) == 3:
+        points = cell.get_points()
+        points += shift.reshape(3, 1)
+    else:
+        sys.stderr.write("Atomic position shift is not correctly set.\n")
+
 def transform_cell(cell, options):
     if options.is_r2h:
         cell = rhomb2hex(cell)
@@ -118,6 +126,10 @@ def transform_cell(cell, options):
             cell = get_tmat_cell(cell, options)
         if options.s_mat:
             cell = get_smat_cell(cell, options)
+
+    if options.shift:
+        set_shift(cell, options)
+            
     return cell
 
 def write_cells(write_func, cells,

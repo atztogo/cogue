@@ -47,6 +47,10 @@ def read_poscar(filename="POSCAR"):
     """Returns Cell object by reading POSCAR style file."""
     return vasp_io.read_poscar(filename)
 
+def parse_poscar(lines):
+    """Returns Cell object by parsing POSCAR lines list."""
+    return vasp_io.parse_poscar(lines)
+
 def write_poscar(cell, filename=None):
     """Write Cell object into POSCAR style file."""
     vasp_io.write_poscar(cell, filename)
