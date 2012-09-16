@@ -1,4 +1,5 @@
 import sys
+import os
 import numpy as np
 
 def get_options(parser=None):
@@ -137,7 +138,8 @@ def write_cells(write_func, cells,
     for i, cell in enumerate(cells):
         if len(cells) > 1:
             if output_filename:
-                write_func(cell, output_filename + "%d" % (i + 1))
+                root, ext = os.path.splitext(output_filename)
+                write_func(cell, root + "-%03d" % (i + 1) + ext)
             else:
                 print "-" * len(input_filenames[i])
                 print input_filenames[i]
