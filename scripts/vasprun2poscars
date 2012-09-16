@@ -19,7 +19,7 @@ if options.count_offset:
     count = 1 + options.count_offset
 else:
     count = 1
-    
+
 for filename in args:
     if not os.path.exists(filename):
         sys.stderr.write("%s doesn't exist.\n" % filename)
