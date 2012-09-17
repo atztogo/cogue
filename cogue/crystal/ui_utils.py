@@ -113,7 +113,9 @@ def set_shift(cell, options):
     else:
         sys.stderr.write("Atomic position shift is not correctly set.\n")
 
-def transform_cell(cell, options):
+def transform_cell(cell, options, is_shift=True):
+    if options.shift and is_shift:
+        set_shift(cell, options)
     if options.t_mat:
         cell = get_tmat_cell(cell, options)
     if options.is_r2h:
@@ -126,8 +128,6 @@ def transform_cell(cell, options):
         cell = get_supercell(cell, r2h)
     if options.s_mat:
         cell = get_smat_cell(cell, options)
-    if options.shift:
-        set_shift(cell, options)
             
     return cell
 

@@ -14,7 +14,7 @@ def frac2val(string):
         return float(string)
 
 def get_angles(lattice):
-    a, b, c = get_cell_parameters(lattice)
+    a, b, c = get_lattice_parameters(lattice)
     alpha = np.arccos(np.vdot(lattice[:,1], lattice[:,2]) / b / c)
     beta  = np.arccos(np.vdot(lattice[:,2], lattice[:,0]) / c / a)
     gamma = np.arccos(np.vdot(lattice[:,0], lattice[:,1]) / a / b)
@@ -39,11 +39,11 @@ def lattice2cartesian(a, b, c, alpha, beta, gamma):
                           2 * ca * cb * cg) / sg
     return L
 
-def get_cell_parameters(lattice):
+def get_lattice_parameters(lattice):
     return np.sqrt(np.dot(lattice.T, lattice).diagonal())
 
 def get_oriented_lattice(lattice):
-    a, b, c = get_cell_parameters(lattice)
+    a, b, c = get_lattice_parameters(lattice)
     alpha, beta, gamma = get_angles(lattice)
     alpha *= np.pi / 180
     beta *= np.pi / 180
@@ -177,7 +177,7 @@ def read_yaml(filename):
 # Cif
 #
 def write_cif_P1(cell, filename=None):
-    a, b, c = get_cell_parameters(cell.get_lattice())
+    a, b, c = get_lattice_parameters(cell.get_lattice())
     alpha, beta, gamma = get_angles(cell.get_lattice())
     
     cif = """data_cogue_crystal_converter
@@ -485,7 +485,7 @@ def split_xyz_symbol(symbol):
 def write_v_sim(cell, filename=None):
     lat = get_oriented_lattice(cell.get_lattice())
     text  = "# cogue generated file\n"
-    # text += "%15.9f%15.9f%15.9f\n" % tuple(get_cell_parameters(lattice))
+    # text += "%15.9f%15.9f%15.9f\n" % tuple(get_lattice_parameters(lattice))
     # text += "%15.9f%15.9f%15.9f\n" % tuple(get_angles(lattice))
     text += "%15.9f%15.9f%15.9f\n" % (lat[0,0], lat[0,1], lat[1,1])
     text += "%15.9f%15.9f%15.9f\n" % (lat[0,2], lat[1,2], lat[2,2])

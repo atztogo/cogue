@@ -24,7 +24,7 @@ import numpy as np
 from cogue.task import TaskElement
 from cogue.crystal.cell import Cell
 from cogue.crystal.converter import \
-    atoms2cell, write_cif_P1, write_v_sim, get_cell_parameters
+    atoms2cell, write_cif_P1, write_v_sim, get_lattice_parameters
 from cogue.calculator.vasp.vasp_io import write_poscar
 from cogue.crystal.symmetry import \
     get_symmetry_dataset, get_crystallographic_cell
@@ -378,7 +378,7 @@ class PhononRelaxElementBase(TaskElement):
         # Long cell axis is not multiplied.
         for dimension in self._supercell_dimensions:
             for i, length in enumerate(
-                get_cell_parameters(prim_cell.get_lattice())):
+                get_lattice_parameters(prim_cell.get_lattice())):
                 if length * dimension[i] > 20:
                     dimension[i] = 1
 

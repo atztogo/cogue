@@ -1,6 +1,8 @@
 import numpy as np
 from mayavi import mlab
 from cogue.crystal.atom import atomic_jmol_colors, covalent_radii
+from cogue.crystal.converter import get_lattice_parameters
+
 
 def set_figure():
     mlab.figure(bgcolor=(1,1,1))
@@ -10,6 +12,11 @@ def show():
 
 def savefig(filename, size=None):
     mlab.savefig(filename, size=size)
+
+def plot_cell(cell, margin=1e-5, color=(1, 0, 0)):
+    plot_lattice(cell.get_lattice(), color=color)
+    plot_axes(cell.get_lattice(), color=color)
+    plot_atoms(cell, margin=margin)
 
 def line_plot(m, n, pt, color=None):
     mlab.plot3d([pt[m][0], pt[n][0]],
@@ -70,11 +77,11 @@ def plot_lattice_points(lattice, dim):
     mlab.points3d(lp[0], lp[1], lp[2],
                   scale_factor=0.2, opacity=0.2, color=(0,0,0))              
 
-def plot_atoms(cell, shift=[0,0,0], atom_scale=0.4):
+def plot_atoms(cell, margin=1e-5, shift=[0,0,0], atom_scale=0.4):
     points = cell.get_points()
     points += np.reshape(shift, (3, 1))
     points -= np.floor(points)
-    symbols = cell.get_symbols()
+    points, symbols = get_points_with_margin(cell, margin)
     
     xs, ys, zs = np.dot(cell.get_lattice(), points)
     for x, y, z, s in zip(xs, ys, zs, symbols):
@@ -83,3 +90,19 @@ def plot_atoms(cell, shift=[0,0,0], atom_scale=0.4):
                       resolution=16,
                       scale_factor=covalent_radii[s],
                       color=color)
+
+def get_points_with_margin(cell, margin=1e-5):
+    abc = get_lattice_parameters(cell.get_lattice())
+    points = cell.get_points()
+    points_new = []
+    symbols_new = []
+    for p, s in zip(points.T, cell.get_symbols()):
+        for i in (-1, 0, 1):
+            for j in (-1, 0, 1):
+                for k in (-1, 0, 1):
+                    p_inspect = p + np.array([i, j, k])
+                    if ((p_inspect > 0 - margin * abc).all() and
+                        (p_inspect < 1 + margin * abc).all()):
+                        points_new.append(p_inspect)
+                        symbols_new.append(s)
+    return np.transpose(points_new), symbols_new

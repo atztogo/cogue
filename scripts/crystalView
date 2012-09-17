@@ -1,32 +1,45 @@
 #!/usr/bin/python
 
 import sys
+import numpy as np
 import cogue.crystal.mayavi2 as mayavi2
 import cogue.crystal.symmetry as symmetry
 import cogue.calculator.vasp as vasp
 import cogue.crystal.ui_utils as ui_utils
-
-def plot_cell(cell, color=(1, 0, 0)):
-    mayavi2.plot_lattice(cell.get_lattice(), color=color)
-    mayavi2.plot_axes(cell.get_lattice(), color=color)
-    mayavi2.plot_atoms(cell)
-
+from cogue.crystal.converter import frac2val
 
 parser = ui_utils.get_parser()
-parser.set_defaults(symprec=1e-5)
+parser.set_defaults(symprec=1e-5,
+                    position_margin=None)
 parser.add_option("-s", "--tolerance", dest="symprec", type="float",
                   help="Symmetry tolerance to search")
+parser.add_option("--margin",
+                  dest="position_margin",
+                  action="store",
+                  type="string",                      
+                  help="Margin to plot atoms within crystal lattice")
 options, args = ui_utils.get_options(parser)
 cell = vasp.read_poscar(args[0])
 dataset = symmetry.get_symmetry_dataset(cell, options.symprec)
+if options.position_margin:
+    margin = [frac2val(x) for x in options.position_margin.split()]
+    if len(margin) == 1:
+        margin = margin[0]
+    elif len(margin) == 3:
+        margin = np.array(margin)
+    else:
+        sys.stderr.write("--margin is incorrectly set.")
+        sys.exit(1)
+else:
+    margin = 1e-5
 
+ui_utils.set_shift(cell, options)
 mayavi2.set_figure()
-
-plot_cell(cell)
+mayavi2.plot_cell(cell, margin=margin)
 
 if options.t_mat or options.s_mat or options.is_r2h:
-    transformed_cell = ui_utils.transform_cell(cell, options)
-    plot_cell(transformed_cell, color=(0, 0, 1))
+    transformed_cell = ui_utils.transform_cell(cell, options, is_shift=False)
+    mayavi2.plot_cell(transformed_cell, margin=margin, color=(0, 0, 1))
 
 if options.output_filename:
     mayavi2.savefig(options.output_filename, size=(800, 800))
