@@ -101,8 +101,8 @@ def get_points_with_margin(cell, margin=1e-5):
             for j in (-1, 0, 1):
                 for k in (-1, 0, 1):
                     p_inspect = p + np.array([i, j, k])
-                    if ((p_inspect > 0 - margin * abc).all() and
-                        (p_inspect < 1 + margin * abc).all()):
+                    if ((p_inspect > 0 - margin / abc).all() and
+                        (p_inspect < 1 + margin / abc).all()):
                         points_new.append(p_inspect)
                         symbols_new.append(s)
     return np.transpose(points_new), symbols_new
