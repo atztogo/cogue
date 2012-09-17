@@ -50,7 +50,7 @@ xtalcomp = Extension('cogue._xtalcomp',
                                 'ext/xtalcomp/xctransform.cpp'])
 
 setup(name = 'cogue',
-      version = '0.0.1',
+      version = '0.1.0',
       description = 'Spglib and xtalcomp extensions',
       author = 'Atsushi Togo',
       author_email = 'atz.togo@gmail.com',
