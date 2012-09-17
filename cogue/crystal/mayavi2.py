@@ -83,18 +83,3 @@ def plot_atoms(cell, shift=[0,0,0], atom_scale=0.4):
                       resolution=16,
                       scale_factor=covalent_radii[s],
                       color=color)
-
-# def plot_modulation(lattice, positions, modulation):
-#     modu = np.dot(modulation, lattice)
-#     x = positions[:,0]
-#     y = positions[:,1]
-#     z = positions[:,2]
-#     u = modu[:,0]
-#     v = modu[:,1]
-#     w = modu[:,2]
-#     mlab.quiver3d(x, y, z, u, v, w,
-#                    color=(0,0,0),
-#                    line_width=3,
-#                    scale_factor=10*options.amp_modulation)
-#     plot_atoms(positions)
-
