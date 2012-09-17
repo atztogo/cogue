@@ -12,8 +12,16 @@ Cogue is a package of crystal simulation tools:
 - Wrappers of calculators and queueing systems for `VASP5 <http://cms.mpi.univie.ac.at/vasp/vasp/>`_ and `GridEngine <http://gridengine.org>`_
 - Automation tools for various tasks
 
-Tasks
-------
+Convenient command line tools
+------------------------------
+
+- Crystal format converters
+- Transformation of crystal structure including supercell builder
+- Symmetry finder
+- Simple crystal viewer
+
+Automation tasks
+-----------------
 
 - Total energy, eigenvalues, forces, stress
 - Structure optimizations
@@ -30,20 +38,11 @@ Useful functions and classes
 - Calculator file parsers and writers
 - Crystal symmetry handling with `spglib <http://spglib.sf.net>`_
 
-Architecture of automation system
-----------------------------------
-
-Cogue is composed of three objects, task, taskset, and controller
-(``autocalc``). Task corresponds to a calculation. Taskset is a set of
-tasks and tasksets. A series of tasksets can be contained in a
-task. Complicated process is designed by nesting tasks and tasksets.
-Controller handles tasks and tasksets with the help of a queueing system.
-
 Documentation
 --------------
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
 
    contents
 
