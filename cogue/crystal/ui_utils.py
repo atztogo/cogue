@@ -1,6 +1,7 @@
 import sys
 import os
 import numpy as np
+from cogue.crystal.converter import frac2val
 
 def get_options(parser=None):
     if parser:
@@ -79,7 +80,7 @@ def get_matrix(mat):
         return False
 
 def get_tmat_cell(cell, options):
-    t_mat = np.array([float(x) for x in options.t_mat.split()])
+    t_mat = np.array([frac2val(x) for x in options.t_mat.split()])
     t_mat = get_matrix(t_mat)
     if t_mat is False:
         sys.stderr.write("Transformation matrix is not correctly set.\n")

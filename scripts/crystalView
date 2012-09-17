@@ -1,0 +1,23 @@
+#!/usr/bin/python
+
+import sys
+import cogue.crystal.mayavi2 as mayavi2
+import cogue.crystal.symmetry as symmetry
+import cogue.calculator.vasp as vasp
+import cogue.crystal.ui_utils as ui_utils
+
+parser = ui_utils.get_parser()
+parser.set_defaults(symprec=1e-5)
+parser.add_option("-s", "--tolerance", dest="symprec", type="float",
+                  help="Symmetry tolerance to search")
+options, args = ui_utils.get_options(parser)
+cell = vasp.read_poscar(args[0])
+dataset = symmetry.get_symmetry_dataset(cell, options.symprec)
+mayavi2.set_figure()
+mayavi2.plot_lattice(cell.get_lattice(), color=(1,0.5,0.5))
+mayavi2.plot_axes(cell.get_lattice(), (1,0,0))
+mayavi2.plot_atoms(cell)
+if options.output_filename:
+    mayavi2.savefig(options.output_filename)
+else:
+    mayavi2.show()
