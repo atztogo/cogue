@@ -6,6 +6,12 @@ import cogue.crystal.symmetry as symmetry
 import cogue.calculator.vasp as vasp
 import cogue.crystal.ui_utils as ui_utils
 
+def plot_cell(cell, color=(1, 0, 0)):
+    mayavi2.plot_lattice(cell.get_lattice(), color=color)
+    mayavi2.plot_axes(cell.get_lattice(), color=color)
+    mayavi2.plot_atoms(cell)
+
+
 parser = ui_utils.get_parser()
 parser.set_defaults(symprec=1e-5)
 parser.add_option("-s", "--tolerance", dest="symprec", type="float",
@@ -13,11 +19,16 @@ parser.add_option("-s", "--tolerance", dest="symprec", type="float",
 options, args = ui_utils.get_options(parser)
 cell = vasp.read_poscar(args[0])
 dataset = symmetry.get_symmetry_dataset(cell, options.symprec)
+
 mayavi2.set_figure()
-mayavi2.plot_lattice(cell.get_lattice(), color=(1,0.5,0.5))
-mayavi2.plot_axes(cell.get_lattice(), (1,0,0))
-mayavi2.plot_atoms(cell)
+
+plot_cell(cell)
+
+if options.t_mat or options.s_mat or options.is_r2h:
+    transformed_cell = ui_utils.transform_cell(cell, options)
+    plot_cell(transformed_cell, color=(0, 0, 1))
+
 if options.output_filename:
-    mayavi2.savefig(options.output_filename)
+    mayavi2.savefig(options.output_filename, size=(800, 800))
 else:
     mayavi2.show()

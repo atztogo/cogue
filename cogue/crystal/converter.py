@@ -7,8 +7,11 @@ from cogue.crystal.symmetry import get_symmetry_dataset, get_crystallographic_ce
 # Utility functions
 #
 def frac2val(string):
-    num, denom = [float(x) for x in string.split('/')]
-    return num / denom
+    if '/' in string:
+        num, denom = [float(x) for x in string.split('/')]
+        return num / denom
+    else:
+        return float(string)
 
 def get_angles(lattice):
     a, b, c = get_cell_parameters(lattice)
@@ -77,46 +80,39 @@ def get_primitive(cell, tolerance=1e-5):
         brv_cell = cbc2prim(brv_cell)
     return brv_cell
 
-def rhomb2hex(cell):
-    shift = [[0, 0, 0],
-             [1, 0, 0],
-             [0, 0,-1]] 
-    tmat = [[ 1, 0, 1],
-            [-1, 1, 1],
-            [ 0,-1, 1]]
-    natom = len(cell.get_symbols())
-    points = cell.get_points()
-    lattice = get_oriented_lattice(np.dot(cell.get_lattice(), tmat))
-    triple_pos = np.zeros((3, natom * 3), dtype=float)
-    for i in range(3):
-        triple_pos[:,i*natom:(i+1)*natom] = (points.T + shift[i]).T
-    
-    points_hex = np.dot(np.linalg.inv(tmat), triple_pos)
-    points_hex -= np.floor(points_hex)
-    
-    return Cell(lattice=lattice,
-                points=points_hex,
-                symbols=cell.get_symbols() * 3)
-
 def reduce_points(tmat, cell, tolerance=1e-5):
+    lattice = cell.get_lattice()
     points_prim = []
     symbols_prim = []
+    masses_prim = []
+    points = cell.get_points()
     symbols = cell.get_symbols()
-    for i, p in enumerate(
-        np.dot(np.linalg.inv(tmat), cell.get_points()).T):
+    masses = cell.get_masses()
+    magmoms = cell.get_magnetic_moments()
+    if magmoms==None:
+        magmoms_prim = None
+    else:
+        magmoms_prim = []
+    
+    for i, p in enumerate(np.dot(np.linalg.inv(tmat), points).T):
         is_different = True
-        for pp in points_prim:
-            diff = pp - p
-            if (abs(diff - diff.round()) < tolerance).all():
+        for p_prim in points_prim:
+            diff = p_prim - p
+            diff -= diff.round()
+            if (np.linalg.norm(np.dot(lattice, diff)) < tolerance).all():
                 is_different = False
                 break
         if is_different:
             points_prim.append(p - np.floor(p))
             symbols_prim.append(symbols[i])
+            masses_prim.append(masses[i])
+            if magmoms != None:
+                magmoms_prim.append(magmoms[i])
 
     return Cell(lattice=np.dot(cell.get_lattice(), tmat),
                 points=np.transpose(points_prim),
-                symbols=symbols_prim)
+                symbols=symbols_prim,
+                masses=masses_prim)
 
 def fc2prim(cell):
     tmat = [[ 0.0, 0.5, 0.5],

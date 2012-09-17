@@ -1,7 +1,9 @@
 import sys
 import os
 import numpy as np
-from cogue.crystal.converter import frac2val
+from cogue.crystal.converter import frac2val, reduce_points
+from cogue.crystal.supercell import get_supercell
+
 
 def get_options(parser=None):
     if parser:
@@ -20,7 +22,7 @@ def get_parser():
                         is_verbose=False,
                         output_filename=None,
                         s_mat=None,
-                        t_mat=False,
+                        t_mat=None,
                         shift=None)
     parser.add_option("--r2h",
                       dest="is_r2h",
@@ -92,10 +94,6 @@ def get_tmat_cell(cell, options):
         return reduce_points(t_mat, cell)
 
 def get_smat_cell(cell, options):
-    from phonopy.structure.atoms import Atoms
-    from phonopy.structure.cells import get_supercell
-    from cogue.crystal.converter import atoms2cell
-
     s_mat = np.array([int(x) for x in options.s_mat.split()])
     s_mat = get_matrix(s_mat)
     if s_mat is False:
@@ -105,12 +103,7 @@ def get_smat_cell(cell, options):
         if options.is_verbose:
             print "Transform cell using supercell matrix:"
             print s_mat
-        cell_phonopy = Atoms(cell=cell.get_lattice().T.copy(),
-                             scaled_positions=cell.get_points().T.copy(),
-                             symbols=cell.get_symbols()[:],
-                             pbc=True)
-        scell_phonopy = get_supercell(cell_phonopy, list(s_mat))
-        return atoms2cell(scell_phonopy)
+        return get_supercell(cell, s_mat)
 
 def set_shift(cell, options):
     shift = np.array([float(x) for x in options.shift.split()])
@@ -121,14 +114,18 @@ def set_shift(cell, options):
         sys.stderr.write("Atomic position shift is not correctly set.\n")
 
 def transform_cell(cell, options):
+    if options.t_mat:
+        cell = get_tmat_cell(cell, options)
     if options.is_r2h:
-        cell = rhomb2hex(cell)
-    else:
-        if options.t_mat:
-            cell = get_tmat_cell(cell, options)
-        if options.s_mat:
-            cell = get_smat_cell(cell, options)
-
+        r2h = [[ 1,-1, 1],
+               [ 0, 1, 1],
+               [-1, 0, 1]]
+        if options.is_verbose:
+            print "Transform cell by transformation matrix of rhombohedral to hexagonal:"
+            print np.array(r2h)
+        cell = get_supercell(cell, r2h)
+    if options.s_mat:
+        cell = get_smat_cell(cell, options)
     if options.shift:
         set_shift(cell, options)
             

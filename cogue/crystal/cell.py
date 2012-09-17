@@ -36,6 +36,7 @@ class Cell:
                  lattice=None,
                  points=None,
                  symbols=None,
+                 magmoms=None,
                  masses=None,
                  numbers=None):
 
@@ -48,6 +49,11 @@ class Cell:
             self._points = None
         else:
             self._points = np.array(points, dtype=float).copy()
+
+        if magmoms == None:
+            self._magmoms = None
+        else:
+            self._magmoms = np.array(mogmoms, dtype=float).copy()
 
         if not symbols:
             self._symbols = None
@@ -121,6 +127,14 @@ class Cell:
     def get_masses(self):
         """ """
         return self._masses
+
+    def set_magnetic_moments(self, magmoms):
+        """ """
+        self._magmoms = np.array(magmoms, dtype=float).copy()
+
+    def get_magnetic_moments(self):
+        """ """
+        return self._magmoms
 
     def set_numbers(self, numbers):
         """ """

@@ -8,8 +8,8 @@ def set_figure():
 def show():
     mlab.show()
 
-def savefig(filename):
-    mlab.savefig(filename)
+def savefig(filename, size=None):
+    mlab.savefig(filename, size=size)
 
 def line_plot(m, n, pt, color=None):
     mlab.plot3d([pt[m][0], pt[n][0]],
@@ -44,7 +44,7 @@ def plot_lattice(lattice, color=None):
     line_plot(2, 4, pt, color)
     line_plot(3, 5, pt, color)
 
-def plot_axes(lattice, color):
+def plot_axes(lattice, color=(1, 0, 0)):
     lat = np.transpose([x/np.linalg.norm(x) for x in lattice.T])
     mlab.quiver3d([0, 0, 0],
                   [0, 0, 0],
