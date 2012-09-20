@@ -110,7 +110,7 @@ if __name__ == '__main__':
         print "Cell build failed."
         sys.exit(1)
 
-    write_poscar(cell)
+    write_poscar(cell, "POSCAR")
 
     for i, p1 in enumerate(cell.get_points().T):
         for j, p2 in enumerate(cell.get_points().T):

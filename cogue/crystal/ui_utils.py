@@ -4,6 +4,23 @@ import numpy as np
 from cogue.crystal.converter import frac2val, reduce_points
 from cogue.crystal.supercell import get_supercell
 
+r2h_observe_R3 = [[-1, 1, 1],
+                  [ 0,-1, 1],
+                  [ 1, 0, 1]]
+
+h2r_observe_R3 = [[-1./3,-1./3, 2./3],
+                  [ 1./3,-2./3, 1./3],
+                  [ 1./3, 1./3, 1./3]]
+
+r2h_reverse_R3 = [[ 1,-1, 1],
+                  [ 0, 1, 1],
+                  [-1, 0, 1]]
+
+h2r_reverse_R3 = [[ 1./3, 1./3,-2./3],
+                  [-1./3, 2./3,-1./3],
+                  [ 1./3, 1./3, 1./3]]
+
+r2h = r2h_observe_R3
 
 def get_options(parser=None):
     if parser:
@@ -119,9 +136,6 @@ def transform_cell(cell, options, is_shift=True):
     if options.t_mat:
         cell = get_tmat_cell(cell, options)
     if options.is_r2h:
-        r2h = [[ 1,-1, 1],
-               [ 0, 1, 1],
-               [-1, 0, 1]]
         if options.is_verbose:
             print "Transform cell by transformation matrix of rhombohedral to hexagonal:"
             print np.array(r2h)

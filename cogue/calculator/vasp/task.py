@@ -57,7 +57,7 @@ class TaskVasp:
             os.remove("vasprun.xml")
         if os.path.exists("CONTCAR"):
             os.remove("CONTCAR")
-        write_poscar(self._cell)
+        write_poscar(self._cell, "POSCAR")
         ps_set = [self._pseudo_potential_map[x]
                   for x in self._cell.get_symbols()]
         write_potcar(ps_set)

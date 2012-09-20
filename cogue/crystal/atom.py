@@ -352,6 +352,8 @@ covalent_radii = {
     'Am'     : 1.80,
     'Cm'     : 1.69}
 
+# Colors of atoms are obtained at
+# http://jmol.sourceforge.net/jscolors/
 atomic_jmol_colors = {
     'H'     : (255, 255, 255),
     'He'    : (217, 255, 255),

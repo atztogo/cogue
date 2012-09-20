@@ -112,6 +112,7 @@ def reduce_points(tmat, cell, tolerance=1e-5):
     return Cell(lattice=np.dot(cell.get_lattice(), tmat),
                 points=np.transpose(points_prim),
                 symbols=symbols_prim,
+                magmoms=magmoms_prim,
                 masses=masses_prim)
 
 def fc2prim(cell):
@@ -147,6 +148,8 @@ def bbc2prim(cell):
 def atoms2cell(phonopy_cell):
     return Cell(lattice=phonopy_cell.get_cell().T,
                 points=phonopy_cell.get_scaled_positions().T,
+                masses=phonopy_cell.get_masses(),
+                magmoms=phonopy_cell.get_magnetic_moments(),
                 symbols=phonopy_cell.symbols)
 
 #######################
