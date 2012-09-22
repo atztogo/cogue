@@ -14,17 +14,17 @@ def savefig(filename, size=None):
     mlab.savefig(filename, size=size)
 
 def plot_cell(cell, margin=1e-5, color=(1, 0, 0)):
-    plot_lattice(cell.get_lattice(), color=color)
-    plot_axes(cell.get_lattice(), color=color)
-    plot_atoms(cell, margin=margin)
+    _plot_lattice(cell.get_lattice(), color=color)
+    _plot_axes(cell.get_lattice(), color=color)
+    _plot_atoms(cell, margin=margin)
 
-def line_plot(m, n, pt, color=None):
+def _line_plot(m, n, pt, color=None):
     mlab.plot3d([pt[m][0], pt[n][0]],
                 [pt[m][1], pt[n][1]],
                 [pt[m][2], pt[n][2]],
                 tube_radius=0.015, opacity=1, color=color)
 
-def plot_lattice(lattice, color=None):
+def _plot_lattice(lattice, color=None):
     lat = lattice.T
     origin = np.zeros(3)
     pt = [origin,
@@ -38,20 +38,20 @@ def plot_lattice(lattice, color=None):
 
     pt = np.array(pt)
     
-    line_plot(0, 1, pt, color)
-    line_plot(0, 2, pt, color)
-    line_plot(0, 3, pt, color)
-    line_plot(4, 7, pt, color)
-    line_plot(5, 7, pt, color)
-    line_plot(6, 7, pt, color)
-    line_plot(1, 4, pt, color)
-    line_plot(2, 5, pt, color)
-    line_plot(3, 6, pt, color)
-    line_plot(1, 6, pt, color)
-    line_plot(2, 4, pt, color)
-    line_plot(3, 5, pt, color)
+    _line_plot(0, 1, pt, color)
+    _line_plot(0, 2, pt, color)
+    _line_plot(0, 3, pt, color)
+    _line_plot(4, 7, pt, color)
+    _line_plot(5, 7, pt, color)
+    _line_plot(6, 7, pt, color)
+    _line_plot(1, 4, pt, color)
+    _line_plot(2, 5, pt, color)
+    _line_plot(3, 6, pt, color)
+    _line_plot(1, 6, pt, color)
+    _line_plot(2, 4, pt, color)
+    _line_plot(3, 5, pt, color)
 
-def plot_axes(lattice, color=(1, 0, 0)):
+def _plot_axes(lattice, color=(1, 0, 0)):
     lat = np.transpose([x/np.linalg.norm(x) for x in lattice.T])
     mlab.quiver3d([0, 0, 0],
                   [0, 0, 0],
@@ -66,7 +66,7 @@ def plot_axes(lattice, color=(1, 0, 0)):
     for c, v in zip(('a','b','c'), (lat * 1.3).T):
         mlab.text3d(v[0]+0.15, v[1], v[2], c, color=color, scale=0.3)
 
-def plot_lattice_points(lattice, dim):
+def _plot_lattice_points(lattice, dim):
     lat_points = []
     for i in range(-dim[0], dim[0] + 1):
         for j in range(-dim[1], dim[1] + 1):
@@ -77,11 +77,11 @@ def plot_lattice_points(lattice, dim):
     mlab.points3d(lp[0], lp[1], lp[2],
                   scale_factor=0.2, opacity=0.2, color=(0,0,0))              
 
-def plot_atoms(cell, margin=1e-5, shift=[0,0,0], atom_scale=0.4):
+def _plot_atoms(cell, margin=1e-5, shift=[0,0,0], atom_scale=0.4):
     points = cell.get_points()
     points += np.reshape(shift, (3, 1))
     points -= np.floor(points)
-    points, symbols = get_points_with_margin(cell, margin)
+    points, symbols = _get_points_with_margin(cell, margin)
     
     xs, ys, zs = np.dot(cell.get_lattice(), points)
     for x, y, z, s in zip(xs, ys, zs, symbols):
@@ -91,7 +91,7 @@ def plot_atoms(cell, margin=1e-5, shift=[0,0,0], atom_scale=0.4):
                       scale_factor=covalent_radii[s],
                       color=color)
 
-def get_points_with_margin(cell, margin=1e-5):
+def _get_points_with_margin(cell, margin=1e-5):
     abc = get_lattice_parameters(cell.get_lattice())
     points = cell.get_points()
     points_new = []

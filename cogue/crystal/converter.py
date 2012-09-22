@@ -3,9 +3,47 @@ import numpy as np
 from cogue.crystal.cell import Cell
 from cogue.crystal.symmetry import get_symmetry_dataset, get_crystallographic_cell
 
-#
-# Utility functions
-#
+##############################
+# Generally usable functions #
+##############################
+def reduce_points(tmat, cell, tolerance=1e-5):
+    lattice = cell.get_lattice()
+    points_prim = []
+    symbols_prim = []
+    masses_prim = []
+    points = cell.get_points()
+    symbols = cell.get_symbols()
+    masses = cell.get_masses()
+    magmoms = cell.get_magnetic_moments()
+    if magmoms==None:
+        magmoms_prim = None
+    else:
+        magmoms_prim = []
+    
+    for i, p in enumerate(np.dot(np.linalg.inv(tmat), points).T):
+        is_different = True
+        for p_prim in points_prim:
+            diff = p_prim - p
+            diff -= diff.round()
+            if (np.linalg.norm(np.dot(lattice, diff)) < tolerance).all():
+                is_different = False
+                break
+        if is_different:
+            points_prim.append(p - np.floor(p))
+            symbols_prim.append(symbols[i])
+            masses_prim.append(masses[i])
+            if magmoms != None:
+                magmoms_prim.append(magmoms[i])
+
+    return Cell(lattice=np.dot(cell.get_lattice(), tmat),
+                points=np.transpose(points_prim),
+                symbols=symbols_prim,
+                magmoms=magmoms_prim,
+                masses=masses_prim)
+
+#####################
+# Utility functions #
+#####################
 def frac2val(string):
     if '/' in string:
         num, denom = [float(x) for x in string.split('/')]
@@ -69,82 +107,50 @@ def get_primitive(cell, tolerance=1e-5):
     sym_dataset = get_symmetry_dataset(brv_cell)
     spg_symbol = sym_dataset['international'][0]
     if spg_symbol == 'F':
-        brv_cell = fc2prim(brv_cell)
+        brv_cell = _fc2prim(brv_cell)
     elif spg_symbol == 'I':
-        brv_cell = bc2prim(brv_cell)
+        brv_cell = _bc2prim(brv_cell)
     elif spg_symbol == 'A':
-        brv_cell = abc2prim(brv_cell)
+        brv_cell = _abc2prim(brv_cell)
     elif spg_symbol == 'B':
-        brv_cell = bbc2prim(brv_cell)
+        brv_cell = _bbc2prim(brv_cell)
     elif spg_symbol == 'C':
-        brv_cell = cbc2prim(brv_cell)
+        brv_cell = _cbc2prim(brv_cell)
     return brv_cell
 
-def reduce_points(tmat, cell, tolerance=1e-5):
-    lattice = cell.get_lattice()
-    points_prim = []
-    symbols_prim = []
-    masses_prim = []
-    points = cell.get_points()
-    symbols = cell.get_symbols()
-    masses = cell.get_masses()
-    magmoms = cell.get_magnetic_moments()
-    if magmoms==None:
-        magmoms_prim = None
-    else:
-        magmoms_prim = []
-    
-    for i, p in enumerate(np.dot(np.linalg.inv(tmat), points).T):
-        is_different = True
-        for p_prim in points_prim:
-            diff = p_prim - p
-            diff -= diff.round()
-            if (np.linalg.norm(np.dot(lattice, diff)) < tolerance).all():
-                is_different = False
-                break
-        if is_different:
-            points_prim.append(p - np.floor(p))
-            symbols_prim.append(symbols[i])
-            masses_prim.append(masses[i])
-            if magmoms != None:
-                magmoms_prim.append(magmoms[i])
-
-    return Cell(lattice=np.dot(cell.get_lattice(), tmat),
-                points=np.transpose(points_prim),
-                symbols=symbols_prim,
-                magmoms=magmoms_prim,
-                masses=masses_prim)
-
-def fc2prim(cell):
+def _fc2prim(cell):
     tmat = [[ 0.0, 0.5, 0.5],
             [ 0.5, 0.0, 0.5],
             [ 0.5, 0.5, 0.0]]
     return reduce_points(tmat, cell)
 
-def bc2prim(cell):
+def _bc2prim(cell):
     tmat = [[-0.5, 0.5, 0.5],
             [ 0.5,-0.5, 0.5],
             [ 0.5, 0.5,-0.5]]
     return reduce_points(tmat, cell)
 
-def cbc2prim(cell):
+def _cbc2prim(cell):
     tmat = [[ 0.5, 0.5, 0.0],
             [-0.5, 0.5, 0.0],
             [ 0.0, 0.0, 1.0]]
     return reduce_points(tmat, cell)
 
-def abc2prim(cell):
+def _abc2prim(cell):
     tmat = [[ 0.0, 0.5, 0.5],
             [ 0.0,-0.5, 0.5],
             [ 1.0, 0.0, 0.0]]
     return reduce_points(tmat, cell)
 
-def bbc2prim(cell):
+def _bbc2prim(cell):
     tmat = [[ 0.5, 0.0, 0.5],
             [ 0.5, 0.0,-0.5],
             [ 0.0, 1.0, 0.0]]
     return reduce_points(tmat, cell)
 
+#########################
+# Phonopy Atoms to Cell #
+#########################
 def atoms2cell(phonopy_cell):
     return Cell(lattice=phonopy_cell.get_cell().T,
                 points=phonopy_cell.get_scaled_positions().T,
@@ -355,28 +361,28 @@ def read_cif(str_cif):
         elif loop_mode == 'atom_site':
             str_atom_site += line  + '\n'
 
-    return get_cell_from_cif_info(str_symmetry_equiv_pos_as_xyz,
-                                  str_atom_site,
-                                  atom_site_order,
-                                  lattice2cartesian(a, b, c,
-                                                    alpha, beta, gamma))
+    return _get_cell_from_cif_info(str_symmetry_equiv_pos_as_xyz,
+                                   str_atom_site,
+                                   atom_site_order,
+                                   lattice2cartesian(a, b, c,
+                                                     alpha, beta, gamma))
             
-def get_cell_from_cif_info(str_sym, str_atom, order, lattice):
-    symbols, points = read_atom_site_lines(str_atom, order, lattice)
-    operations = expand_symmetry_equiv_pos_as_xyz(str_sym)
+def _get_cell_from_cif_info(str_sym, str_atom, order, lattice):
+    symbols, points = _read_atom_site_lines(str_atom, order, lattice)
+    operations = _expand_symmetry_equiv_pos_as_xyz(str_sym)
     points = np.vstack((np.array(points), np.ones(len(symbols))))
     all_points = np.dot(operations[0], points)
     for opn in operations[1:]:
         all_points = np.hstack((all_points, np.dot(opn, points)))
     symbols = symbols * len(operations)
-    red_symbols, red_points = remove_overlapping_points(all_points,
-                                                        symbols)
+    red_symbols, red_points = _remove_overlapping_points(all_points,
+                                                         symbols)
 
     return Cell(lattice=lattice,
                 points=red_points,
                 symbols=red_symbols)
 
-def remove_overlapping_points(points, symbols, symprec=1e-2):
+def _remove_overlapping_points(points, symbols, symprec=1e-2):
     red_pos = []
     red_sym = []
 
@@ -393,7 +399,7 @@ def remove_overlapping_points(points, symbols, symprec=1e-2):
 
     return red_sym, (np.array(red_pos) - np.floor(red_pos)).T
 
-def read_atom_site_lines(str_lines, atom_site_order, lattice):
+def _read_atom_site_lines(str_lines, atom_site_order, lattice):
     ind_symbol = atom_site_order.index("type_symbol")
     if "Cartn_x" in atom_site_order:
         index_x = atom_site_order.index("Cartn_x")
@@ -419,14 +425,14 @@ def read_atom_site_lines(str_lines, atom_site_order, lattice):
         
     return symbols, points
 
-def expand_symmetry_equiv_pos_as_xyz(str_lines):
+def _expand_symmetry_equiv_pos_as_xyz(str_lines):
     operations = []
     for line in str_lines.splitlines():
         if line.strip():
             xyz = [x for x in line.translate(None, '\' ').split(',')]
             operation = np.zeros((3, 4))
             for i, symbol in enumerate(xyz):
-                parts = split_xyz_symbol(symbol)
+                parts = _split_xyz_symbol(symbol)
                 for string in parts:
                     if '/' in string:
                         operation[i, 3] += frac2val(string)
@@ -441,7 +447,7 @@ def expand_symmetry_equiv_pos_as_xyz(str_lines):
 
     return np.array(operations)
                 
-def split_xyz_symbol(symbol):
+def _split_xyz_symbol(symbol):
     def plusminus(char):
         if char == '+' or char == '-':
             return True

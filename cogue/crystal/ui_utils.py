@@ -89,39 +89,6 @@ def get_lines(filenames):
     lines.append(filelines)
     return lines
 
-def get_matrix(mat):
-    if len(mat) == 3:
-        return np.diag(mat)
-    elif len(mat) == 9:
-        mat.shape = (3, 3)
-        return mat
-    else:
-        return False
-
-def get_tmat_cell(cell, options):
-    t_mat = np.array([frac2val(x) for x in options.t_mat.split()])
-    t_mat = get_matrix(t_mat)
-    if t_mat is False:
-        sys.stderr.write("Transformation matrix is not correctly set.\n")
-        return False
-    else:
-        if options.is_verbose:
-            print "Transform cell using transformation matrix:"
-            print t_mat
-        return reduce_points(t_mat, cell)
-
-def get_smat_cell(cell, options):
-    s_mat = np.array([int(x) for x in options.s_mat.split()])
-    s_mat = get_matrix(s_mat)
-    if s_mat is False:
-        sys.stderr.write("Supercell matrix is not correctly set.\n")
-        return False
-    else:
-        if options.is_verbose:
-            print "Transform cell using supercell matrix:"
-            print s_mat
-        return get_supercell(cell, s_mat)
-
 def set_shift(cell, options):
     shift = np.array([float(x) for x in options.shift.split()])
     if len(shift) == 3:
@@ -134,14 +101,14 @@ def transform_cell(cell, options, is_shift=True):
     if options.shift and is_shift:
         set_shift(cell, options)
     if options.t_mat:
-        cell = get_tmat_cell(cell, options)
+        cell = _get_tmat_cell(cell, options)
     if options.is_r2h:
         if options.is_verbose:
             print "Transform cell by transformation matrix of rhombohedral to hexagonal:"
             print np.array(r2h)
         cell = get_supercell(cell, r2h)
     if options.s_mat:
-        cell = get_smat_cell(cell, options)
+        cell = _get_smat_cell(cell, options)
             
     return cell
 
@@ -162,4 +129,38 @@ def write_cells(write_func, cells,
                 write_func(cell, output_filename)
             else:
                 write_func(cell)
+
+def _get_matrix(mat):
+    if len(mat) == 3:
+        return np.diag(mat)
+    elif len(mat) == 9:
+        mat.shape = (3, 3)
+        return mat
+    else:
+        return False
+
+def _get_tmat_cell(cell, options):
+    t_mat = np.array([frac2val(x) for x in options.t_mat.split()])
+    t_mat = _get_matrix(t_mat)
+    if t_mat is False:
+        sys.stderr.write("Transformation matrix is not correctly set.\n")
+        return False
+    else:
+        if options.is_verbose:
+            print "Transform cell using transformation matrix:"
+            print t_mat
+        return reduce_points(t_mat, cell)
+
+def _get_smat_cell(cell, options):
+    s_mat = np.array([int(x) for x in options.s_mat.split()])
+    s_mat = _get_matrix(s_mat)
+    if s_mat is False:
+        sys.stderr.write("Supercell matrix is not correctly set.\n")
+        return False
+    else:
+        if options.is_verbose:
+            print "Transform cell using supercell matrix:"
+            print s_mat
+        return get_supercell(cell, s_mat)
+
     
