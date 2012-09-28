@@ -147,6 +147,7 @@ class Incar:
                  lepsilon=None,
                  lreal=None,
                  lwave=None,
+                 nelm=None,
                  nelmin=None,
                  npar=None,
                  nsw=None,
@@ -168,6 +169,7 @@ class Incar:
             'lepsilon': "LEPSILON",
             'lreal'   : "LREAL",
             'lwave'   : "LWAVE",
+            'nelm'    : "NELM",
             'nelmin'  : "NELMIN",
             'npar'    : "NPAR",
             'nsw'     : "NSW",
@@ -189,6 +191,7 @@ class Incar:
             'lepsilon': lepsilon,
             'lreal'   : lreal,
             'lwave'   : lwave,
+            'nelm'    : nelm,
             'nelmin'  : nelmin,
             'npar'    : npar,
             'nsw'     : nsw,
@@ -199,6 +202,7 @@ class Incar:
         self._tagorder = ['prec',
                          'ibrion',
                          'nsw',
+                         'nelm',
                          'nelmin',
                          'isif',
                          'encut',
@@ -303,6 +307,12 @@ class Incar:
 
     def get_lwave(self):
         return self._tagvals['lwave']
+
+    def set_nelm(self, x):
+        self._tagvals['nelm'] = x
+
+    def get_nelm(self):
+        return self._tagvals['nelm']
 
     def set_nelmin(self, x):
         self._tagvals['nelmin'] = x
