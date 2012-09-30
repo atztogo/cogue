@@ -51,6 +51,7 @@ class PhononRelaxBase(TaskElement):
                  restrict_offspring=False,
                  max_offspring=None,
                  cutoff_eigenvalue=None,
+                 max_displacement=None,
                  traverse=False):
 
         TaskElement.__init__(self)
@@ -74,6 +75,10 @@ class PhononRelaxBase(TaskElement):
         self._restrict_offspring = restrict_offspring
         self._max_offspring = max_offspring
         self._cutoff_eigenvalue = cutoff_eigenvalue
+        if max_displacement:
+            self._max_displacement = max_displacement
+        else:
+            self._max_displacement = symmetry_tolerance * 1.1
         self._traverse = traverse
 
         self._phr_tasks = []
@@ -238,6 +243,7 @@ class PhononRelaxElementBase(TaskElement):
                  min_iteration=None,
                  symmetry_tolerance=None,
                  cutoff_eigenvalue=None,
+                 max_displacement=None,
                  traverse=False):
 
         TaskElement.__init__(self)
@@ -259,6 +265,7 @@ class PhononRelaxElementBase(TaskElement):
         self._min_iteration = min_iteration
         self._symmetry_tolerance = symmetry_tolerance
         self._cutoff_eigenvalue = cutoff_eigenvalue
+        self._max_displacement = max_displacement
         self._traverse = traverse
 
         self._tasks = []
@@ -405,7 +412,7 @@ class PhononRelaxElementBase(TaskElement):
                 self._imaginary_modes += get_unstable_modulations(
                     phonon,
                     dimension,
-                    max_displacement=self._symmetry_tolerance,
+                    max_displacement=self._max_displacement,
                     cutoff_eigenvalue=self._cutoff_eigenvalue,
                     ndiv=180,
                     excluded_qpoints=qpoints_done)
@@ -453,7 +460,7 @@ class PhononRelaxElementBase(TaskElement):
 def get_unstable_modulations(phonon,
                              supercell_dimension,
                              degeneracy_tolerance=DEGENERACY_TOLERANCE,
-                             max_displacement=0.1,
+                             max_displacement=None,
                              cutoff_eigenvalue=None,
                              ndiv=180,
                              excluded_qpoints=None):

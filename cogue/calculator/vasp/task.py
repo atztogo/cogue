@@ -646,6 +646,7 @@ class PhononRelax(TaskVasp, PhononRelaxBase):
                  restrict_offspring=False,
                  max_offspring=None,
                  cutoff_eigenvalue=-0.02,
+                 max_displacement=None,
                  traverse=False):
 
         PhononRelaxBase.__init__(
@@ -665,6 +666,7 @@ class PhononRelax(TaskVasp, PhononRelaxBase):
             restrict_offspring=restrict_offspring,
             max_offspring=max_offspring,
             cutoff_eigenvalue=cutoff_eigenvalue,
+            max_displacement=max_displacement,
             traverse=traverse)
 
     def _get_phonon_relax_element_task(self, cell):
@@ -680,6 +682,7 @@ class PhononRelax(TaskVasp, PhononRelaxBase):
                                   min_iteration=self._min_iteration,
                                   symmetry_tolerance=self._symmetry_tolerance,
                                   cutoff_eigenvalue=self._cutoff_eigenvalue,
+                                  max_displacement=self._max_displacement,
                                   traverse=self._traverse)
 
         task.set_configurations(
@@ -738,6 +741,7 @@ class PhononRelaxElement(TaskVasp, PhononRelaxElementBase):
                  min_iteration=5,
                  symmetry_tolerance=0.1,
                  cutoff_eigenvalue=-0.02,
+                 max_displacement=None,
                  traverse=False):
 
         PhononRelaxElementBase.__init__(
@@ -755,6 +759,7 @@ class PhononRelaxElement(TaskVasp, PhononRelaxElementBase):
             min_iteration=min_iteration,
             symmetry_tolerance=symmetry_tolerance,
             cutoff_eigenvalue=cutoff_eigenvalue,
+            max_displacement=max_displacement,
             traverse=traverse)
 
     def _get_phonon_task(self, cell, supercell_matrix, directory):
