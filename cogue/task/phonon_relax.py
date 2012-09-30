@@ -78,7 +78,7 @@ class PhononRelaxBase(TaskElement):
         if max_displacement:
             self._max_displacement = max_displacement
         else:
-            self._max_displacement = symmetry_tolerance * 1.1
+            self._max_displacement = symmetry_tolerance
         self._traverse = traverse
 
         self._phr_tasks = []
