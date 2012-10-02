@@ -289,7 +289,7 @@ static int get_operation(int rot[][3][3],
   tolerance = symprec;
   for (attempt = 0; attempt < 100; attempt++) {
     is_found = 0;
-    pure_trans = sym_get_pure_translation(cell, symprec);
+    pure_trans = sym_get_pure_translation(cell, tolerance);
     if (pure_trans->size == 0) {
       mat_free_VecDBL(pure_trans);
       goto end;
@@ -306,6 +306,8 @@ static int get_operation(int rot[][3][3],
     cel_free_cell(primitive);
     mat_free_VecDBL(pure_trans);
     tolerance *= REDUCE_RATE;
+    warning_print("spglib: Reduce tolerance to %f\n", tolerance);
+    warning_print("(line %d, %s).\n", __LINE__, __FILE__);
   }
 
   if (! is_found) {goto end;}
@@ -800,9 +802,9 @@ static PointSymmetry transform_pointsymmetry(SPGCONST PointSymmetry * lat_sym_or
     }
   }
 
-#ifdef SPGWARNING
+#ifdef DEBUG
   if (! (lat_sym_orig->size == size)) {
-    warning_print("spglib: Some of point symmetry operations were dropted.");
+    warning_print("spglib: Some of point symmetry operations were dropped.");
     warning_print("(line %d, %s).\n", __LINE__, __FILE__);
   }
 #endif
