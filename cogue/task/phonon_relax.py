@@ -910,61 +910,9 @@ if __name__ == '__main__':
                                  modulation_dimension,
                                  ndiv=ndiv,
                                  symmetry_tolerance=tolerance,
-                                 max_displacement=tolerance * 2,
-                                 store_all=True)
+                                 max_displacement=tolerance * 1.1)
 
-    # best_cells = phononMod.get_modulation_cells()
-    all_cells = phononMod.get_all_cells()
-    vectors = phononMod.get_vectors()
-    arguments = phononMod.get_arguments()
-    
-    for v, a in zip(vectors, arguments):
-        print a[0], "(%d, %d)" % (a[1][1], a[1][0])
-        print v.T
-
-    # for sym in phononMod.get_all_symmetries():
-    #     print "%s (%d, %d): %d" % (sym['international'],
-    #                                sym['number'],
-    #                                sym['hall_number'],
-    #                                len(sym['rotations']))
-
-
-    max_numop = 0
-    best_cells = []
-    for i, cell in enumerate(all_cells):
-        sym = get_symmetry_dataset(cell, tolerance=tolerance)
-        numop = len(sym['rotations'])
-        print "%d: %s (%d, %d): %d" % (i + 1,
-                                       sym['international'],
-                                       sym['number'],
-                                       sym['hall_number'],
-                                       numop),
-        
-        refined_cell = get_crystallographic_cell(cell,
-                                                 tolerance=tolerance)
-        if max_numop < numop:
-            max_numop = numop
-            best_cells = [refined_cell]
-            write_poscar(refined_cell, "HSPOSCAR-%03d" % (i + 1))
-            print "*"
-        elif max_numop == numop:
-            is_found = True
-            for bc in best_cells:
-                if xtal_compare(bc,
-                                refined_cell,
-                                tolerance=0.01):
-                    is_found = False
-                    break
-            if is_found:
-                best_cells.append(refined_cell)
-                print "*"
-            else:
-                print
-            write_poscar(refined_cell, "HSPOSCAR-%03d" % (i + 1))
-        else:
-            print
-            
-
-        # return [get_crystallographic_cell(cell,
-        #                                   self._symmetry_tolerance)
-        #         for cell in self._all_cells]
+    best_cells = phononMod.get_modulation_cells()
+    for cell in best_cells:
+        sym = get_symmetry_dataset(cell, tolerance)
+        print sym['international'], len(sym['rotations'])

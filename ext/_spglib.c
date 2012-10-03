@@ -6,6 +6,7 @@
 static PyObject * get_dataset(PyObject *self, PyObject *args);
 static PyObject * get_crystallographic_cell(PyObject *self, PyObject *args);
 static PyObject * get_primitive(PyObject *self, PyObject *args);
+static PyObject * get_datasets_of_modulations(PyObject *self, PyObject *args);
 static void set_spglib_cell(double lattice[3][3],
 			    double positions[][3],
 			    int types[],
@@ -23,7 +24,10 @@ static PyMethodDef functions[] = {
    "Return crystal symmetry dataset"},
   {"get_crystallographic_cell", get_crystallographic_cell, METH_VARARGS,
    "Return crystallographically proper cell"},
-  {"get_primitive_cell", get_primitive, METH_VARARGS, "Return a primitive cell"},
+  {"get_primitive_cell", get_primitive, METH_VARARGS,
+   "Return a primitive cell"},
+  {"get_datasets_of_modulations", get_datasets_of_modulations, METH_VARARGS,
+   "Return datasets of modulations"},
   {NULL, NULL, 0, NULL}
 };
 
@@ -226,6 +230,46 @@ static PyObject * get_primitive(PyObject *self, PyObject *args)
   free(positions);
 
   return array;
+}
+
+static PyObject * get_datasets_of_modulations(PyObject *self, PyObject *args)
+{
+  int i, j, k, num_atom;
+  double symprec;
+  SpglibDataset *dataset;
+  PyArrayObject* lattice_vectors;
+  PyArrayObject* atomic_positions;
+  PyArrayObject* atom_types;
+  PyObject* array, *vec, *mat, *rot, *trans, *wyckoffs, *equiv_atoms;
+  
+  double *p_lattice;
+  double *p_positions;
+  double lattice[3][3];
+  double (*positions)[3];
+  long *types_long;
+  int *types;
+
+  if (!PyArg_ParseTuple(args, "OOOd",
+			&lattice_vectors,
+			&atomic_positions,
+			&atom_types,
+			&symprec)) {
+    return NULL;
+  }
+
+  p_lattice = (double(*))lattice_vectors->data;
+  p_positions = (double(*))atomic_positions->data;
+  num_atom = atomic_positions->dimensions[1];
+  positions = (double(*) [3]) malloc(sizeof(double[3]) * num_atom);
+  types_long = (long*)atom_types->data;
+  types = (int*) malloc(sizeof(int) * num_atom);
+  
+  set_spglib_cell(lattice, positions, types, num_atom,
+		  p_lattice, p_positions, types_long);
+  dataset = spg_get_dataset(lattice, positions, types, num_atom, symprec);
+
+  free(types);
+  free(positions);
 }
 
 static PyObject * set_cell(int num_atom,

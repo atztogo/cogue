@@ -10,6 +10,7 @@ def get_parser():
     from optparse import OptionParser
     parser = OptionParser()
     parser.set_defaults(symprec=1e-5,
+                        output_filename=None,
                         show_details=False,
                         show_operations=False,
                         is_bravais=False,
@@ -20,18 +21,23 @@ def get_parser():
                       dest="show_details",
                       action="store_true",
                       help="Show detailed information.")
-    parser.add_option("-o", "--operations",
+    parser.add_option("--op", "--operations",
                       dest="show_operations",
                       action="store_true",
                       help="Show symmetry operations.")
+    parser.add_option("-o",
+                      dest="output_filename",
+                      action="store",
+                      type="string",                      
+                      help="Output filename")
     parser.add_option("--bravais",
                       dest="is_bravais",
                       action="store_true",
-                      help="Write crystalographical cell (BRV + filename) with Bravais lattice")
+                      help="Show a Bravais cell where the lattice vectors and atomic points are refined. Used togather with -o option, the cell is stored in the file.")
     parser.add_option("--primitive",
                       dest="is_primitive",
                       action="store_true",
-                      help="Write a primitive cell (PRM + filename) where the lattice vectors and atomic points are not refined.")
+                      help="Show a primitive cell where the lattice vectors and atomic points are not refined. Used togather with -o option, the cell is stored in the file.")
     return parser
 
 options, args = ui_utils.get_options(get_parser())
@@ -81,10 +87,19 @@ if options.show_operations:
         for v in r:
             print "%2d %2d %2d" % tuple(v)
         print "%8.6f %8.6f %8.6f" % tuple(t + 1e-8 - np.floor(t + 1e-8))
+    print
 
 if options.is_bravais:
     brv_cell = symmetry.get_crystallographic_cell(cell, tolerance)
-    vasp.write_poscar(brv_cell, "BRV" + args[0])
+    if options.output_filename:
+        vasp.write_poscar(brv_cell, options.output_filename)
+    else:
+        print "--------"
+        vasp.write_poscar(brv_cell)
 elif options.is_primitive:
     prim_cell = symmetry.get_primitive_cell(cell, tolerance)
-    vasp.write_poscar(prim_cell, "PRM" + args[0])
+    if options.output_filename:
+        vasp.write_poscar(prim_cell, options.output_filename)
+    else:
+        print "--------"
+        vasp.write_poscar(prim_cell)

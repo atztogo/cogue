@@ -52,7 +52,7 @@ def get_symmetry_dataset(cell, tolerance=1e-5):
     dataset['origin_shift'] = np.array(dataset['origin_shift'])
     dataset['rotations'] = np.array(dataset['rotations'])
     dataset['translations'] = np.array(dataset['translations'])
-    letters = "abcdefghijklmnopqrstuvwxyz"
+    letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
     dataset['wyckoffs'] = [letters[x] for x in dataset['wyckoffs']]
     dataset['equivalent_atoms'] = np.array(dataset['equivalent_atoms'])
 
