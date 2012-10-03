@@ -234,42 +234,16 @@ static PyObject * get_primitive(PyObject *self, PyObject *args)
 
 static PyObject * get_datasets_of_modulations(PyObject *self, PyObject *args)
 {
-  int i, j, k, num_atom;
-  double symprec;
-  SpglibDataset *dataset;
-  PyArrayObject* lattice_vectors;
-  PyArrayObject* atomic_positions;
-  PyArrayObject* atom_types;
-  PyObject* array, *vec, *mat, *rot, *trans, *wyckoffs, *equiv_atoms;
-  
-  double *p_lattice;
-  double *p_positions;
-  double lattice[3][3];
-  double (*positions)[3];
-  long *types_long;
-  int *types;
-
-  if (!PyArg_ParseTuple(args, "OOOd",
-			&lattice_vectors,
-			&atomic_positions,
-			&atom_types,
-			&symprec)) {
-    return NULL;
-  }
-
-  p_lattice = (double(*))lattice_vectors->data;
-  p_positions = (double(*))atomic_positions->data;
-  num_atom = atomic_positions->dimensions[1];
-  positions = (double(*) [3]) malloc(sizeof(double[3]) * num_atom);
-  types_long = (long*)atom_types->data;
-  types = (int*) malloc(sizeof(int) * num_atom);
-  
-  set_spglib_cell(lattice, positions, types, num_atom,
-		  p_lattice, p_positions, types_long);
-  dataset = spg_get_dataset(lattice, positions, types, num_atom, symprec);
-
-  free(types);
-  free(positions);
+  /* This function aims improving the speed of symmetry searches of */
+  /* huge configurations of combinations of degenerated modulations. */
+  /* The plan: */
+  /* 1. Recieve a set of modulation basis (e.g., {v_a, v_b, v_c}) and those */
+  /*    configurations (e.g., {(1, 0, 0), (sqrt(2)/2, 0, sqrt(2)/2), ...} */
+  /*    norm = 1). */
+  /* 2. Create real value modulations. */
+  /* 3. Shift supercell points by the modulations. */
+  /* 4. Search symmetry of the modified supercell. */
+  /* These operations may be multithreaded. */
 }
 
 static PyObject * set_cell(int num_atom,
