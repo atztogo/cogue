@@ -290,6 +290,7 @@ static int get_operation(int rot[][3][3],
   for (attempt = 0; attempt < 100; attempt++) {
     is_found = 0;
     pure_trans = sym_get_pure_translation(cell, tolerance);
+
     if (pure_trans->size == 0) {
       mat_free_VecDBL(pure_trans);
       goto end;
@@ -306,7 +307,7 @@ static int get_operation(int rot[][3][3],
     cel_free_cell(primitive);
     mat_free_VecDBL(pure_trans);
     tolerance *= REDUCE_RATE;
-    warning_print("spglib: Reduce tolerance to %f\n", tolerance);
+    warning_print("spglib: Reduce tolerance to %f ", tolerance);
     warning_print("(line %d, %s).\n", __LINE__, __FILE__);
   }
 

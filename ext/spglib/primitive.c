@@ -16,10 +16,12 @@
 static double current_tolerance;
 
 
-static int trim_cell(Cell * primitive,
-		     int * mapping_table,
-		     SPGCONST Cell * cell,
-		     const double symprec);
+static Cell * get_primitive_with_pure_translation(SPGCONST Cell * cell,
+						  const VecDBL *pure_trans,
+						  const double symprec);
+static Cell * get_primitive_with_mapping_table(int * mapping_table,
+					       SPGCONST Cell * cell,
+					       const double symprec);
 static int set_primitive_positions(Cell * primitive,
 				   const VecDBL * position,
 				   const Cell * cell,
@@ -42,6 +44,10 @@ static Cell * get_primitive(int * mapping_table,
 			    SPGCONST Cell * cell,
 			    const VecDBL * pure_trans,
 			    const double symprec);
+static int trim_cell(Cell * primitive,
+		     int * mapping_table,
+		     SPGCONST Cell * cell,
+		     const double symprec);
 static int get_primitive_lattice_vectors_iterative(double prim_lattice[3][3],
 						   SPGCONST Cell * cell,
 						   const VecDBL * pure_trans,
@@ -71,23 +77,55 @@ Cell * prm_get_primitive_with_pure_translations(SPGCONST Cell * cell,
 						const VecDBL *pure_trans,
 						const double symprec)
 {
-  int *mapping_table;
   Cell *primitive;
 
-  mapping_table = (int*) malloc(sizeof(int) * cell->size);
-  primitive = prm_get_primitive_with_all(mapping_table,
-					 cell,
-					 pure_trans,
-					 symprec);
-  free(mapping_table);
+  primitive = get_primitive_with_pure_translation(cell,
+						  pure_trans,
+						  symprec);
+  return primitive;
+}
+
+Cell * prm_get_primitive_with_mapping_table(int * mapping_table,
+					    SPGCONST Cell * cell,
+					    const double symprec)
+{
+  return get_primitive_with_mapping_table(mapping_table,
+					  cell,
+					  symprec);
+}
+
+double prm_get_current_tolerance(void)
+{
+  return current_tolerance;
+}
+
+/* If primitive could not be found, primitive->size = 0 is returned. */
+/* If cell is already primitive cell, */
+/* primitive cell with smallest lattice is returned. */
+static Cell * get_primitive_with_pure_translation(SPGCONST Cell * cell,
+						  const VecDBL *pure_trans,
+						  const double symprec)
+{
+  int i;
+  Cell *primitive;
+  int *mapping_table;
+
+  if (pure_trans->size > 1) {
+    mapping_table = (int*) malloc(sizeof(int) * cell->size);
+    primitive = get_primitive(mapping_table, cell, pure_trans, symprec);
+    free(mapping_table);
+  } else {
+    primitive = get_cell_with_smallest_lattice(cell, symprec);
+  }
+
   return primitive;
 }
 
 /* If cell is already primitive cell, */
 /* primitive cell with smallest lattice is returned. */
-Cell * prm_get_primitive_with_mapping_table(int * mapping_table,
-					    SPGCONST Cell * cell,
-					    const double symprec)
+static Cell * get_primitive_with_mapping_table(int * mapping_table,
+					       SPGCONST Cell * cell,
+					       const double symprec)
 {
   int i, attempt;
   double tolerance;
@@ -130,34 +168,6 @@ Cell * prm_get_primitive_with_mapping_table(int * mapping_table,
   mat_free_VecDBL(pure_trans);
   set_current_tolerance(tolerance);
   return primitive;
-}
-
-/* If primitive could not be found, primitive->size = 0 is returned. */
-/* If cell is already primitive cell, */
-/* primitive cell with smallest lattice is returned. */
-Cell * prm_get_primitive_with_all(int * mapping_table,
-				  SPGCONST Cell * cell,
-				  const VecDBL *pure_trans,
-				  const double symprec)
-{
-  int i;
-  Cell *primitive;
-
-  if (pure_trans->size > 0) {
-    primitive = get_primitive(mapping_table, cell, pure_trans, symprec);
-  } else {
-    primitive = get_cell_with_smallest_lattice(cell, symprec);
-    for (i = 0; i < cell->size; i++) {
-      mapping_table[i] = i;
-    }
-  }
-
-  return primitive;
-}
-
-double prm_get_current_tolerance(void)
-{
-  return current_tolerance;
 }
 
 static void set_current_tolerance(const double tolerance)

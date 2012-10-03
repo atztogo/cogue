@@ -162,7 +162,6 @@ static int get_hall_number(double origin_shift[3],
 			   const double symprec)
 {
   int pg_num, hall_number=0;
-  double tolerance;
 
   pg_num = ptg_get_pointgroup_number(symmetry);
   if (pg_num > -1) {
@@ -186,12 +185,6 @@ static int get_hall_number(double origin_shift[3],
 						primitive,
 						symmetry,
 						symprec);
-#ifdef SPGWARNING
-  if (hall_number == 0) {
-    warning_print("spglib: Iterative attempt with sym_reduce_operation to find Hall symbol failed.\n");
-    warning_print("spglib: The final tolerance = %e.\n", tolerance );
-  }
-#endif
 
  ret:
   return hall_number;
@@ -231,6 +224,11 @@ static int get_hall_number_local_iteration(double origin_shift[3],
     }
     sym_free_symmetry(sym_reduced);
   }
+
+#ifdef SPGWARNING
+  if (hall_number == 0) {
+    warning_print("spglib: Iterative attempt with sym_reduce_operation to find Hall symbol failed.\n");
+#endif
 
   return hall_number;
 }
