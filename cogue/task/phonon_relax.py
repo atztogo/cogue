@@ -78,7 +78,7 @@ class PhononRelaxBase(TaskElement):
         if max_displacement:
             self._max_displacement = max_displacement
         else:
-            self._max_displacement = symmetry_tolerance
+            self._max_displacement = symmetry_tolerance * 2
         self._traverse = traverse
 
         self._phr_tasks = []
@@ -206,6 +206,8 @@ class PhononRelaxBase(TaskElement):
         w.write("max_iteration: %d\n" % self._max_iteration)
         w.write("min_iteration: %d\n" % self._min_iteration)
         w.write("symmetry_tolerance: %d\n" % self._symmetry_tolerance)
+        w.write("max_displacement: %f\n" % self._max_displacement)
+        w.write("cutoff_eigenvalue: %f\n" % self._cutoff_eigenvalue)
         if self._restrict_offspring:
             w.write("restrict_offspring: %s\n" % self._restrict_offspring)
         if self._max_offspring:
@@ -412,6 +414,7 @@ class PhononRelaxElementBase(TaskElement):
                 self._imaginary_modes += get_unstable_modulations(
                     phonon,
                     dimension,
+                    symmetry_tolerance=self._symmetry_tolerance,
                     max_displacement=self._max_displacement,
                     cutoff_eigenvalue=self._cutoff_eigenvalue,
                     ndiv=180,
@@ -427,6 +430,8 @@ class PhononRelaxElementBase(TaskElement):
         w.write("max_iteration: %d\n" % self._max_iteration)
         w.write("min_iteration: %d\n" % self._min_iteration)
         w.write("symmetry_tolerance: %f\n" % self._symmetry_tolerance)
+        w.write("max_displacement: %f\n" % self._max_displacement)
+        w.write("cutoff_eigenvalue: %f\n" % self._cutoff_eigenvalue)
         w.write("stage: %d\n" % self._stage)
         w.write("status: %s\n" % self._status)
         if self._energy:
@@ -460,7 +465,8 @@ class PhononRelaxElementBase(TaskElement):
 def get_unstable_modulations(phonon,
                              supercell_dimension,
                              degeneracy_tolerance=DEGENERACY_TOLERANCE,
-                             max_displacement=None,
+                             symmetry_tolerance=0.1,
+                             max_displacement=0.2,
                              cutoff_eigenvalue=None,
                              ndiv=180,
                              excluded_qpoints=None):
@@ -501,7 +507,7 @@ def get_unstable_modulations(phonon,
                 deg_set,
                 modulation_dimension,
                 ndiv=ndiv,
-                symmetry_tolerance=max_displacement * 0.9,
+                symmetry_tolerance=symmetry_tolerance,
                 max_displacement=max_displacement,
                 store_all=False)
             # write_all_symmetries(phononMod.get_all_symmetries(), i , j)
@@ -578,7 +584,7 @@ class PhononModulation:
         self._all_cells = []
 
         self._run()
-
+        
     def get_modulation_cells(self):
         return [self._get_cell_with_modulation(m)
                 for m in self.get_modulations()]
@@ -805,12 +811,15 @@ if __name__ == '__main__':
     from phonopy.interface.vasp import read_vasp, write_vasp
     from phonopy.hphonopy.file_IO import parse_FORCE_CONSTANTS
     from optparse import OptionParser
+    from cogue.crystal.converter import frac2val
     
     def get_parameters():
         parser = OptionParser()
         parser.set_defaults(supercell_dimension=None,
                             qpoint=None,
                             band_indices=None,
+                            distance=None,
+                            t_mat=None,
                             ndiv=None,
                             tolerance=None)
         parser.add_option("--dim", dest="supercell_dimension",
@@ -823,8 +832,17 @@ if __name__ == '__main__':
                           action="store", type="string")
         parser.add_option("-q", dest="qpoint",
                           action="store", type="string")
-        parser.add_option("--tolerance", dest="tolerance", type="float",
+        parser.add_option("--pa", "--primitive_axis",
+                          dest="t_mat",
+                          action="store",
+                          type="string",                      
+                          help=("Multiply transformation matrix. Absolute "
+                                "value of determinant has to be 1 or less "
+                                "than 1."))
+        parser.add_option("-s", "--tolerance", dest="tolerance", type="float",
                           help="Symmetry tolerance to search")
+        parser.add_option("--distance", dest="distance", type="float",
+                          help="Maximum displacement distance")
         (options, args) = parser.parse_args()
         
         if not options.supercell_dimension:
@@ -839,25 +857,34 @@ if __name__ == '__main__':
             print "Option --band has to be set."
             sys.exit(1)
     
-        qpoint = [float(x) for x in options.qpoint.split()]
+        qpoint = [frac2val(x) for x in options.qpoint.split()]
         if len(qpoint) == 3:
             qpoint = np.array(qpoint)
         else:
             print "Illeagal q-point"
             sys.exit(1)
         
-        supercell_dimension = \
-            [int(x) for x in options.supercell_dimension.split()]
+        supercell_dimension = [int(x)
+                               for x in options.supercell_dimension.split()]
         if not len(supercell_dimension) == 3:
             print "Illeagal supercell dimension"
             sys.exit(1)
     
-        modulation_dimension = \
-            [int(x) for x in options.modulation_dimension.split()]
+        modulation_dimension = [int(x)
+                                for x in options.modulation_dimension.split()]
         if not len(modulation_dimension) == 3:
             print "Illeagal modulatoin dimension"
             sys.exit(1)
-    
+
+        if options.t_mat:
+            primitive_matrix = [frac2val(x) for x in options.t_mat.split()]
+            if len(primitive_matrix) != 9:
+                print "Illeagal primitive matrix"
+                sys.exit(1)
+        else:
+            primitive_matrix = None
+
+            
         band_indices = [int(x) - 1 for x in options.band_indices.split()]
         if len(band_indices) > 4:
             print "Number of band indices is too large (%d)" % len(band_indices)
@@ -872,47 +899,68 @@ if __name__ == '__main__':
             tolerance = options.tolerance
         else:
             tolerance = 1e-5
+
+        if options.distance:
+            distance = options.distance
+        else:
+            distance = tolerance
     
         cell = read_vasp(args[0])
         fc = parse_FORCE_CONSTANTS(args[1])
     
         return (qpoint,
                 supercell_dimension,
+                primitive_matrix,
                 modulation_dimension,
                 cell,
                 fc,
                 ndiv,
                 band_indices,
+                distance,
                 tolerance)
-
-    def get_phonon(cell, supercell_dimension, fc):
+                          
+    def get_phonon(cell,
+                   supercell_dimension,
+                   fc,
+                   primitive_matrix=None):
+                              
         phonon = Phonopy(cell,
                          np.diag(supercell_dimension),
                          is_auto_displacements=False)
-        phonon.set_post_process(force_constants=fc)
+
+        if primitive_matrix:
+            phonon.set_post_process(primitive_matrix=np.reshape(
+                    primitive_matrix, (3, 3)),
+                    force_constants=fc)
+        else:
+            phonon.set_post_process(force_constants=fc)
     
         return phonon
 
 
     (qpoint,
      supercell_dimension,
+     primitive_matrix,
      modulation_dimension,
      cell,
      fc,
      ndiv,
      band_indices,
+     distance,
      tolerance) = get_parameters()
 
-    phonon = get_phonon(cell, supercell_dimension, fc)
+    phonon = get_phonon(cell, supercell_dimension, fc,
+                        primitive_matrix=primitive_matrix)
     phononMod = PhononModulation(phonon,
                                  qpoint,
                                  band_indices,
                                  modulation_dimension,
                                  ndiv=ndiv,
                                  symmetry_tolerance=tolerance,
-                                 max_displacement=tolerance * 1.1)
+                                 max_displacement=distance)
 
     best_cells = phononMod.get_modulation_cells()
-    for cell in best_cells:
+    for i, cell in enumerate(best_cells):
         sym = get_symmetry_dataset(cell, tolerance)
         print sym['international'], len(sym['rotations'])
+        write_poscar(cell, "BEST_CELL-%d" % (i + 1))
