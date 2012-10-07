@@ -96,6 +96,7 @@ Cell * prm_get_primitive_with_mapping_table(int * mapping_table,
 
 double prm_get_current_tolerance(void)
 {
+  debug_print("prm_get_current_tolerance %f\n", current_tolerance);
   return current_tolerance;
 }
 
@@ -145,14 +146,11 @@ static Cell * get_primitive_with_mapping_table(int * mapping_table,
     if (pure_trans->size > 1) {
       primitive = get_primitive(mapping_table, cell, pure_trans, tolerance);
       if (primitive->size > 0) {
-	mat_free_VecDBL(pure_trans);
-	pure_trans = sym_get_pure_translation(primitive, tolerance);
-	if (pure_trans->size == 1) {
-	  goto ret;
-	}
+	goto ret;
       }
       cel_free_cell(primitive);
     }
+
     tolerance *= REDUCE_RATE;
     warning_print("spglib: Tolerance is reduced to %f at attempt %d\n", tolerance, attempt);
     warning_print("(line %d, %s).\n", __LINE__, __FILE__);
@@ -244,15 +242,6 @@ static Cell * get_primitive(int * mapping_table,
     goto not_found;
   }
 
-  debug_print("Original cell lattice.\n");
-  debug_print_matrix_d3(cell->lattice);
-  debug_print("Found primitive lattice after choosing least axes.\n");
-  debug_print_matrix_d3(primitive->lattice);
-  debug_print("Number of atoms in primitive cell: %d\n", primitive->size);
-  debug_print("Volume: original %f --> primitive %f\n",
-	      mat_get_determinant_d3(cell->lattice),
-	      mat_get_determinant_d3(primitive->lattice));
-
   /* found */
   return primitive;
 
@@ -303,11 +292,6 @@ static int trim_cell(Cell * primitive,
 				cell,
 				overlap_table)) {goto err;}
 
-  debug_print("Trimed position\n");
-  debug_print_vectors_with_label(primitive->position,
-				 primitive->types,
-				 primitive->size);
-  
   mat_free_VecDBL(position);
   free_overlap_table(overlap_table, cell->size);
   return 1;
@@ -337,8 +321,6 @@ static int set_primitive_positions(Cell * primitive,
   for (i = 0; i < cell->size; i++) {
 
     if (! is_equivalent[i]) {
-
-      debug_print("Trimming... i=%d index_prim_atom=%d\n", i, index_prim_atom);
       primitive->types[index_prim_atom] = cell->types[i];
 
       for (j = 0; j < 3; j++) {
@@ -386,8 +368,6 @@ static int set_primitive_positions(Cell * primitive,
   free(is_equivalent);
   is_equivalent = NULL;
 
-  debug_print("Index_prim_atom: %d Size of cell: %d Size of primitive: %d\n",
-	      index_prim_atom, cell->size, primitive->size);
   if (! (index_prim_atom == primitive->size)) {
     warning_print("spglib: Atomic positions of primitive cell could not be determined ");
     warning_print("(line %d, %s).\n", __LINE__, __FILE__);
@@ -413,17 +393,12 @@ static VecDBL * get_positions_primitive(SPGCONST Cell * cell,
   mat_multiply_matrix_d3(axis_inv, tmp_matrix, cell->lattice);
 
   /* Send atoms into the primitive cell */
-  debug_print("Positions in new axes reduced to primitive cell\n");
   for (i = 0; i < cell->size; i++) {
     mat_multiply_matrix_vector_d3(position->vec[i],
 				  axis_inv, cell->position[i]);
     for (j = 0; j < 3; j++) {
       position->vec[i][j] -= mat_Nint(position->vec[i][j]);
     }
-    debug_print("%d: %f %f %f\n", i + 1,
-		position->vec[i][0], 
-		position->vec[i][1],
-		position->vec[i][2]);
   }
 
   return position;
@@ -445,8 +420,6 @@ static int get_overlap_table(int **overlap_table,
   trim_tolerance = symprec;
 
   for (attempt = 0; attempt < 100; attempt++) {
-    debug_print("Trim attempt %d: tolerance=%f\n",attempt+1,trim_tolerance);
-
     /* Each value of -1 has to be overwritten by 0 or positive numbers. */
     for (i = 0; i < cell_size; i++) {
       for (j = 0; j < cell_size; j++) {
@@ -465,25 +438,18 @@ static int get_overlap_table(int **overlap_table,
       }
     }
 
-    debug_print("num_overlap %d, ratio %d\n", num_overlap, ratio);
-    
-#ifdef DEBUG
-    for (i = 0; i < cell_size; i++) {
-      for (j = 0; j < cell_size; j++) {
-	printf("%d ", overlap_table[i][j]);
-      }
-      printf("\n");
-    }
-#endif
     if (check_overlap_table(overlap_table, cell_size, ratio)) {
       goto found;
     }
 
     if (num_overlap < ratio) {
       trim_tolerance *= INCREASE_RATE;
+      warning_print("spglib: Increase tolerance to %f ", trim_tolerance);
     } else {
       trim_tolerance *= REDUCE_RATE;
+      warning_print("spglib: Reduce tolerance to %f ", trim_tolerance);
     }
+    warning_print("(line %d, %s).\n", __LINE__, __FILE__);
   }
 
   warning_print("spglib: Could not trim cell into primitive ");
@@ -589,8 +555,8 @@ static int get_primitive_lattice_vectors_iterative(double prim_lattice[3][3],
       pure_trans_reduced = sym_reduce_pure_translation(cell,
 						       tmp_vec,
 						       tolerance);
-      debug_print("Tolerance is reduced to %f (%d), size = %d\n",
-		  tolerance, attempt, pure_trans_reduced->size);
+      warning_print("Tolerance is reduced to %f (%d), size = %d\n",
+		    tolerance, attempt, pure_trans_reduced->size);
 
       mat_free_VecDBL(tmp_vec);
       mat_free_VecDBL(vectors);
@@ -622,11 +588,10 @@ static int get_primitive_lattice_vectors(double prim_lattice[3][3],
   double inv_mat_dbl[3][3];
   int inv_mat_int[3][3];
 
-  debug_print("*** get_primitive_lattice_vectors ***\n");
+  debug_print("get_primitive_lattice_vectors:\n");
 
   size = vectors->size;
   initial_volume = mat_Dabs(mat_get_determinant_d3(cell->lattice));
-  debug_print("initial volume: %f\n", initial_volume);
 
   /* check volumes of all possible lattices, find smallest volume */
   for (i = 0; i < size; i++) {
@@ -643,9 +608,6 @@ static int get_primitive_lattice_vectors(double prim_lattice[3][3],
 				      vectors->vec[k]);
 	volume = mat_Dabs(mat_get_determinant_d3(tmp_lattice));
 	if (volume > symprec) {
-	  debug_print("temporary volume of primitive cell: %f\n", volume);
-	  debug_print("volume of original cell: %f\n", initial_volume);
-	  debug_print("multi and calculated multi: %d, %d\n", size-2, mat_Nint(initial_volume / volume));
 	  if (mat_Nint(initial_volume / volume) == size-2) {
 	    mat_copy_vector_d3(min_vectors[0], vectors->vec[i]);
 	    mat_copy_vector_d3(min_vectors[1], vectors->vec[j]);
@@ -681,13 +643,6 @@ static int get_primitive_lattice_vectors(double prim_lattice[3][3],
   }
   mat_multiply_matrix_d3(prim_lattice, cell->lattice, relative_lattice);
 
-  debug_print("Oritinal relative_lattice\n");
-  debug_print_matrix_d3(relative_lattice);
-  debug_print("Cleaned relative_lattice\n");
-  debug_print_matrix_d3(relative_lattice);
-  debug_print("Primitive lattice\n");
-  debug_print_matrix_d3(prim_lattice);
-
   return 1;  
 }
 
@@ -716,13 +671,6 @@ static VecDBL * get_translation_candidates(const VecDBL * pure_trans)
       }
     }
   }
-
-#ifdef DEBUG
-  for (i = 0; i < multi + 2; i++) {
-    debug_print("%d: %f %f %f\n", i + 1, vectors->vec[i][0],
-		vectors->vec[i][1], vectors->vec[i][2]);
-  }
-#endif
 
   return vectors;
 }

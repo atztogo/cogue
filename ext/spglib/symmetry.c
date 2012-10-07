@@ -142,7 +142,6 @@ Symmetry * sym_get_operation(SPGCONST Cell *cell,
 
   num_sym = get_operation(rot->mat, trans->vec, cell, symprec);
 
-
   symmetry = sym_alloc_symmetry(num_sym);
   for (i = 0; i < num_sym; i++) {
     mat_copy_matrix_i3(symmetry->rot[i], rot->mat[i]);
@@ -190,10 +189,13 @@ VecDBL * sym_get_pure_translation(SPGCONST Cell *cell,
     pure_trans = get_translation(identity, cell, tolerance, 1);
     multi = pure_trans->size;
     if ((cell->size / multi) * multi == cell->size) {
+      debug_print("sym_get_pure_translation: pure_trans->size = %d\n", multi);
       goto found;
     } else {
       mat_free_VecDBL(pure_trans);
       tolerance *= REDUCE_RATE;
+      warning_print("spglib: Reduce tolerance to %f ", tolerance);
+      warning_print("(line %d, %s).\n", __LINE__, __FILE__);
     }
   }
 
@@ -272,10 +274,8 @@ static int get_operation(int rot[][3][3],
   PointSymmetry lattice_sym;
   Cell *primitive;
   VecDBL *pure_trans;
-#ifdef DEBUG
-  int i;
-#endif
-  debug_print("*** get_symmetry (found symmetry operations) *** \n");
+
+  debug_print("get_operation:\n");
 
   num_sym = 0;
 
@@ -335,18 +335,6 @@ static int get_operation(int rot[][3][3],
   mat_free_VecDBL(pure_trans);
 
  end:
-#ifdef DEBUG
-  debug_print("num_sym = %d\n", num_sym);
-  debug_print("num_lattice_sym = %d\n", lattice_sym.size);
-  debug_print("Lattice \n");
-  debug_print_matrix_d3(cell->lattice);
-  for (i = 0; i < num_sym; i++) {
-    debug_print("--- %d ---\n", i + 1);
-    debug_print_matrix_i3(rot[i]);
-    debug_print("%f %f %f\n", trans[i][0], trans[i][1], trans[i][2]);
-  }
-#endif
-  
   return num_sym;
 }
 
@@ -359,6 +347,8 @@ static Symmetry * reduce_operation(SPGCONST Cell * cell,
   PointSymmetry point_symmetry;
   MatINT *rot;
   VecDBL *trans;
+
+  debug_print("reduce_operation:\n");
 
   point_symmetry = get_lattice_symmetry(cell, symprec);
   rot = mat_alloc_MatINT(symmetry->size);
@@ -391,7 +381,7 @@ static Symmetry * reduce_operation(SPGCONST Cell * cell,
   mat_free_MatINT(rot);
   mat_free_VecDBL(trans);
 
-  debug_print("reduce_operation: num_sym = %d\n", num_sym);
+  debug_print("  num_sym %d -> %d\n", symmetry->size, num_sym);
 
   return sym_reduced;
 }
@@ -563,6 +553,8 @@ static int get_space_group_operation(int rot[][3][3],
   int i, j, k, num_sym;
   VecDBL **tmp_trans;
 
+  debug_print("get_space_group_operation:\n");
+  
   num_sym = 0;
   tmp_trans = (VecDBL**) malloc(sizeof(VecDBL*) * lattice_sym->size);
 
@@ -606,7 +598,7 @@ static int get_operation_supercell(int rot[][3][3],
   trans_prim = mat_alloc_VecDBL(num_sym);
   multi = pure_trans->size;
 
-  debug_print("get_operation_supercell\n");
+  debug_print("get_operation_supercell:\n");
 
   mat_inverse_matrix_d3(inv_prim_lat, primitive->lattice, 0);
   mat_multiply_matrix_d3(trans_mat, inv_prim_lat, cell->lattice);
@@ -678,10 +670,6 @@ static PointSymmetry get_lattice_symmetry(SPGCONST Cell *cell,
 	}
 	mat_multiply_matrix_di3(lattice, min_lattice, axes);
 	mat_get_metric(metric, lattice);
-
-	debug_print_matrix_i3(axes);
-	debug_print_matrix_d3(metric);
-	debug_print_matrix_d3(metric_orig);
 	
 	if (is_identity_metric(metric, metric_orig, symprec)) {
 	  mat_copy_matrix_i3(lattice_sym.rot[num_sym], axes);
@@ -723,7 +711,6 @@ static int is_identity_metric(SPGCONST double metric_rotated[3][3],
     length_orig[i] = sqrt(metric_orig[i][i]);
     length_rot[i] = sqrt(metric_rotated[i][i]);
     if (mat_Dabs(length_orig[i] - length_rot[i]) > symprec) {
-      debug_print("eliminate by length\n");
       goto fail;
     }
   }
@@ -749,7 +736,6 @@ static int is_identity_metric(SPGCONST double metric_rotated[3][3],
 		     (length_orig[k] + length_rot[k])) / 4;
       if (sin_dtheta2 > 1e-12) {
 	if (sin_dtheta2 * length_ave2 > symprec * symprec) {
-	  debug_print("eliminate by angle %f %f %20.17f %e\n", cos1, cos2, x, sin_dtheta2);
 	  goto fail;
 	}
       }
@@ -803,7 +789,7 @@ static PointSymmetry transform_pointsymmetry(SPGCONST PointSymmetry * lat_sym_or
     }
   }
 
-#ifdef DEBUG
+#ifdef SPGWARNING
   if (! (lat_sym_orig->size == size)) {
     warning_print("spglib: Some of point symmetry operations were dropped.");
     warning_print("(line %d, %s).\n", __LINE__, __FILE__);
