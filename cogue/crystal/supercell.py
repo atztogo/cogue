@@ -13,6 +13,9 @@ def get_supercell(cell, supercell_matrix, tolerance=1e-5):
     smat = np.array(supercell_matrix)
     frame = get_smallest_surrounding_lattice_multiplicities(smat)
     surrounding_cell = get_simple_supercell(frame, cell)
+    if (np.diag(np.diagonal(smat)) == smat).all():
+        return surrounding_cell
+
     transformation_matrix = np.array([smat[0] / float(frame[0]),
                                       smat[1] / float(frame[1]),
                                       smat[2] / float(frame[2])])
