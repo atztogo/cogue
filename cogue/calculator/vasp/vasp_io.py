@@ -135,6 +135,7 @@ def write_potcar(names, filename="POTCAR"):
 class Incar:
     def __init__(self,
                  addgrid=None,
+                 algo=None,
                  ediff=None,
                  ediffg=None,
                  encut=None,
@@ -157,6 +158,7 @@ class Incar:
 
         self._tagnames = {
             'addgrid' : "ADDGRID",
+            'algo'    : "ALGO",
             'ediff'   : "EDIFF",
             'ediffg'  : "EDIFFG",
             'encut'   : "ENCUT",
@@ -179,6 +181,7 @@ class Incar:
 
         self._tagvals = {
             'addgrid' : addgrid,
+            'algo'    : algo,
             'ediff'   : ediff, 
             'ediffg'  : ediffg,
             'encut'   : encut,
@@ -202,6 +205,7 @@ class Incar:
         self._tagorder = ['prec',
                          'ibrion',
                          'nsw',
+                         'algo',
                          'nelm',
                          'nelmin',
                          'isif',
@@ -235,6 +239,12 @@ class Incar:
 
     def get_addgrid(self):
         return self._tagvals['addgrid']
+
+    def set_algo(self, x):
+        self._tagvals['algo'] = x
+
+    def get_algo(self):
+        return self._tagvals['algo']
 
     def set_ediff(self, x):
         self._tagvals['ediff'] = x
