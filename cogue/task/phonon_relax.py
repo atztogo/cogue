@@ -644,17 +644,18 @@ class PhononModulation:
         self._points_on_sphere = points_on_sphere
 
     def _set_best_arguments_of_vectors_and_supercell(self):
+        phonon_modes = [[self._qpoint, i, 1, 0]
+                        for i in self._band_indices]
         modulations, supercell = self._phonon.get_delta_modulations(
-            self._qpoint, self._modulation_dimension)
+            self._modulation_dimension, phonon_modes)
         self._supercell = atoms2cell(supercell)
 
         vectors = []
         arguments = []
         for i, deltas in enumerate(modulations):
-            if i in self._band_indices:
-                argument, indices = self._best_argument(deltas.T)
-                arguments.append([argument, indices])
-                vectors.append((deltas.T * np.exp(-1j * argument)).real)
+            argument, indices = self._best_argument(deltas.T)
+            arguments.append([argument, indices])
+            vectors.append((deltas.T * np.exp(-1j * argument)).real)
 
         self._vectors = vectors
         self._arguments = arguments
