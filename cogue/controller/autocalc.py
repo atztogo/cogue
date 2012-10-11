@@ -156,16 +156,25 @@ class AutoCalc:
         name = task.get_name()
         status = task.get_status()
         comment = task.get_comment()
+        if status == "done":
+            color = "lightblue2"
+        elif status == "terminate":
+            color = "pink"
+        else:
+            color = "khaki1"
+
         f_dot.write("n%d ;\n" % tid)
         if status == None:
             f_dot.write("n%d [label=\"%s\"] ;\n" % (tid, name))
         else:
             if comment:
-                f_dot.write("n%d [label=\"%s\\n%s\\n%s\"] ;\n" %
-                            (tid, name, comment, status))
+                f_dot.write("n%d [color=%s, style=filled, "
+                            "shape=box, label=\"[%d] %s\\n%s\\n%s\"] ;\n" %
+                            (tid, color, tid, status, name, comment))
             else:
-                f_dot.write("n%d [label=\"%s\\n%s\"] ;\n" %
-                            (tid, name, status))
+                f_dot.write("n%d [color=%s, style=filled, "
+                            "shape=box, label=\"[%d] %s\\n%s\"] ;\n" %
+                            (tid, color, tid, status, name))
         if task.get_tasks():
             for t in task.get_tasks():
                 self._write_dot_labels(t, f_dot)

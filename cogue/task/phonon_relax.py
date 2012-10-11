@@ -38,7 +38,7 @@ class PhononRelaxBase(TaskElement):
     def __init__(self,
                  directory=None,
                  name=None,
-                 ancestral_cells=[],
+                 ancestral_cells={},
                  distance=None,
                  lattice_tolerance=None,
                  force_tolerance=None,
@@ -90,12 +90,12 @@ class PhononRelaxBase(TaskElement):
     def set_status(self):
         done = True
         terminate = False
-        reversion = False
+        confluence = None
 
-        if self._stage == 0 and self._tasks[0].get_status() == "reversion":
-            reversion = True
+        if self._stage == 0 and "confluence" in self._tasks[0].get_status():
+            confluence = self._tasks[0].get_status()
 
-        if not reversion:
+        if not confluence:
             for task in self._tasks:
                 done &= task.done()
                 if task.get_status() == "terminate":
@@ -104,8 +104,8 @@ class PhononRelaxBase(TaskElement):
         if done:
             if terminate:
                 self._status = "terminate"
-            elif reversion:
-                self._status = "reversion"
+            elif confluence:
+                self._status = confluence
             else:
                 self._status = "next"
 
@@ -132,10 +132,10 @@ class PhononRelaxBase(TaskElement):
         self._write_yaml()
 
     def done(self):
-        return (self._status == "terminate" or
-                self._status == "reversion" or
-                self._status == "next" or
-                self._status == "done")
+        return ("terminate" in self._status or
+                "confluence" in self._status or
+                "next" in self._status or
+                "done" in self._status)
 
     def next(self):
         if self._stage == 0:
@@ -145,7 +145,8 @@ class PhononRelaxBase(TaskElement):
                 self._comment += " --> %s" % task.get_space_group_type()
                 self._energy = task.get_energy()
                 if self._energy:
-                    self._comment += "\\n%f" % self._energy
+                    num_atom = len(task.get_equilibrium_cell().get_symbols())
+                    self._comment += "\\n%f/%d" % (self._energy, num_atom)
                 if imag_modes: # Next phonon-relaxes
                     self._stage = 1
                     self._status = "offspring"
@@ -157,7 +158,7 @@ class PhononRelaxBase(TaskElement):
                     raise StopIteration
             elif self._status == "terminate":
                 raise StopIteration
-            elif self._status == "reversion":
+            elif "confluence" in self._status:
                 self._comment += " --> %s" % task.get_space_group_type()
                 self._tasks = []
                 raise StopIteration
@@ -234,7 +235,8 @@ class PhononRelaxElementBase(TaskElement):
     def __init__(self,
                  directory=None,
                  name=None,
-                 ancestral_cells=[],
+                 ancestral_cells={},
+                 tid_parent=None,
                  distance=None,
                  lattice_tolerance=None,
                  force_tolerance=None,
@@ -256,6 +258,7 @@ class PhononRelaxElementBase(TaskElement):
         else:
             self._name = name
         self._ancestral_cells = ancestral_cells
+        self._tid_parent = tid_parent
         self._task_type = "phonon_relax_element"
         self._distance = distance
         self._lattice_tolerance = lattice_tolerance
@@ -294,6 +297,12 @@ class PhononRelaxElementBase(TaskElement):
     def get_energy(self):
         return self._energy
 
+    def get_equilibrium_cell(self):
+        if self._stage == 0:
+            return self._cell
+        else:
+            return self._phre_tasks[1].get_equilibrium_cell()
+
     def set_status(self):
         all_done = True
         for task in self._tasks:
@@ -328,7 +337,7 @@ class PhononRelaxElementBase(TaskElement):
 
     def done(self):
         return ("terminate" in self._status or
-                "reversion" in self._status or 
+                "confluence" in self._status or 
                 "done" in self._status or
                 "next" in self._status)
 
@@ -338,17 +347,17 @@ class PhononRelaxElementBase(TaskElement):
                 raise StopIteration
             else:
                 cell = self._tasks[0].get_cell()
-                for ancest in self._ancestral_cells:
-                    if xtal_compare(ancest,
+                for tid in self._ancestral_cells:
+                    if xtal_compare(self._ancestral_cells[tid],
                                     cell,
                                     tolerance=self._symmetry_tolerance):
                         symmetry = get_symmetry_dataset(
                             cell,
                             tolerance=self._symmetry_tolerance)
                         self._space_group_type = symmetry['international']
-                        self._status = "reversion"
+                        self._status = "confluence with [%d]" % tid
                         raise StopIteration
-                self._ancestral_cells.append(cell)
+                self._ancestral_cells[self._tid_parent] = cell
                 self._set_stage1(cell)
                 self._stage = 1
                 self._status = "stage 1"
@@ -419,6 +428,10 @@ class PhononRelaxElementBase(TaskElement):
                     cutoff_eigenvalue=self._cutoff_eigenvalue,
                     ndiv=180,
                     excluded_qpoints=qpoints_done)
+
+        sym_dataset = get_symmetry_dataset(
+            self._tasks[0].get_equilibrium_cell())
+        self._space_group_type = sym_dataset['international']
                 
     def _write_yaml(self):
         w = open("%s.yaml" % self._directory, 'w')
