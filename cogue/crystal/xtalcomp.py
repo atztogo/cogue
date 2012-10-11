@@ -26,12 +26,18 @@ if __name__ == '__main__':
     cell1 = read_poscar(sys.argv[1])
     cell2 = read_poscar(sys.argv[2])
 
-    print cell1.get_lattice().T.copy()
+    print cell1.get_lattice().T
     print cell1.get_numbers()
-    print cell1.get_points().T.copy()
+    print cell1.get_points().T
+    print np.dot(cell1.get_lattice(), cell1.get_points()).T
 
-    print cell2.get_lattice().T.copy()
+    print cell2.get_lattice().T
     print cell2.get_numbers()
-    print cell2.get_points().T.copy()
+    print cell2.get_points().T
+    print np.dot(cell2.get_lattice(), cell2.get_points()).T
+
+    print np.dot(cell1.get_lattice(), cell1.get_points()).T - np.dot(cell2.get_lattice(), cell2.get_points()).T
+    for v in np.dot(cell1.get_lattice(), cell1.get_points()).T - np.dot(cell2.get_lattice(), cell2.get_points()).T:
+        print np.dot(v, v) ** (0.5)
     
-    print compare(cell1, cell2, float(sys.argv[3]))
+    print compare(cell1, cell2, float(sys.argv[3]), float(sys.argv[4]))

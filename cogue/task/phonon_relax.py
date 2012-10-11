@@ -350,7 +350,8 @@ class PhononRelaxElementBase(TaskElement):
                 for tid in self._ancestral_cells:
                     if xtal_compare(self._ancestral_cells[tid],
                                     cell,
-                                    tolerance=self._symmetry_tolerance):
+                                    tolerance=self._symmetry_tolerance,
+                                    angle_tolerance=1.0):
                         symmetry = get_symmetry_dataset(
                             cell,
                             tolerance=self._symmetry_tolerance)
@@ -647,7 +648,8 @@ class PhononModulation:
                 for bc in best_cells:
                     if xtal_compare(bc,
                                     refined_cell,
-                                    tolerance=self._symmetry_tolerance):
+                                    tolerance=self._symmetry_tolerance,
+                                    angle_tolerance=1.0):
                         is_found = False
                         break
                 if is_found:
