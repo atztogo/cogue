@@ -134,12 +134,15 @@ class StructureOptimizationBase(TaskElement):
 
         if "terminate" in self._status and self._traverse == "restart":
             self._traverse = False
-            task = self._so_tasks.pop()
-            self._stage -= 1
             if self._stage > 2:
-                self._stage -= 1
+                self._stage -= 2
                 task = self._so_tasks.pop()
-            self._next_cell = task.get_cell()
+                task = self._so_tasks.pop()
+                self._next_cell = task.get_cell()
+            else:
+                self._so_tasks = []
+                self._stage = 0
+                self._next_cell = self._cell
             self._status = "next"
                 
         if self._next_cell:
