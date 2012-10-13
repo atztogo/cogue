@@ -58,27 +58,9 @@ def parse_dot_file(filename):
     connections = extract_connection(filename, results)
     return results, connections
 
-def plot(results, connections):
+def plot(results, connections, reference_energy):
     tids = [x[0] for x in results]
-    energies = [(x[1] / x[2]) for x in results]
-    texts = [x[3] for x in results]
-
-    for i, (x, y, t) in enumerate(zip(tids, energies, texts)):
-        plt.plot(i + 1, y, 'o')
-        plt.text(i + 1, y, t.split()[2] + " [%d]" % x, rotation=45, ha='left', va='bottom')
-
-    for (left, right) in connections:
-        i_1 = tids.index(left)
-        x_1 = i_1 + 1
-        y_1 = energies[i_1]
-        i_2 = tids.index(right)
-        x_2 = i_2 + 1
-        y_2 = energies[i_2]
-        plt.plot([x_1, x_2], [y_1, y_2], '-')
-
-def plot2(results, connections):
-    tids = [x[0] for x in results]
-    energies = [(x[1] / x[2]) for x in results]
+    energies = [x[1] / x[2] - reference_energy for x in results]
     texts = [x[3] for x in results]
     tid_pos = {}
     points = []
@@ -117,19 +99,34 @@ def plot2(results, connections):
 
     for x, y, tid, text in points:
         draw_point(x, y, tid, text)
+
+    plt.xlim(0, len(results) + 1)
+    emax = max(energies)
+    emin = min(energies)
+    de = emax - emin
+    plt.ylim(emin - de * 0.1, emax + de * 0.1)
     
 
 from optparse import OptionParser
 parser = OptionParser()
-parser.set_defaults(split=False)
-parser.add_option("--split", dest="split",
-                  action="store_true",
-                  help="Split and reformat .dot file")
+parser.set_defaults(reference_energy=0.0,
+                    output_filename=None)
+parser.add_option("--reference", dest="reference_energy",
+                  type="float",
+                  help="Reference energy to be set as zero")
+parser.add_option("-o", "--output", dest="output_filename",
+                  action="store", type="string",
+                  help="Output filename of PDF plot")
 (options, args) = parser.parse_args()
 
 results, connections = parse_dot_file(args[0])
-plot2(results, connections)
-plt.xlim(0, len(results) + 1)
+plot(results, connections, options.reference_energy)
 plt.xticks([])
 plt.grid(True)
-plt.show()
+
+if options.output_filename:
+    plt.rcParams['backend'] = 'PDF'
+    plt.rcParams['pdf.fonttype'] = 42
+    plt.savefig(options.output_filename)
+else:
+    plt.show()
