@@ -60,9 +60,7 @@ class AutoCalc:
     def _deep_begin(self, task):
         directory = task.get_directory()
         if not directory == None:
-            if os.path.exists(directory):
-                print "Directory %s exists." % directory
-            else:
+            if not os.path.exists(directory):
                 os.mkdir(directory)
 
         cwd = self._chdir_in(directory)

@@ -33,6 +33,7 @@ from cogue.crystal.xtalcomp import compare as xtal_compare
 
 CUTOFF_ZERO = 1e-10
 DEGENERACY_TOLERANCE = 1e-3
+MAX_DISPLACEMENT_RATIO = 1.1
 
 class PhononRelaxBase(TaskElement):
     def __init__(self,
@@ -78,7 +79,7 @@ class PhononRelaxBase(TaskElement):
         if max_displacement:
             self._max_displacement = max_displacement
         else:
-            self._max_displacement = symmetry_tolerance * 2
+            self._max_displacement = symmetry_tolerance * MAX_DISPLACEMENT_RATIO
         self._traverse = traverse
 
         self._phr_tasks = []
@@ -345,30 +346,48 @@ class PhononRelaxElementBase(TaskElement):
         if self._stage == 0:
             if self._status == "terminate":
                 raise StopIteration
-            else:
-                cell = self._tasks[0].get_cell()
-                for tid in self._ancestral_cells:
-                    if xtal_compare(self._ancestral_cells[tid],
-                                    cell,
-                                    tolerance=self._symmetry_tolerance,
-                                    angle_tolerance=1.0):
-                        symmetry = get_symmetry_dataset(
-                            cell,
-                            tolerance=self._symmetry_tolerance)
-                        self._space_group_type = symmetry['international']
-                        self._status = "confluence with [%d]" % tid
-                        raise StopIteration
-                self._ancestral_cells[self._tid_parent] = cell
-                self._set_stage1(cell)
-                self._stage = 1
-                self._status = "stage 1"
+
+            cell = self._tasks[0].get_cell()
+            tid = self._find_equivalent_crystal_structure(cell)
+            if tid > 0:
+                self._status = "confluence with [%d]" % tid
+                symmetry = get_symmetry_dataset(
+                    cell,
+                    tolerance=self._symmetry_tolerance)
+                self._space_group_type = symmetry['international']
+                raise StopIteration
+            elif (self._traverse == "restart" and
+                not os.path.exists("phonon-1")):
+                # In restart mode, the order to parse directory tree can
+                # be different from that in run time. So inequivalent
+                # crystal structure can be found different point.
+                # This condition indicates there should be an equivalent
+                # crystal structure somewhere else. In this case, this
+                # 'next' does nothing (restarting stage0) and waits for
+                # until it will be found.
+                self.begin()
                 return self._tasks
+
+            self._ancestral_cells[self._tid_parent] = cell
+            self._set_stage1(cell)
+            self._stage = 1
+            self._status = "stage 1"
+            return self._tasks
         else:
             if self._status == "next":
                 self._analyze_phonon()
                 self._status = "done"
 
             raise StopIteration
+
+    def _find_equivalent_crystal_structure(self, cell):
+        for tid in self._ancestral_cells:
+            if xtal_compare(self._ancestral_cells[tid],
+                            cell,
+                            tolerance=self._symmetry_tolerance,
+                            angle_tolerance=1.0):
+                return tid
+        return 0
 
     def _set_stage0(self):
         self._tasks = []
