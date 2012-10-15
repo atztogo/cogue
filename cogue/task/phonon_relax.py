@@ -356,8 +356,8 @@ class PhononRelaxElementBase(TaskElement):
                     tolerance=self._symmetry_tolerance)
                 self._space_group_type = symmetry['international']
                 raise StopIteration
-            elif (self._traverse == "restart" and
-                not os.path.exists("phonon-1")):
+            elif (self._traverse and 
+                  not os.path.exists("phonon-1")):
                 # In restart mode, the order to parse directory tree can
                 # be different from that in run time. So inequivalent
                 # crystal structure can be found different point.
