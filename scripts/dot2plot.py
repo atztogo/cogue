@@ -59,9 +59,17 @@ def parse_dot_file(filename):
     return results, connections
 
 def plot(results, connections, reference_energy):
-    tids = [x[0] for x in results]
-    energies = [x[1] / x[2] - reference_energy for x in results]
-    texts = [x[3] for x in results]
+    tids = []
+    energies = []
+    texts = []
+    for x in results:
+        if None in x:
+            continue
+        tids.append(x[0])
+        energies.append(x[1] / x[2] - reference_energy)
+        texts.append(x[3])
+    # energies = [x[1] / x[2] - reference_energy for x in results]
+    # texts = [x[3] for x in results]
     tid_pos = {}
     points = []
 
@@ -70,6 +78,9 @@ def plot(results, connections, reference_energy):
         plt.text(x, y, t.split()[2] + " [%d]" % tid, rotation=45, ha='left', va='bottom')
 
     def recr(tid, pos):
+        if not tid in tids:
+            return pos
+        
         pos += 1
         tid_pos[tid] = pos
 
@@ -89,6 +100,9 @@ def plot(results, connections, reference_energy):
     recr(tids[0], 0)
 
     for (left, right) in connections:
+        if not right in tids:
+            continue
+
         i_1 = tids.index(left)
         x_1 = tid_pos[left]
         y_1 = energies[i_1]
@@ -100,7 +114,7 @@ def plot(results, connections, reference_energy):
     for x, y, tid, text in points:
         draw_point(x, y, tid, text)
 
-    plt.xlim(0, len(results) + 1)
+    plt.xlim(0, len(tids) + 1)
     emax = max(energies)
     emin = min(energies)
     de = emax - emin
