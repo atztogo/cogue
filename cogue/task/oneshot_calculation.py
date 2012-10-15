@@ -119,6 +119,11 @@ class StructureOptimizationElementBase(OneShotCalculation):
         self._stress = None
         self._energy = None
 
+        self._current_cell = None
+
+    def get_current_cell(self): # cell under structure optimization
+        return self._current_cell
+
     def get_stress(self):
         return self._stress
 
@@ -137,10 +142,10 @@ class StructureOptimizationElementBase(OneShotCalculation):
         w = open("%s.yaml" % self._directory, 'w')
         w.write("status: %s\n" % self._status)
 
-        if self._cell:
-            lattice = self._cell.get_lattice().T
-            points = self._cell.get_points().T
-            symbols = self._cell.get_symbols()
+        if self._current_cell:
+            lattice = self._current_cell.get_lattice().T
+            points = self._current_cell.get_points().T
+            symbols = self._current_cell.get_symbols()
         
             w.write("lattice:\n")
             for v, a in zip(lattice, ('a', 'b', 'c')) :

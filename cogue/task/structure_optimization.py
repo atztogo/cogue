@@ -58,6 +58,9 @@ class StructureOptimizationBase(TaskElement):
     def get_cell(self):
         return self._next_cell
 
+    def get_initial_cell(self):
+        return self._cell
+
     def get_stage(self):
         return self._stage
 
@@ -121,7 +124,7 @@ class StructureOptimizationBase(TaskElement):
             self._next_cell = None
         else:
             task = self._tasks[0]
-            self._next_cell = task.get_cell()
+            self._next_cell = task.get_current_cell()
             stress = task.get_stress()
             forces = task.get_forces()
             energy = task.get_energy()
@@ -195,7 +198,7 @@ class StructureOptimizationBase(TaskElement):
         w.write("iteration: %d\n" % self._stage)
         w.write("status: %s\n" % self._status)
 
-        cell = self._so_tasks[-1].get_cell()
+        cell = self._so_tasks[-1].get_current_cell()
         if cell:
             lattice = cell.get_lattice().T
             points = cell.get_points().T

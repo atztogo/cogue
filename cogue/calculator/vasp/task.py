@@ -244,7 +244,7 @@ class StructureOptimizationElement(TaskVasp,
     def _collect(self):
         """Collect information from output files of VASP.
 
-        self._cell: Final crystal structure of each relaxation steps.
+        self._current_cell: Final crystal structure of each relaxation steps.
         self._status: "next", "done", or "terminate" is stored.
         self._log: Terminate log is stored.
 
@@ -252,11 +252,8 @@ class StructureOptimizationElement(TaskVasp,
         self._log = ""
         self._status = "terminate"
 
-        # In VASP, the order of atoms are sorted by chemical
-        # symbols. So self._cell is reset using POSCAR
-        # for the case VASP runs incorrectly.
         if os.path.exists("POSCAR"):
-            self._cell = read_poscar("POSCAR")
+            self._current_cell = read_poscar("POSCAR")
     
         if not os.path.exists("vasprun.xml"):
             self._log += "vasprun.xml not exists.\n"
@@ -284,31 +281,32 @@ class StructureOptimizationElement(TaskVasp,
                 self._judge(lattice[-3], points[-3])
             else:
                 self._log += "Failed to parse vasprun.xml.\n"
-                self._cell = None
+                self._current_cell = None
 
     def _judge(self, lattice_last, points):
-        lattice_init = self._cell.get_lattice()
+        lattice_init = self._current_cell.get_lattice()
         vecs2_init = np.diag(np.dot(lattice_init.T, lattice_init))
         vecs2_last = np.diag(np.dot(lattice_last.T, lattice_last))
         d_vecs2_ratio = (vecs2_last - vecs2_init) / vecs2_init
 
         cell = Cell(lattice=lattice_last,
                     points=points,
-                    symbols=self._cell.get_symbols())
+                    symbols=self._current_cell.get_symbols())
         if os.path.exists("CONTCAR"):
             try:
-                self._cell = read_poscar("CONTCAR")
+                self._current_cell = read_poscar("CONTCAR")
             except:
-                self._cell = cell
+                self._current_cell = cell
             else:
                 # Sometimes CONTCAR's structure becomes original
                 # structure same as POSCAR. In this case, the third
                 # relaxed structure from the last is used for the new
                 # cell.
-                if (abs(self._cell.get_lattice() - lattice_init) < 1e-12).all():
-                    self._cell = cell
+                if (abs(self._current_cell.get_lattice() - lattice_init)
+                    < 1e-12).all():
+                    self._current_cell = cell
         else:
-            self._cell = cell
+            self._current_cell = cell
 
         if np.linalg.det(lattice_last) > \
                 self._max_increase * np.linalg.det(lattice_init):
@@ -317,7 +315,8 @@ class StructureOptimizationElement(TaskVasp,
             if (abs(d_vecs2_ratio) > self._lattice_tolerance ** 2).any():
                 self._log += "Lattice is not enough relaxed.\n"
                 self._status = "next"
-            if (abs(self._stress - np.eye(3) * self._pressure_target) > self._stress_tolerance).any():
+            if (abs(self._stress - np.eye(3) * self._pressure_target)
+                > self._stress_tolerance).any():
                 self._log += "Stress is not enough relaxed.\n"
                 self._status = "next"
             if (abs(self._forces) > self._force_tolerance).any():
