@@ -127,7 +127,7 @@ class PhononRelaxBase(TaskElement):
         self._tasks = [task]
         space_group = get_symmetry_dataset(self._cell,
                                            tolerance=self._symmetry_tolerance)
-        self._comment = space_group['international']
+        self._comment = space_group['international_standard']
 
     def end(self):
         self._write_yaml()
@@ -354,7 +354,7 @@ class PhononRelaxElementBase(TaskElement):
                 symmetry = get_symmetry_dataset(
                     cell,
                     tolerance=self._symmetry_tolerance)
-                self._space_group_type = symmetry['international']
+                self._space_group_type = symmetry['international_standard']
                 raise StopIteration
             elif (self._traverse and 
                   not os.path.exists("phonon-1")):
@@ -397,14 +397,14 @@ class PhononRelaxElementBase(TaskElement):
             symmetry_tolerance=self._symmetry_tolerance)
         symmetry = get_symmetry_dataset(self._cell,
                                         tolerance=self._symmetry_tolerance)
-        self._space_group_type = symmetry['international']
+        self._space_group_type = symmetry['international_standard']
         self._phre_tasks = [task]
         self._tasks = [task]
 
     def _set_stage1(self, cell):
         prim_cell = get_primitive(cell, tolerance=self._symmetry_tolerance)
         sym_dataset = get_symmetry_dataset(prim_cell)
-        self._space_group_type = sym_dataset['international']
+        self._space_group_type = sym_dataset['international_standard']
         spg_number = sym_dataset['number']
         if (spg_number >= 143 and
             spg_number <= 194 and
@@ -451,7 +451,7 @@ class PhononRelaxElementBase(TaskElement):
 
         sym_dataset = get_symmetry_dataset(
             self._tasks[0].get_equilibrium_cell())
-        self._space_group_type = sym_dataset['international']
+        self._space_group_type = sym_dataset['international_standard']
                 
     def _write_yaml(self):
         w = open("%s.yaml" % self._directory, 'w')
@@ -485,7 +485,7 @@ class PhononRelaxElementBase(TaskElement):
                         (q[0], q[1], q[2], q_index))
                 w.write("  frequency: %10.5f # %d\n" % (-freq, band_index))
                 w.write("  degeneracy: %d\n" % degeneracy)
-                w.write("  space_group_type: %s\n" % spg['international'])
+                w.write("  space_group_type: %s\n" % spg['international_standard'])
                 w.write("  space_group_number: %s\n" % spg['number'])
         w.write("tasks:\n")
         for task in self._phre_tasks:
@@ -577,7 +577,7 @@ def write_all_symmetries(all_symmetries, i, j):
     """
     w = open("symmetries-q%db%d.dat" % (i + 1, j + 1), 'w')
     for sym in all_symmetries:
-        w.write("%s %d\n" % (sym['international'],
+        w.write("%s %d\n" % (sym['international_standard'],
                              len(sym['rotations'])))
     w.close()
 

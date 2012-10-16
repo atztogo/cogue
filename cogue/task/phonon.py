@@ -110,7 +110,7 @@ class PhononBase(TaskElement):
             if "next" in self._status:
                 self._energy = self._tasks[0].get_energy()
                 self._comment = "%s\\n%f" % (
-                    self._tasks[0].get_space_group()['international'],
+                    self._tasks[0].get_space_group()['international_standard'],
                     self._energy)
                 self._set_stage1()
                 return self._tasks

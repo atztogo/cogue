@@ -12,3 +12,4 @@ def get_crystallographic_cell(cell, tolerance=1e-5):
 
 def get_primitive_cell(cell, tolerance=1e-5):
     return spglib.get_primitive_cell(cell, tolerance)
+
