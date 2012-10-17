@@ -175,7 +175,9 @@ from optparse import OptionParser
 parser = OptionParser()
 parser.set_defaults(reference_energy=0.0,
                     ignore_tids=None,
-                    output_filename=None)
+                    output_filename=None,
+                    ymax=None,
+                    ymin=None)
 parser.add_option("--reference", dest="reference_energy",
                   type="float",
                   help="Reference energy to be set as zero")
@@ -184,6 +186,12 @@ parser.add_option("-o", "--output", dest="output_filename",
                   help="Output filename of PDF plot")
 parser.add_option("--igtids", dest="ignore_tids", action="store",
                   type="string", help="Draw without the TIDs")
+parser.add_option("--ymax", dest="ymax",
+                  type="float",
+                  help="Maximum y value of plot area")
+parser.add_option("--ymin", dest="ymin",
+                  type="float",
+                  help="Minimum y value of plot area")
 (options, args) = parser.parse_args()
 
 if options.ignore_tids:
@@ -194,6 +202,10 @@ else:
 results, connections, confluences = parse_dot_file(args[0])
 plot(results, connections, confluences, options.reference_energy, ig_tids)
 plt.xticks([])
+if options.ymax:
+    plt.ylim(ymax=options.ymax)
+if options.ymin:
+    plt.ylim(ymin=options.ymin)
 plt.grid(True)
 
 if options.output_filename:
