@@ -312,4 +312,4 @@ standard_HM_symbols = [
     "Fd-3m",      # 227
     "Fd-3c",      # 228
     "Im-3m",      # 229
-    "Ia-3d",      # 230]
+    "Ia-3d"]      # 230
