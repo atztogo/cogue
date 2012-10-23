@@ -641,7 +641,7 @@ class PhononModulation:
         max_num_op = 0
         best_cells = []
         points_on_sphere = []
-        for i, point in enumerate(self._get_phases()):
+        for point in self._get_phases():
             modulation = self._add_modulations(point)
             modcell = self._get_cell_with_modulation(modulation)
             symmetry = get_symmetry_dataset(
@@ -683,7 +683,8 @@ class PhononModulation:
         if n == 2:
             phase_sets = []
             for x in phases:
-                phase_sets.append([1, x])
+                for y in phases:
+                    phase_sets.append([1, x])
         elif n == 3:
             phase_sets = []
             for x in phases:
@@ -747,11 +748,11 @@ class PhononModulation:
                     numbers=self._supercell.get_numbers())
     
     def _normalize_modulation(self, modulation):
-        u = modulation.flatten()
-        index_max_elem = np.argmax(abs(u))
-        max_elem = u[index_max_elem]
-        phase_factor = max_elem / abs(max_elem)
-        modulation /= phase_factor
+        # u = modulation.flatten()
+        # index_max_elem = np.argmax(abs(u))
+        # max_elem = u[index_max_elem]
+        # phase_factor = max_elem / abs(max_elem)
+        # modulation /= phase_factor
 
         max_u = 0.
         for u in modulation.real.T:
