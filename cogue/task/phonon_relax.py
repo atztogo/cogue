@@ -25,7 +25,7 @@ from cogue.task import TaskElement
 from cogue.crystal.cell import Cell
 from cogue.crystal.converter import \
     atoms2cell, write_cif_P1, write_v_sim, get_lattice_parameters
-from cogue.calculator.vasp.vasp_io import write_poscar
+from cogue.crystal.vasp_io import write_poscar
 from cogue.crystal.symmetry import \
     get_symmetry_dataset, get_crystallographic_cell
 from cogue.crystal.converter import get_primitive
@@ -546,16 +546,16 @@ def get_unstable_modulations(phonon,
             # write_all_symmetries(phononMod.get_all_symmetries(), i , j)
             modulation_cells = phononMod.get_modulation_cells()
             supercell = phononMod.get_supercell()
-            write_poscar(supercell,
-                         "SPOSCAR-d%d%d%d" % tuple(modulation_dimension))
+            vasp.write_poscar(supercell,
+                        "SPOSCAR-d%d%d%d" % tuple(modulation_dimension))
             write_cif_P1(supercell,
                          "supercell-d%d%d%d.cif" % tuple(modulation_dimension))
             write_v_sim(supercell,
                         "supercell-d%d%d%d.ascii" % tuple(modulation_dimension))
             for k, modcell in enumerate(modulation_cells):
-                write_poscar(modcell,
-                             "POSCAR-d%d%d%d-q%db%d-%d" %
-                             (tuple(modulation_dimension) + (i + 1, j + 1, k + 1)))
+                vasp.write_poscar(modcell,
+                            "POSCAR-d%d%d%d-q%db%d-%d" %
+                            (tuple(modulation_dimension) + (i + 1, j + 1, k + 1)))
                 write_cif_P1(modcell,
                              "mod-d%d%d%d-q%db%d-%d.cif" % 
                              (tuple(modulation_dimension) + (i + 1, j + 1, k + 1)))
@@ -1006,166 +1006,3 @@ class PhononModulationOld:
 
 
 
-if __name__ == '__main__':
-    import sys
-    from phonopy import Phonopy
-    from phonopy.structure.atoms import Atoms
-    from phonopy.structure.symmetry import Symmetry
-    from phonopy.interface.vasp import read_vasp, write_vasp
-    from phonopy.hphonopy.file_IO import parse_FORCE_CONSTANTS
-    from optparse import OptionParser
-    from cogue.crystal.converter import frac2val
-    
-    def get_parameters():
-        parser = OptionParser()
-        parser.set_defaults(supercell_dimension=None,
-                            qpoint=None,
-                            band_indices=None,
-                            distance=None,
-                            t_mat=None,
-                            ndiv=None,
-                            tolerance=None)
-        parser.add_option("--dim", dest="supercell_dimension",
-                          action="store", type="string")
-        parser.add_option("--moddim", dest="modulation_dimension",
-                          action="store", type="string")
-        parser.add_option("--ndiv", dest="ndiv",
-                          action="store", type="int")
-        parser.add_option("--band", dest="band_indices",
-                          action="store", type="string")
-        parser.add_option("-q", dest="qpoint",
-                          action="store", type="string")
-        parser.add_option("--pa", "--primitive_axis",
-                          dest="t_mat",
-                          action="store",
-                          type="string",                      
-                          help=("Multiply transformation matrix. Absolute "
-                                "value of determinant has to be 1 or less "
-                                "than 1."))
-        parser.add_option("-s", "--tolerance", dest="tolerance", type="float",
-                          help="Symmetry tolerance to search")
-        parser.add_option("--distance", dest="distance", type="float",
-                          help="Maximum displacement distance")
-        (options, args) = parser.parse_args()
-        
-        if not options.supercell_dimension:
-            print "Option --dim has to be set."
-            sys.exit(1)
-        
-        if not options.qpoint:
-            print "Option -q has to be set."
-            sys.exit(1)
-    
-        if not options.band_indices:
-            print "Option --band has to be set."
-            sys.exit(1)
-    
-        qpoint = [frac2val(x) for x in options.qpoint.split()]
-        if len(qpoint) == 3:
-            qpoint = np.array(qpoint)
-        else:
-            print "Illeagal q-point"
-            sys.exit(1)
-        
-        supercell_dimension = [int(x)
-                               for x in options.supercell_dimension.split()]
-        if not len(supercell_dimension) == 3:
-            print "Illeagal supercell dimension"
-            sys.exit(1)
-    
-        modulation_dimension = [int(x)
-                                for x in options.modulation_dimension.split()]
-        if not len(modulation_dimension) == 3:
-            print "Illeagal modulatoin dimension"
-            sys.exit(1)
-
-        if options.t_mat:
-            primitive_matrix = [frac2val(x) for x in options.t_mat.split()]
-            if len(primitive_matrix) != 9:
-                print "Illeagal primitive matrix"
-                sys.exit(1)
-        else:
-            primitive_matrix = None
-
-            
-        band_indices = [int(x) - 1 for x in options.band_indices.split()]
-        if len(band_indices) > 4:
-            print "Number of band indices is too large (%d)" % len(band_indices)
-            sys.exit(1)
-    
-        if options.ndiv:
-            ndiv = options.ndiv
-        else:
-            ndiv = 360
-    
-        if options.tolerance:
-            tolerance = options.tolerance
-        else:
-            tolerance = 1e-5
-
-        if options.distance:
-            distance = options.distance
-        else:
-            distance = tolerance
-    
-        cell = read_vasp(args[0])
-        fc = parse_FORCE_CONSTANTS(args[1])
-    
-        return (qpoint,
-                supercell_dimension,
-                primitive_matrix,
-                modulation_dimension,
-                cell,
-                fc,
-                ndiv,
-                band_indices,
-                distance,
-                tolerance)
-                          
-    def get_phonon(cell,
-                   supercell_dimension,
-                   fc,
-                   primitive_matrix=None):
-                              
-        phonon = Phonopy(cell,
-                         np.diag(supercell_dimension),
-                         is_auto_displacements=False)
-
-        if primitive_matrix:
-            phonon.set_post_process(primitive_matrix=np.reshape(
-                    primitive_matrix, (3, 3)),
-                    force_constants=fc)
-        else:
-            phonon.set_post_process(force_constants=fc)
-    
-        return phonon
-
-
-    (qpoint,
-     supercell_dimension,
-     primitive_matrix,
-     modulation_dimension,
-     cell,
-     fc,
-     ndiv,
-     band_indices,
-     distance,
-     tolerance) = get_parameters()
-
-    phonon = get_phonon(cell, supercell_dimension, fc,
-                        primitive_matrix=primitive_matrix)
-    phononMod = PhononModulation(phonon,
-                                 qpoint,
-                                 band_indices,
-                                 modulation_dimension,
-                                 ndiv=ndiv,
-                                 symmetry_tolerance=tolerance,
-                                 max_displacement=distance)
-
-    best_cells = phononMod.get_modulation_cells()
-    mods = phononMod.get_modulations()
-    for i, (cell, m) in enumerate(zip(best_cells, mods)):
-        sym = get_symmetry_dataset(cell, tolerance)
-        print sym['international'], len(sym['rotations'])
-        write_poscar(cell, "BEST_CELL-%d" % (i + 1))
-        print m

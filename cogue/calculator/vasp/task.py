@@ -8,7 +8,7 @@ from cogue.task.bulk_modulus import *
 from cogue.task.phonon import *
 from cogue.task.phonon_relax import *
 from cogue.task.elastic_constants import *
-from cogue.calculator.vasp.vasp_io import *
+from cogue.crystal.vasp_io import *
 
 def klength2mesh(k_length, lattice):
     """Convert length to mesh in k-point sampling
