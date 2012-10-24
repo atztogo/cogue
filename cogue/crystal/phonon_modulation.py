@@ -31,7 +31,8 @@ class PhononModulation:
                 for m in self.get_modulations()]
 
     def get_modulations(self):
-        return [self._get_modulation(p) for p in self._points_on_sphere]
+        return [self._get_modulation(pt) / ph * a
+                for (pt, ph, a) in self._points_on_sphere]
 
     def get_points_on_sphere(self):
         return self._points_on_sphere
@@ -46,27 +47,42 @@ class PhononModulation:
         self._set_vectors_and_supercell()
         max_num_op = 0
         best_cells = []
+        best_spacegroup_types = []
         points_on_sphere = []
+        phase_shifts = self._get_phase_shifts_at_lattice_points()
         for point in self._get_phases():
             modulation = self._get_modulation(point)
-            modcell = self._get_cell_with_modulation(modulation)
-            symmetry = get_symmetry_dataset(
-                modcell, tolerance=self._symmetry_tolerance)
 
-            num_op = len(symmetry['rotations'])
-            if num_op > max_num_op:
-                max_num_op = num_op
-                best_cells = [modcell]
-                points_on_sphere = [point]
-            if num_op == max_num_op:
-                for bc in best_cells:
-                    if not xtal_compare(bc,
-                                        modcell,
-                                        tolerance=self._symmetry_tolerance,
-                                        angle_tolerance=1.0):
-                        print symmetry['international_standard'], len(symmetry['rotations'])
+            for phase in phase_shifts:
+                amplitude = self._get_normalize_amplitude(modulation / phase)
+                modcell = self._get_cell_with_modulation(
+                    modulation / phase * amplitude)
+                symmetry = get_symmetry_dataset(
+                    modcell, tolerance=self._symmetry_tolerance)
+    
+                num_op = len(symmetry['rotations'])
+                if num_op > max_num_op:
+                    max_num_op = num_op
+                    best_cells = [modcell]
+                    best_spacegroup_types = [symmetry['number']]
+                    points_on_sphere = [[point, phase, amplitude]]
+
+                elif num_op == max_num_op:
+                    if symmetry['number'] in best_spacegroup_types:
+                        for bc in best_cells:
+                            if not xtal_compare(
+                                bc,
+                                modcell,
+                                tolerance=self._symmetry_tolerance,
+                                angle_tolerance=1.0):
+                                
+                                best_cells.append(modcell)
+                                points_on_sphere.append(
+                                    [point, phase, amplitude])
+                    else:
                         best_cells.append(modcell)
-                        points_on_sphere.append(point)
+                        points_on_sphere.append([point, phase, amplitude])
+                        best_spacegroup_types.append(symmetry['number'])
 
         self._points_on_sphere = points_on_sphere
 
@@ -84,7 +100,7 @@ class PhononModulation:
 
     def _get_modulation(self, point):
         modulation = self._add_modulations(point)
-        self._normalize_modulation(modulation)
+        modulation *= self._get_normalize_phase_factor(modulation)
         return modulation
         
     def _add_modulations(self, phase_set):
@@ -104,14 +120,17 @@ class PhononModulation:
                     masses=self._supercell.get_masses(),
                     numbers=self._supercell.get_numbers())
     
-    def _normalize_modulation(self, modulation):
+    def _get_normalize_phase_factor(self, modulation):
         u = modulation.flatten()
         index_max_elem = np.argmax(abs(u))
         max_elem = u[index_max_elem]
-        phase_factor = max_elem / abs(max_elem)
-        modulation /= phase_factor
-        max_u = abs(u[index_max_elem])
-        modulation *= self._max_displacement / max_u
+        return max_elem / abs(max_elem)
+
+    def _get_normalize_amplitude(self, modulation):
+        u = modulation.flatten().real
+        index_max_elem = np.argmax(abs(u))
+        max_elem = u[index_max_elem]
+        return self._max_displacement / abs(max_elem)
 
     def _get_phases(self):
         n = len(self._vectors)
@@ -151,30 +170,25 @@ class PhononModulation:
                                 phase_sets.append([1, x_1, x_2, x_3, x_4, x_5])
 
 
-        # return phase_sets
-    
+        return phase_sets
+
+    def _get_phase_shifts_at_lattice_points(self):
         total_phase_shifts = [1+0j]
-        dim = np.array(self._modulation_dimension)
+        dim = np.array(self._modulation_dimension) * 3
         for i in range(self._modulation_dimension[0]):
             for j in range(self._modulation_dimension[1]):
                 for k in range(self._modulation_dimension[2]):
                     phase = np.exp(2j * np.pi * 
                                    np.dot([i, j, k], 1. / dim))
                     is_found = True
-                    for p in total_phase_shifts - phase:
-                        if abs(p) < 1e-10:
+                    for p in total_phase_shifts:
+                        if abs(p - phase) < 1e-10:
                             is_found = False
                             break
                     if is_found:
                         total_phase_shifts.append(phase)
 
-        phase_sets = np.array(phase_sets)
-        total_phase_sets = phase_sets.copy()
-        for phase in total_phase_shifts[1:]:
-            total_phase_sets = np.vstack((total_phase_sets,
-                                          phase_sets * phase))
-
-        return total_phase_sets
+        return total_phase_shifts
         
 
 class PhononModulationOld:
