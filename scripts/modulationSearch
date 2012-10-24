@@ -6,7 +6,8 @@ from phonopy import Phonopy
 from phonopy.interface.vasp import read_vasp
 from phonopy.hphonopy.file_IO import parse_FORCE_CONSTANTS
 from optparse import OptionParser
-from cogue.task.phonon_relax import PhononModulation, PhononModulationOld
+from cogue.crystal.phonon_modulation import \
+    PhononModulation, PhononModulationOld
 from cogue.crystal.converter import frac2val
 from cogue.crystal.symmetry import \
      get_symmetry_dataset, get_crystallographic_cell
@@ -164,3 +165,5 @@ for i, (cell, m) in enumerate(zip(best_cells, mods)):
     sym = get_symmetry_dataset(cell, tolerance)
     print sym['international'], len(sym['rotations'])
     vasp_io.write_poscar(cell, "BEST_CELL-%d" % (i + 1))
+    for x in m.flatten():
+        print "[%10.7f %10.7f] (%9.7f, %7.2f)" % (x.real, x.imag, abs(x), np.angle(x)/np.pi*180)
