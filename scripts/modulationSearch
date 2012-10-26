@@ -9,8 +9,7 @@ from optparse import OptionParser
 from cogue.crystal.phonon_modulation import \
     PhononModulation, PhononModulationOld
 from cogue.crystal.converter import frac2val
-from cogue.crystal.symmetry import \
-     get_symmetry_dataset, get_crystallographic_cell
+from cogue.crystal.symmetry import get_symmetry_dataset
 import cogue.crystal.vasp_io as vasp_io
 
 def get_parameters():
@@ -161,9 +160,11 @@ phononMod = PhononModulation(phonon,
 
 best_cells = phononMod.get_modulation_cells()
 mods = phononMod.get_modulations()
-for i, (cell, m) in enumerate(zip(best_cells, mods)):
+pos = phononMod.get_points_on_sphere()
+for i, (cell, m, pt) in enumerate(zip(best_cells, mods, pos)):
     sym = get_symmetry_dataset(cell, tolerance)
     print sym['international'], len(sym['rotations'])
     vasp_io.write_poscar(cell, "BEST_CELL-%d" % (i + 1))
+    print pt
     for x in m.flatten():
         print "[%10.7f %10.7f] (%9.7f, %7.2f)" % (x.real, x.imag, abs(x), np.angle(x)/np.pi*180)

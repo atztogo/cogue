@@ -20,6 +20,7 @@
 """
 
 import os
+import numpy as np
 from cogue.task import TaskElement
 from cogue.crystal.converter import \
     write_cif_P1, write_v_sim, get_lattice_parameters
@@ -27,6 +28,8 @@ from cogue.crystal.vasp_io import write_poscar
 from cogue.crystal.converter import get_primitive
 from cogue.crystal.xtalcomp import compare as xtal_compare
 from cogue.crystal.phonon_modulation import PhononModulation
+from cogue.crystal.symmetry import \
+     get_symmetry_dataset, get_crystallographic_cell
 
 CUTOFF_ZERO = 1e-10
 DEGENERACY_TOLERANCE = 1e-3
@@ -50,6 +53,7 @@ class PhononRelaxBase(TaskElement):
                  max_offspring=None,
                  cutoff_eigenvalue=None,
                  max_displacement=None,
+                 num_sampling_points=None,
                  traverse=False):
 
         TaskElement.__init__(self)
@@ -77,6 +81,7 @@ class PhononRelaxBase(TaskElement):
             self._max_displacement = max_displacement
         else:
             self._max_displacement = symmetry_tolerance * MAX_DISPLACEMENT_RATIO
+        self._num_sampling_points = num_sampling_points
         self._traverse = traverse
 
         self._phr_tasks = []
@@ -246,6 +251,7 @@ class PhononRelaxElementBase(TaskElement):
                  symmetry_tolerance=None,
                  cutoff_eigenvalue=None,
                  max_displacement=None,
+                 num_sampling_points=None,
                  traverse=False):
 
         TaskElement.__init__(self)
@@ -269,6 +275,7 @@ class PhononRelaxElementBase(TaskElement):
         self._symmetry_tolerance = symmetry_tolerance
         self._cutoff_eigenvalue = cutoff_eigenvalue
         self._max_displacement = max_displacement
+        self._num_sampling_points = num_sampling_points
         self._traverse = traverse
 
         self._tasks = []
@@ -443,7 +450,7 @@ class PhononRelaxElementBase(TaskElement):
                     symmetry_tolerance=self._symmetry_tolerance,
                     max_displacement=self._max_displacement,
                     cutoff_eigenvalue=self._cutoff_eigenvalue,
-                    ndiv=180,
+                    ndiv=self._num_sampling_points,
                     excluded_qpoints=qpoints_done)
 
         sym_dataset = get_symmetry_dataset(
@@ -538,19 +545,17 @@ def get_unstable_modulations(phonon,
                 modulation_dimension,
                 ndiv=ndiv,
                 symmetry_tolerance=symmetry_tolerance,
-                max_displacement=max_displacement,
-                store_all=False)
-            # write_all_symmetries(phononMod.get_all_symmetries(), i , j)
+                max_displacement=max_displacement)
             modulation_cells = phononMod.get_modulation_cells()
             supercell = phononMod.get_supercell()
-            vasp.write_poscar(supercell,
+            write_poscar(supercell,
                         "SPOSCAR-d%d%d%d" % tuple(modulation_dimension))
             write_cif_P1(supercell,
                          "supercell-d%d%d%d.cif" % tuple(modulation_dimension))
             write_v_sim(supercell,
                         "supercell-d%d%d%d.ascii" % tuple(modulation_dimension))
             for k, modcell in enumerate(modulation_cells):
-                vasp.write_poscar(modcell,
+                write_poscar(modcell,
                             "POSCAR-d%d%d%d-q%db%d-%d" %
                             (tuple(modulation_dimension) + (i + 1, j + 1, k + 1)))
                 write_cif_P1(modcell,
@@ -564,19 +569,6 @@ def get_unstable_modulations(phonon,
                      len(deg_set), modulation_dimension))
             
     return imag_modes
-
-def write_all_symmetries(all_symmetries, i, j):
-    """ Write all symmetry information
-
-    To obtain all_symmetries, PhononModulation has to be invoked with
-    store_all=True.
-    
-    """
-    w = open("symmetries-q%db%d.dat" % (i + 1, j + 1), 'w')
-    for sym in all_symmetries:
-        w.write("%s %d\n" % (sym['international_standard'],
-                             len(sym['rotations'])))
-    w.close()
 
 def get_degeneracy_sets(eigs, indices, degeneracy_tolerance):
     degeneracy_sets = []

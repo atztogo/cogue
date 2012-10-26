@@ -646,6 +646,7 @@ class PhononRelax(TaskVasp, PhononRelaxBase):
                  max_offspring=None,
                  cutoff_eigenvalue=-0.02,
                  max_displacement=None,
+                 num_sampling_points=60,
                  traverse=False):
 
         PhononRelaxBase.__init__(
@@ -666,6 +667,7 @@ class PhononRelax(TaskVasp, PhononRelaxBase):
             max_offspring=max_offspring,
             cutoff_eigenvalue=cutoff_eigenvalue,
             max_displacement=max_displacement,
+            num_sampling_points=num_sampling_points,
             traverse=traverse)
 
     def _get_phonon_relax_element_task(self, cell):
@@ -683,6 +685,7 @@ class PhononRelax(TaskVasp, PhononRelaxBase):
                                   symmetry_tolerance=self._symmetry_tolerance,
                                   cutoff_eigenvalue=self._cutoff_eigenvalue,
                                   max_displacement=self._max_displacement,
+                                  num_sampling_points=self._num_sampling_points,
                                   traverse=self._traverse)
 
         task.set_configurations(
@@ -713,6 +716,7 @@ class PhononRelax(TaskVasp, PhononRelaxBase):
                            max_offspring=self._max_offspring,
                            cutoff_eigenvalue=self._cutoff_eigenvalue,
                            max_displacement=self._max_displacement,
+                           num_sampling_points=self._num_sampling_points,
                            traverse=self._traverse)
 
         task.set_configurations(
@@ -745,6 +749,7 @@ class PhononRelaxElement(TaskVasp, PhononRelaxElementBase):
                  symmetry_tolerance=0.1,
                  cutoff_eigenvalue=-0.02,
                  max_displacement=None,
+                 num_sampling_points=60,
                  traverse=False):
 
         PhononRelaxElementBase.__init__(
@@ -764,6 +769,7 @@ class PhononRelaxElement(TaskVasp, PhononRelaxElementBase):
             symmetry_tolerance=symmetry_tolerance,
             cutoff_eigenvalue=cutoff_eigenvalue,
             max_displacement=max_displacement,
+            num_sampling_points=num_sampling_points,
             traverse=traverse)
 
     def _get_phonon_task(self, cell, supercell_matrix, directory):

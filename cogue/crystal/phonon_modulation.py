@@ -69,16 +69,19 @@ class PhononModulation:
 
                 elif num_op == max_num_op:
                     if symmetry['number'] in best_spacegroup_types:
+                        cell_in_best_cells = False
                         for bc in best_cells:
-                            if not xtal_compare(
+                            if xtal_compare(
                                 bc,
                                 modcell,
                                 tolerance=self._symmetry_tolerance,
                                 angle_tolerance=1.0):
+                                cell_in_best_cells = True
+                                break
                                 
-                                best_cells.append(modcell)
-                                points_on_sphere.append(
-                                    [point, phase, amplitude])
+                        if not cell_in_best_cells:
+                            best_cells.append(modcell)
+                            points_on_sphere.append([point, phase, amplitude])
                     else:
                         best_cells.append(modcell)
                         points_on_sphere.append([point, phase, amplitude])
