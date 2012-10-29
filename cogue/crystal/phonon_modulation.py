@@ -52,7 +52,6 @@ class PhononModulation:
         phase_shifts = self._get_phase_shifts_at_lattice_points()
         for point in self._get_phases():
             modulation = self._get_modulation(point)
-
             for phase in phase_shifts:
                 amplitude = self._get_normalize_amplitude(modulation / phase)
                 modcell = self._get_cell_with_modulation(
@@ -66,7 +65,7 @@ class PhononModulation:
                     best_cells = [modcell]
                     best_spacegroup_types = [symmetry['number']]
                     points_on_sphere = [[point, phase, amplitude]]
-
+    
                 elif num_op == max_num_op:
                     if symmetry['number'] in best_spacegroup_types:
                         cell_in_best_cells = False
@@ -144,7 +143,7 @@ class PhononModulation:
         elif n == 2:
             phase_sets = []
             for x in phases:
-                phase_sets.append([1, x])
+                phase_sets.append([x, x * np.exp(1j * np.pi / 2)])
         elif n == 3:
             phase_sets = []
             for x in phases:
