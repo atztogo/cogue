@@ -4,7 +4,7 @@ from phonopy import Phonopy
 from phonopy.structure.atoms import Atoms
 from phonopy.hphonopy.file_IO import write_disp_yaml
 from phonopy.hphonopy.file_IO import write_FORCE_SETS
-from cogue.calculator.vasp.vasp_io import write_poscar
+from cogue.crystal.vasp_io import write_poscar
 
 class PhononBase(TaskElement):
     """PhononBase class
