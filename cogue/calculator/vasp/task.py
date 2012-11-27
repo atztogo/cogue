@@ -77,25 +77,41 @@ class TaskVasp:
         self._incar.write()
 
     def _choose_configuration(self, index=0):
+        # incar
         if (isinstance(self._incar, list) or
             isinstance(self._incar, tuple)):
             incar = self._incar[index].copy()
         else:
             incar = self._incar.copy()
 
-        if np.array(self._k_mesh).ndim == 2:
+        # k_mesh
+        if (isinstance(self._k_mesh, list) or
+            isinstance(self._k_mesh, tuple)):
+            if None in self._k_mesh:
+                k_mesh = self._k_mesh[index]
+        elif np.array(self._k_mesh).ndim == 2:
             k_mesh = self._k_mesh[index]
         else:
             k_mesh = self._k_mesh
 
-        if self._k_shift == None:
+        # k_shift
+        if (isinstance(self._k_shift, list) or
+            isinstance(self._k_shift, tuple)):
+            if None in self._k_shift:
+                k_shift = self._k_shift[index]
+        elif self._k_shift == None:
             k_shift = None
         elif np.array(self._k_shift).ndim == 2:
             k_shift = self._k_shift[index]
         else:
             k_shift = self._k_shift
 
-        if not self._k_gamma:
+        # k_gamma
+        if (isinstance(self._k_gamma, list) or
+            isinstance(self._k_gamma, tuple)):
+            if None in self._k_gamma:
+                k_gamma = self._k_gamma[index]
+        elif not self._k_gamma:
             k_gamma = None
         elif (isinstance(self._k_gamma, list) or 
               isinstance(self._k_gamma, tuple)):
@@ -103,7 +119,12 @@ class TaskVasp:
         else:
             k_gamma = self._k_gamma
 
-        if not self._k_length:
+        # k_length
+        if (isinstance(self._k_length, list) or
+            isinstance(self._k_length, tuple)):
+            if None in self._k_length:
+                k_length = self._k_length[index]
+        elif not self._k_length:
             k_length = None
         elif (isinstance(self._k_length, list) or 
               isinstance(self._k_length, tuple)):
@@ -111,6 +132,7 @@ class TaskVasp:
         else:
             k_length = self._k_length
 
+        # job
         if (isinstance(self._job, list) or
             isinstance(self._job, tuple)):
             job = self._job[index]
