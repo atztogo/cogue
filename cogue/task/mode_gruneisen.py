@@ -1,18 +1,22 @@
 from cogue.task import TaskElement
 
-class BulkModulusBase(TaskElement):
-    """BulkModulus class
+class ModeGruneisenBase(TaskElement):
+    """ModeGruneisen class
 
     Three stages:
     1. structure optimization of input cell
     2. create cells with +1% and -1% volume and optimize them
-    3. calculate bulk modulus from stress of two cells
+    3. calculate phonons for three cells
+    4. calculate mode-Gruneisen parameters
     
     """
     
     def __init__(self,
                  directory=None,
                  name=None,
+                 supercell_matrix=None,
+                 primitive_matrix=None,
+                 distance=None,
                  lattice_tolerance=None,
                  force_tolerance=None,
                  pressure_target=None,
@@ -30,7 +34,11 @@ class BulkModulusBase(TaskElement):
             self._name = directory
         else:
             self._name = name
-        self._task_type = "bulk_modulus"
+        self._task_type = "mode_gruneisen"
+
+        self._supercell_matrix = supercell_matrix
+        self._primitive_matrix = primitive_matrix
+        self._distance = distance
         self._lattice_tolerance = lattice_tolerance
         self._pressure_target = pressure_target
         self._stress_tolerance = stress_tolerance
@@ -45,11 +53,11 @@ class BulkModulusBase(TaskElement):
         self._tasks = None
 
         self._cell = None
-        self._bulk_modulus = None
-        self._bm_tasks = None
+        self._mode_gruneisen = None
+        self._mg_tasks = None
 
-    def get_bulk_modulus(self):
-        return self._bulk_modulus
+    def get_mode_gruneisen(self):
+        return self._mode_gruneisen
 
     def set_status(self):
         done = True
@@ -70,12 +78,12 @@ class BulkModulusBase(TaskElement):
             raise
 
         if self._is_cell_relaxed:
-            self._bm_tasks = [None]
+            self._mg_tasks = [None]
             self._prepare_next(self._cell)
         else:
             self._status = "equilibrium"
-            self._bm_tasks = [self._get_equilibrium_task()]
-            self._tasks = [self._bm_tasks[0]]
+            self._mg_tasks = [self._get_equilibrium_task()]
+            self._tasks = [self._mg_tasks[0]]
 
     def end(self):
         self._write_yaml()
@@ -88,47 +96,29 @@ class BulkModulusBase(TaskElement):
     def next(self):    
         if self._stage == 0:
             if self._status == "next":
-                self._prepare_next(self._bm_tasks[0].get_cell())
+                self._prepare_next(self._mg_tasks[0].get_cell())
             else:
                 raise StopIteration
         else:
             if self._status == "next":
-                stress_p = self._bm_tasks[1].get_stress()
-                stress_m = self._bm_tasks[2].get_stress()
-
-                if (stress_p == None or stress_m == None):
-                    self._status = "terminate"
-                else:
-                    self._calculate_bulk_modulus()
-                    self._status = "done"
-
+                self._calculate_mode_gruneisen()
+                self._status = "done"
             raise StopIteration
 
         return self._tasks
 
-    def _calculate_bulk_modulus(self):
-        if self._is_cell_relaxed:
-            V = self._cell.get_volume()
-        else:
-            V = self._bm_tasks[0].get_cell().get_volume()
-        V_p = self._bm_tasks[1].get_cell().get_volume()
-        V_m = self._bm_tasks[2].get_cell().get_volume()
-        s_p = self._bm_tasks[1].get_stress()
-        s_m = self._bm_tasks[2].get_stress()
-
-        self._bulk_modulus = - (s_p - s_m).trace() / 3 * V / (V_p - V_m)
+    def _calculate_mode_gruneisen(self):
+        self._mode_gruneisen = None
         
     def _prepare_next(self, cell):
         self._stage = 1
-        self._status = "plus minus"
-        plus, minus = self._get_plus_minus_tasks(cell)
-        self._bm_tasks.append(plus)
-        self._bm_tasks.append(minus)
-        self._tasks = self._bm_tasks[1:]
+        self._status = "phonons"
+        self._mg_tasks += self._get_phonon_tasks(cell)
+        self._tasks = self._mg_tasks[1:]
 
     def _write_yaml(self):
         w = open("%s.yaml" % self._directory, 'w')
-        if self._bm_tasks[0]:
+        if self._mg_tasks[0]:
             w.write("lattice_tolerance: %f\n" % self._lattice_tolerance)
             w.write("pressure_target: %f\n" % self._pressure_target)
             w.write("stress_tolerance: %f\n" % self._stress_tolerance)
@@ -136,12 +126,19 @@ class BulkModulusBase(TaskElement):
             w.write("max_increase: %f\n" % self._max_increase)
             w.write("max_iteration: %d\n" % self._max_iteration)
             w.write("min_iteration: %d\n" % self._min_iteration)
-            w.write("iteration: %d\n" % self._bm_tasks[0].get_stage())
+            w.write("iteration: %d\n" % self._mg_tasks[0].get_stage())
         w.write("status: %s\n" % self._status)
+        w.write("supercell_matrix:\n")
+        for row in self._supercell_matrix:
+            w.write("- [ %3d, %3d, %3d ]\n" % tuple(row))
+        w.write("primitive_matrix:\n")
+        for row in self._primitive_matrix:
+            w.write("- [ %6.3f, %6.3f, %6.3f ]\n" % tuple(row))
+        w.write("distance: %f\n" % self._distance)
         if self._is_cell_relaxed:
             cell = self._cell
         else:
-            cell = self._bm_tasks[0].get_cell()
+            cell = self._mg_tasks[0].get_cell()
 
         if cell:
             lattice = cell.get_lattice().T
@@ -162,6 +159,4 @@ class BulkModulusBase(TaskElement):
             for i, v in enumerate(symbols):
                 w.write("- %2s # %d\n" % (v, i + 1))
 
-        if self._bulk_modulus:
-            w.write("bulk_modulus: %f\n" % self._bulk_modulus)
         w.close()

@@ -206,6 +206,7 @@ class PhononBase(TaskElement):
             w.write("primitive_matrix:\n")
             for row in self._primitive_matrix:
                 w.write("- [ %6.3f, %6.3f, %6.3f ]\n" % tuple(row))
+            w.write("distance: %f\n" % self._distance)
             w.write("iteration: %d\n" % self._phonon_tasks[0].get_stage())
             if self._energy:
                 w.write("electric_total_energy: %20.10f\n" % self._energy)

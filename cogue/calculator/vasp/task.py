@@ -5,6 +5,7 @@ from cogue.crystal.converter import atoms2cell
 from cogue.task.oneshot_calculation import *
 from cogue.task.structure_optimization import *
 from cogue.task.bulk_modulus import *
+from cogue.task.mode_gruneisen import *
 from cogue.task.phonon import *
 from cogue.task.phonon_relax import *
 from cogue.task.elastic_constants import *
@@ -85,49 +86,43 @@ class TaskVasp:
             incar = self._incar.copy()
 
         # k_mesh
+        k_mesh = None
         if (isinstance(self._k_mesh, list) or
             isinstance(self._k_mesh, tuple)):
             if None in self._k_mesh:
                 k_mesh = self._k_mesh[index]
-        elif np.array(self._k_mesh).ndim == 2:
-            k_mesh = self._k_mesh[index]
-        else:
-            k_mesh = self._k_mesh
+        if not k_mesh:
+            if np.array(self._k_mesh).ndim == 2:
+                k_mesh = self._k_mesh[index]
+            else:
+                k_mesh = self._k_mesh
 
         # k_shift
+        k_shift = None
         if (isinstance(self._k_shift, list) or
             isinstance(self._k_shift, tuple)):
             if None in self._k_shift:
                 k_shift = self._k_shift[index]
-        elif self._k_shift == None:
-            k_shift = None
-        elif np.array(self._k_shift).ndim == 2:
-            k_shift = self._k_shift[index]
-        else:
-            k_shift = self._k_shift
+        if not k_shift:
+            if self._k_shift == None:
+                k_shift = None
+            elif np.array(self._k_shift).ndim == 2:
+                k_shift = self._k_shift[index]
+            else:
+                k_shift = self._k_shift
 
         # k_gamma
-        if (isinstance(self._k_gamma, list) or
-            isinstance(self._k_gamma, tuple)):
-            if None in self._k_gamma:
-                k_gamma = self._k_gamma[index]
-        elif not self._k_gamma:
-            k_gamma = None
-        elif (isinstance(self._k_gamma, list) or 
+        k_gamma = None
+        if (isinstance(self._k_gamma, list) or 
               isinstance(self._k_gamma, tuple)):
             k_gamma = self._k_gamma[index]
         else:
             k_gamma = self._k_gamma
 
         # k_length
-        if (isinstance(self._k_length, list) or
+        k_length = None
+        if (isinstance(self._k_length, list) or 
             isinstance(self._k_length, tuple)):
-            if None in self._k_length:
-                k_length = self._k_length[index]
-        elif not self._k_length:
-            k_length = None
-        elif (isinstance(self._k_length, list) or 
-              isinstance(self._k_length, tuple)):
             k_length = self._k_length[index]
         else:
             k_length = self._k_length
@@ -649,6 +644,84 @@ class ElasticConstantsElement(TaskVasp, ElasticConstantsElementBase):
             else:
                 self._log += "Failed to parse OUTCAR.\n"
                 self._status = "terminate"
+
+class ModeGruneisen(TaskVasp, ModeGruneisenBase):
+    """Task to calculate mode Gruneisen parameters by VASP."""
+    
+    def __init__(self,
+                 directory="mode_gruneisen",
+                 name=None,
+                 supercell_matrix=np.eye(3, dtype=int),
+                 primitive_matrix=np.eye(3, dtype=int),
+                 distance=0.01,
+                 lattice_tolerance=0.1,
+                 force_tolerance=1e-3,
+                 pressure_target=0,
+                 stress_tolerance=10,
+                 max_increase=1.5,
+                 max_iteration=3,
+                 min_iteration=1,
+                 traverse=False,
+                 is_cell_relaxed=False):
+
+        ModeGruneisenBase.__init__(
+            self,
+            directory=directory,
+            name=name,
+            supercell_matrix=supercell_matrix,
+            primitive_matrix=primitive_matrix,
+            distance=distance,
+            lattice_tolerance=lattice_tolerance,
+            force_tolerance=force_tolerance,
+            pressure_target=pressure_target,
+            stress_tolerance=stress_tolerance,
+            max_increase=max_increase,
+            max_iteration=max_iteration,
+            min_iteration=min_iteration,
+            traverse=traverse,
+            is_cell_relaxed=is_cell_relaxed)
+
+    def _get_phonon_tasks(self, cell):
+        lattice = cell.get_lattice()
+        orig = self._get_phonon_task(cell, "orig",
+                                     is_cell_relaxed=self._is_cell_relaxed)
+
+        cell_plus = cell.copy()
+        cell_plus.set_lattice(lattice * 1.01 ** (1.0/3))
+        plus = self._get_phonon_task(cell_plus, "plus")
+
+        cell_minus = cell.copy()
+        cell_minus.set_lattice(lattice * 0.99 ** (1.0/3))
+        minus = self._get_phonon_task(cell_minus, "minus")
+
+        return orig, plus, minus
+
+    def _get_phonon_task(self, cell, directory, is_cell_relaxed=False):
+        task = Phonon(directory=directory,
+                      supercell_matrix=self._supercell_matrix,
+                      primitive_matrix=self._primitive_matrix,
+                      distance=self._distance,
+                      lattice_tolerance=self._lattice_tolerance,
+                      force_tolerance=self._force_tolerance,
+                      pressure_target=self._pressure_target,
+                      stress_tolerance=self._stress_tolerance,
+                      max_increase=self._max_increase,
+                      max_iteration=1,
+                      min_iteration=1,
+                      is_cell_relaxed=is_cell_relaxed,
+                      traverse=self._traverse)
+
+        task.set_configurations(
+            cell=cell,
+            pseudo_potential_map=self._pseudo_potential_map,
+            k_mesh=self._k_mesh,
+            k_shift=self._k_shift,
+            k_gamma=self._k_gamma,
+            k_length=self._k_length,
+            incar=self._incar)
+        task.set_job(self._job)
+
+        return task
 
 class PhononRelax(TaskVasp, PhononRelaxBase):
     def __init__(self,
