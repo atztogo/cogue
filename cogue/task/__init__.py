@@ -58,7 +58,11 @@ class TaskElement(TaskBase):
         self._traverse = False # Do not submit job
 
     def set_job(self, job):
-        self._job = job
+        if (isinstance(self._job, list) or
+            isinstance(self._job, tuple)):
+            self._job = list(job)
+        else:
+            self._job = job
         
     def get_job(self):
         return self._job

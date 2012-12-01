@@ -42,11 +42,30 @@ class TaskVasp:
         else:
             self._pseudo_potential_map = pseudo_potential_map.copy()
 
-        self._k_mesh = k_mesh
-        self._k_gamma = k_gamma
-        self._k_shift = k_shift
-        self._k_length = k_length
-        self._incar = incar
+        if k_mesh:
+            self._k_mesh = list(k_mesh)
+        else:
+            self._k_mesh = k_mesh
+
+        if k_shift:
+            self._k_shift = list(k_shift)
+        else:
+            self._k_shift = k_shift
+
+        if isinstance(k_gamma, tuple):
+            self._k_gamma = list(k_gamma)
+        else:
+            self._k_gamma = k_gamma
+
+        if isinstance(k_length, tuple):
+            self._k_length = list(k_length)
+        else:
+            self._k_length = k_length
+
+        if isinstance(incar, tuple):
+            self._incar = list(incar)
+        else:
+            self._incar = incar
 
     def _prepare(self):
         """
@@ -79,57 +98,41 @@ class TaskVasp:
 
     def _choose_configuration(self, index=0):
         # incar
-        if (isinstance(self._incar, list) or
-            isinstance(self._incar, tuple)):
+        if isinstance(self._incar, list):
             incar = self._incar[index].copy()
         else:
             incar = self._incar.copy()
 
         # k_mesh
-        k_mesh = None
-        if (isinstance(self._k_mesh, list) or
-            isinstance(self._k_mesh, tuple)):
+        k_mesh = self._k_mesh
+        if self._k_mesh:
             if None in self._k_mesh:
                 k_mesh = self._k_mesh[index]
-        if not k_mesh:
-            if np.array(self._k_mesh).ndim == 2:
+            elif np.array(self._k_mesh).ndim == 2:
                 k_mesh = self._k_mesh[index]
-            else:
-                k_mesh = self._k_mesh
 
         # k_shift
-        k_shift = None
-        if (isinstance(self._k_shift, list) or
-            isinstance(self._k_shift, tuple)):
+        k_shift = self._k_shift
+        if self._k_shift:
             if None in self._k_shift:
                 k_shift = self._k_shift[index]
-        if not k_shift:
-            if self._k_shift == None:
-                k_shift = None
             elif np.array(self._k_shift).ndim == 2:
                 k_shift = self._k_shift[index]
-            else:
-                k_shift = self._k_shift
 
         # k_gamma
-        k_gamma = None
-        if (isinstance(self._k_gamma, list) or 
-              isinstance(self._k_gamma, tuple)):
+        if isinstance(self._k_gamma, list):
             k_gamma = self._k_gamma[index]
         else:
             k_gamma = self._k_gamma
 
         # k_length
-        k_length = None
-        if (isinstance(self._k_length, list) or 
-            isinstance(self._k_length, tuple)):
+        if isinstance(self._k_length, list):
             k_length = self._k_length[index]
         else:
             k_length = self._k_length
 
         # job
-        if (isinstance(self._job, list) or
-            isinstance(self._job, tuple)):
+        if isinstance(self._job, list):
             job = self._job[index]
         else:
             job = self._job
@@ -711,15 +714,49 @@ class ModeGruneisen(TaskVasp, ModeGruneisenBase):
                       is_cell_relaxed=is_cell_relaxed,
                       traverse=self._traverse)
 
+        if isinstance(self._job, list):
+            job = self._job[1:]
+        else:
+            job = self._job
+
+        k_mesh = self._k_mesh
+        if self._k_mesh:
+            if None in self._k_mesh:
+                k_mesh = self._k_mesh[1:]
+            elif np.array(self._k_mesh).ndim > 1:
+                k_mesh = self._k_mesh[1:]
+
+        k_shift = self._k_shift
+        if self._k_shift:
+            if None in self._k_shift:
+                k_shift = self._k_shift[1:]
+            elif np.array(self._k_shift).ndim > 1:
+                k_shift = self._k_shift[1:]
+
+        if isinstance(self._k_gamma, list):
+            k_gamma = self._k_gamma[1:]
+        else:
+            k_gamma = self._k_gamma
+
+        if isinstance(self._k_length, list):
+            k_length = self._k_length[1:]
+        else:
+            k_length = self._k_length
+
+        if isinstance(self._incar, list):
+            incar = self._incar[1:]
+        else:
+            incar = self._incar
+        
         task.set_configurations(
             cell=cell,
             pseudo_potential_map=self._pseudo_potential_map,
-            k_mesh=self._k_mesh,
-            k_shift=self._k_shift,
-            k_gamma=self._k_gamma,
-            k_length=self._k_length,
-            incar=self._incar)
-        task.set_job(self._job)
+            k_mesh=k_mesh,
+            k_shift=k_shift,
+            k_gamma=k_gamma,
+            k_length=k_length,
+            incar=incar)
+        task.set_job(job)
 
         return task
 
