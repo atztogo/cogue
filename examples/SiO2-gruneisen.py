@@ -32,7 +32,8 @@ incar.set_nsw(20)
 incar_ph_rx = vasp.incar()
 incar_ph_rx.set_structure_optimization()
 incar_ph_rx.set_nsw(20)
-incar_ph_rx.set_isif(4)
+incar_ph_rx.set_isif(4) # volume constant
+# incar_ph_rx.set_isif(2) # lattice vectors constant
 
 incar_ph_dsp = vasp.incar()
 incar_ph_dsp.set_electronic_structure()
@@ -48,6 +49,7 @@ job = ge.job(script="mpirun vasp5212mpi",
 # Task
 task = vasp.mode_gruneisen(max_iteration=10,
                            min_iteration=1,
+                           strain=0.01,
                            supercell_matrix=np.diag([2, 2, 2]),
                            cell=cell,
                            pseudo_potential_map=ps_map,
