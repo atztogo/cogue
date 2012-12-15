@@ -691,10 +691,12 @@ class ModeGruneisen(TaskVasp, ModeGruneisenBase):
     def _get_phonon_tasks(self, cell):
         lattice = cell.get_lattice()
         cell_orig = cell.copy()
-        cell_orig.set_lattice(np.dot(lattice, self._lattice_orig))
-
+        cell_orig.set_lattice(np.dot(self._lattice_orig, lattice))
         cell_minus = cell.copy()
-        cell_minus.set_lattice(np.dot(lattice, self._lattice_minus))
+        cell_minus.set_lattice(np.dot(self._lattice_minus, lattice))
+        cell_plus = cell.copy()
+        cell_plus.set_lattice(np.dot(self._lattice_plus, lattice))
+        
         minus = self._get_phonon_task(cell_minus,
                                       "minus",
                                       is_cell_relaxed=(
@@ -708,8 +710,6 @@ class ModeGruneisen(TaskVasp, ModeGruneisenBase):
                     self._bias is not "plus" and
                     self._bias is not "minus"))
 
-        cell_plus = cell.copy()
-        cell_plus.set_lattice(np.dot(lattice, self._lattice_plus))
         plus = self._get_phonon_task(cell_plus,
                                      "plus",
                                      is_cell_relaxed=(
@@ -734,9 +734,11 @@ class ModeGruneisen(TaskVasp, ModeGruneisenBase):
                       traverse=self._traverse)
 
         if isinstance(self._job, list):
-            job = self._job[1:]
+            job = [j.copy("%s-%s" % (j.get_jobname(), directory))
+                   for j in self._job[1:]]
         else:
-            job = self._job
+            job = self._job.copy("%s-%s" % (j.get_jobname(), directory))
+
 
         k_mesh = self._k_mesh
         if self._k_mesh:
