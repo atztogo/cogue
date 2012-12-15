@@ -655,6 +655,7 @@ class ModeGruneisen(TaskVasp, ModeGruneisenBase):
                  directory="mode_gruneisen",
                  name=None,
                  strain=0.01,
+                 bias=None,
                  supercell_matrix=np.eye(3, dtype=int),
                  primitive_matrix=np.eye(3, dtype=int),
                  distance=0.01,
@@ -673,6 +674,7 @@ class ModeGruneisen(TaskVasp, ModeGruneisenBase):
             directory=directory,
             name=name,
             strain=strain,
+            bias=bias,
             supercell_matrix=supercell_matrix,
             primitive_matrix=primitive_matrix,
             distance=distance,
@@ -688,16 +690,31 @@ class ModeGruneisen(TaskVasp, ModeGruneisenBase):
 
     def _get_phonon_tasks(self, cell):
         lattice = cell.get_lattice()
-        orig = self._get_phonon_task(cell, "orig",
-                                     is_cell_relaxed=self._is_cell_relaxed)
-
-        cell_plus = cell.copy()
-        cell_plus.set_lattice(np.dot(lattice, self._lattice_plus))
-        plus = self._get_phonon_task(cell_plus, "plus")
+        cell_orig = cell.copy()
+        cell_orig.set_lattice(np.dot(lattice, self._lattice_orig))
 
         cell_minus = cell.copy()
         cell_minus.set_lattice(np.dot(lattice, self._lattice_minus))
-        minus = self._get_phonon_task(cell_minus, "minus")
+        minus = self._get_phonon_task(cell_minus,
+                                      "minus",
+                                      is_cell_relaxed=(
+                self._is_cell_relaxed and
+                self._bias is "plus"))
+
+        orig = self._get_phonon_task(cell_orig,
+                                     "orig",
+                                     is_cell_relaxed=(
+                    self._is_cell_relaxed and
+                    self._bias is not "plus" and
+                    self._bias is not "minus"))
+
+        cell_plus = cell.copy()
+        cell_plus.set_lattice(np.dot(lattice, self._lattice_plus))
+        plus = self._get_phonon_task(cell_plus,
+                                     "plus",
+                                     is_cell_relaxed=(
+                self._is_cell_relaxed and
+                self._bias is "minus"))
 
         return orig, plus, minus
 

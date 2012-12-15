@@ -16,6 +16,7 @@ class ModeGruneisenBase(TaskElement):
                  directory=None,
                  name=None,
                  strain=None,
+                 bias=None,
                  supercell_matrix=None,
                  primitive_matrix=None,
                  distance=None,
@@ -38,12 +39,34 @@ class ModeGruneisenBase(TaskElement):
             self._name = name
         self._task_type = "mode_gruneisen"
 
-        if isinstance(strain, int) or isinstance(strain, float):
-            self._lattice_plus = (1 + strain) ** (1.0 / 3) * np.eye(3)
-            self._lattice_minus = (1 - strain) ** (1.0 / 3) * np.eye(3)
+        self._bias = bias
+        if bias is "plus":
+            if isinstance(strain, int) or isinstance(strain, float):
+                self._lattice_minus = np.eye(3)
+                self._lattice_orig = (1 + strain) ** (1.0 / 3) * np.eye(3)
+                self._lattice_plus = (1 + 2 * strain) ** (1.0 / 3) * np.eye(3)
+            else:
+                self._lattice_minus = np.eye(3)
+                self._lattice_orig = np.eye(3) + np.array(strain)
+                self._lattice_plus = np.eye(3) + 2 * np.array(strain)
+        elif bias is "minus":
+            if isinstance(strain, int) or isinstance(strain, float):
+                self._lattice_minus = (1 - 2 * strain) ** (1.0 / 3) * np.eye(3)
+                self._lattice_orig = (1 - strain) ** (1.0 / 3) * np.eye(3)
+                self._lattice_plus = np.eye(3)
+            else:
+                self._lattice_minus = np.eye(3) - 2 * np.array(strain)
+                self._lattice_orig = np.eye(3) - np.array(strain)
+                self._lattice_plus = np.eye(3)
         else:
-            self._lattice_plus = np.eye(3) + np.array(strain)
-            self._lattice_minus = np.eye(3) - np.array(strain)
+            if isinstance(strain, int) or isinstance(strain, float):
+                self._lattice_minus = (1 - strain) ** (1.0 / 3) * np.eye(3)
+                self._lattice_orig = np.eye(3)
+                self._lattice_plus = (1 + strain) ** (1.0 / 3) * np.eye(3)
+            else:
+                self._lattice_minus = np.eye(3) - np.array(strain)
+                self._lattice_orig = np.eye(3)
+                self._lattice_plus = np.eye(3) + np.array(strain)
         
         self._supercell_matrix = supercell_matrix
         self._primitive_matrix = primitive_matrix
