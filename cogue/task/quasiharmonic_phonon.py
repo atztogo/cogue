@@ -1,22 +1,21 @@
 from cogue.task import TaskElement
 import numpy as np
 
-class ModeGruneisenBase(TaskElement):
-    """ModeGruneisen class
+class QuasiHarmonicPhononBase(TaskElement):
+    """QuasiHarmonicPhonon class
 
     Three stages:
     1. structure optimization of input cell
-    2. create cells with, e.g. +1% and -1% volumes or strains, and optimize them
+    2. create cells with various volumes and optimize them
     3. calculate phonons for three cells
-    4. calculate mode-Gruneisen parameters (This is not yet implemented.)
+    4. calculate quasi-harmonic phonons
     
     """
     
     def __init__(self,
                  directory=None,
                  name=None,
-                 strain=None,
-                 bias=None,
+                 strains=None,
                  supercell_matrix=None,
                  primitive_matrix=None,
                  distance=None,
@@ -37,37 +36,14 @@ class ModeGruneisenBase(TaskElement):
             self._name = directory
         else:
             self._name = name
-        self._task_type = "mode_gruneisen"
+        self._task_type = "quasiharmonic_phonon"
 
-        self._bias = bias
-        if bias is "plus":
+        self._lattices = [np.eye(3)]
+        for strain in strains:
             if isinstance(strain, int) or isinstance(strain, float):
-                self._lattice_minus = np.eye(3)
-                self._lattice_orig = (1 + strain) ** (1.0 / 3) * np.eye(3)
-                self._lattice_plus = (1 + 2 * strain) ** (1.0 / 3) * np.eye(3)
+                self._lattices.append((1 + strain) ** (1.0 / 3) * np.eye(3))
             else:
-                self._lattice_minus = np.eye(3)
-                self._lattice_orig = np.eye(3) + np.array(strain)
-                self._lattice_plus = np.eye(3) + 2 * np.array(strain)
-        elif bias is "minus":
-            if isinstance(strain, int) or isinstance(strain, float):
-                self._lattice_minus = (1 - 2 * strain) ** (1.0 / 3) * np.eye(3)
-                self._lattice_orig = (1 - strain) ** (1.0 / 3) * np.eye(3)
-                self._lattice_plus = np.eye(3)
-            else:
-                self._lattice_minus = np.eye(3) - 2 * np.array(strain)
-                self._lattice_orig = np.eye(3) - np.array(strain)
-                self._lattice_plus = np.eye(3)
-        else:
-            if isinstance(strain, int) or isinstance(strain, float):
-                self._lattice_minus = (1 - strain) ** (1.0 / 3) * np.eye(3)
-                self._lattice_orig = np.eye(3)
-                self._lattice_plus = (1 + strain) ** (1.0 / 3) * np.eye(3)
-            else:
-                self._lattice_minus = np.eye(3) - np.array(strain)
-                self._lattice_orig = np.eye(3)
-                self._lattice_plus = np.eye(3) + np.array(strain)
-        
+                self._lattices.append(np.eye(3) + np.array(strain))
         self._supercell_matrix = supercell_matrix
         self._primitive_matrix = primitive_matrix
         self._distance = distance
@@ -85,11 +61,7 @@ class ModeGruneisenBase(TaskElement):
         self._tasks = None
 
         self._cell = None
-        self._mode_gruneisen = None
-        self._mg_tasks = None
-
-    def get_mode_gruneisen(self):
-        return self._mode_gruneisen
+        self._qh_tasks = None
 
     def set_status(self):
         done = True
@@ -110,12 +82,12 @@ class ModeGruneisenBase(TaskElement):
             raise
 
         if self._is_cell_relaxed:
-            self._mg_tasks = [None]
+            self._qh_tasks = [None]
             self._prepare_next(self._cell)
         else:
             self._status = "equilibrium"
-            self._mg_tasks = [self._get_equilibrium_task()]
-            self._tasks = [self._mg_tasks[0]]
+            self._qh_tasks = [self._get_equilibrium_task()]
+            self._tasks = [self._qh_tasks[0]]
 
     def end(self):
         self._write_yaml()
@@ -128,29 +100,29 @@ class ModeGruneisenBase(TaskElement):
     def next(self):    
         if self._stage == 0:
             if self._status == "next":
-                self._prepare_next(self._mg_tasks[0].get_cell())
+                self._prepare_next(self._qh_tasks[0].get_cell())
             else:
                 raise StopIteration
         else:
             if self._status == "next":
-                self._calculate_mode_gruneisen()
+                self._calculate_quasiharmonic_phonon()
                 self._status = "done"
             raise StopIteration
 
         return self._tasks
 
-    def _calculate_mode_gruneisen(self):
-        self._mode_gruneisen = None
+    def _calculate_quasiharmonic_phonon(self):
+        self._quasiharmonic_phonon = None
         
     def _prepare_next(self, cell):
         self._stage = 1
         self._status = "phonons"
-        self._mg_tasks += self._get_phonon_tasks(cell)
-        self._tasks = self._mg_tasks[1:]
+        self._qh_tasks += self._get_phonon_tasks(cell)
+        self._tasks = self._qh_tasks[1:]
 
     def _write_yaml(self):
         w = open("%s.yaml" % self._directory, 'w')
-        if self._mg_tasks[0]:
+        if self._qh_tasks[0]:
             w.write("lattice_tolerance: %f\n" % self._lattice_tolerance)
             w.write("pressure_target: %f\n" % self._pressure_target)
             w.write("stress_tolerance: %f\n" % self._stress_tolerance)
@@ -158,7 +130,7 @@ class ModeGruneisenBase(TaskElement):
             w.write("max_increase: %f\n" % self._max_increase)
             w.write("max_iteration: %d\n" % self._max_iteration)
             w.write("min_iteration: %d\n" % self._min_iteration)
-            w.write("iteration: %d\n" % self._mg_tasks[0].get_stage())
+            w.write("iteration: %d\n" % self._qh_tasks[0].get_stage())
         w.write("status: %s\n" % self._status)
         w.write("supercell_matrix:\n")
         for row in self._supercell_matrix:
@@ -170,7 +142,7 @@ class ModeGruneisenBase(TaskElement):
         if self._is_cell_relaxed:
             cell = self._cell
         else:
-            cell = self._mg_tasks[0].get_cell()
+            cell = self._qh_tasks[0].get_cell()
 
         if cell:
             lattice = cell.get_lattice().T

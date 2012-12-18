@@ -9,6 +9,7 @@ from cogue.task.mode_gruneisen import *
 from cogue.task.phonon import *
 from cogue.task.phonon_relax import *
 from cogue.task.elastic_constants import *
+from cogue.task.quasiharmonic_phonon import *
 from cogue.crystal.vasp_io import *
 
 def klength2mesh(k_length, lattice):
@@ -768,6 +769,122 @@ class ModeGruneisen(TaskVasp, ModeGruneisenBase):
             incar = self._incar[1:]
         else:
             incar = self._incar
+        
+        task.set_configurations(
+            cell=cell,
+            pseudo_potential_map=self._pseudo_potential_map,
+            k_mesh=k_mesh,
+            k_shift=k_shift,
+            k_gamma=k_gamma,
+            k_length=k_length,
+            incar=incar)
+        task.set_job(job)
+
+        return task
+
+class QuasiHarmonicPhonon(TaskVasp, QuasiHarmonicPhononBase):
+    """Task to calculate quasi-harmonic phonons by VASP."""
+    
+    def __init__(self,
+                 directory="quasiharmonic_phonon",
+                 name=None,
+                 strains=[-0.04, -0.02, 0.02, 0.04, 0.06, 0.08],
+                 supercell_matrix=np.eye(3, dtype=int),
+                 primitive_matrix=np.eye(3, dtype=int),
+                 distance=0.01,
+                 lattice_tolerance=0.1,
+                 force_tolerance=1e-3,
+                 pressure_target=0,
+                 stress_tolerance=10,
+                 max_increase=1.5,
+                 max_iteration=3,
+                 min_iteration=1,
+                 traverse=False,
+                 is_cell_relaxed=False):
+
+        QuasiHarmonicPhononBase.__init__(
+            self,
+            directory=directory,
+            name=name,
+            strains=strains,
+            supercell_matrix=supercell_matrix,
+            primitive_matrix=primitive_matrix,
+            distance=distance,
+            lattice_tolerance=lattice_tolerance,
+            force_tolerance=force_tolerance,
+            pressure_target=pressure_target,
+            stress_tolerance=stress_tolerance,
+            max_increase=max_increase,
+            max_iteration=max_iteration,
+            min_iteration=min_iteration,
+            traverse=traverse,
+            is_cell_relaxed=is_cell_relaxed)
+
+    def _get_phonon_tasks(self, cell):
+        lattice_orig = cell.get_lattice()
+        phonons = []
+        for i, lattice in enumerate(self._lattices):
+            cell_tmp = cell.copy()
+            cell_tmp.set_lattice(np.dot(lattice, lattice_orig))
+            phonons.append(self._get_phonon_task(cell_tmp,
+                                                 "phonon-%02d" % i,
+                                                 is_cell_relaxed=(
+                        (i is 0) and self._is_cell_relaxed)))
+        return phonons
+
+    def _get_phonon_task(self, cell, directory, is_cell_relaxed=False):
+        task = Phonon(directory=directory,
+                      supercell_matrix=self._supercell_matrix,
+                      primitive_matrix=self._primitive_matrix,
+                      distance=self._distance,
+                      lattice_tolerance=self._lattice_tolerance,
+                      force_tolerance=self._force_tolerance,
+                      pressure_target=self._pressure_target,
+                      stress_tolerance=self._stress_tolerance,
+                      max_increase=self._max_increase,
+                      max_iteration=1,
+                      min_iteration=1,
+                      traverse=self._traverse)
+
+        if isinstance(self._job, list):
+            job = [j.copy("%s-%s" % (j.get_jobname(), directory))
+                   for j in self._job[1:]]
+        else:
+            job = self._job.copy("%s-%s" % (j.get_jobname(), directory))
+
+
+        k_mesh = self._k_mesh
+        if self._k_mesh:
+            if None in self._k_mesh:
+                k_mesh = self._k_mesh[1:]
+            elif np.array(self._k_mesh).ndim > 1:
+                k_mesh = self._k_mesh[1:]
+
+        k_shift = self._k_shift
+        if self._k_shift:
+            if None in self._k_shift:
+                k_shift = self._k_shift[1:]
+            elif np.array(self._k_shift).ndim > 1:
+                k_shift = self._k_shift[1:]
+
+        if isinstance(self._k_gamma, list):
+            k_gamma = self._k_gamma[1:]
+        else:
+            k_gamma = self._k_gamma
+
+        if isinstance(self._k_length, list):
+            k_length = self._k_length[1:]
+        else:
+            k_length = self._k_length
+
+        if isinstance(self._incar, list):
+            incar = [x.copy() for x in self._incar[1:]]
+            if is_cell_relaxed:
+                incar[0].set_nsw(1)
+        else:
+            incar = self._incar.copy()
+            if is_cell_relaxed:
+                incar.set_nsw(1)
         
         task.set_configurations(
             cell=cell,
