@@ -1,5 +1,6 @@
 from cogue.task import TaskElement
 import numpy as np
+from phonopy import PhonopyQHA
 
 class QuasiHarmonicPhononBase(TaskElement):
     """QuasiHarmonicPhonon class
@@ -16,6 +17,10 @@ class QuasiHarmonicPhononBase(TaskElement):
                  directory=None,
                  name=None,
                  strains=None,
+                 sampling_mesh=None,
+                 t_step=None,
+                 t_max=None,
+                 t_min=None,
                  supercell_matrix=None,
                  primitive_matrix=None,
                  distance=None,
@@ -44,6 +49,19 @@ class QuasiHarmonicPhononBase(TaskElement):
                 self._lattices.append((1 + strain) ** (1.0 / 3) * np.eye(3))
             else:
                 self._lattices.append(np.eye(3) + np.array(strain))
+        self._sampling_mesh = sampling_mesh
+        if t_step is None:
+            self._step = 10
+        else:
+            self._t_step = t_step
+        if t_max is None:
+            self._t_max = 1500
+        else:
+            self._t_max = t_max
+        if t_min is None:
+            self._t_min = 0
+        else:
+            self._t_min = t_min
         self._supercell_matrix = supercell_matrix
         self._primitive_matrix = primitive_matrix
         self._distance = distance
@@ -112,6 +130,57 @@ class QuasiHarmonicPhononBase(TaskElement):
         return self._tasks
 
     def _calculate_quasiharmonic_phonon(self):
+        energies = []
+        volumes = []
+        phonons = []
+        T = []
+        F = []
+        S = []
+        Cv = []
+        for task in self._tasks:
+            energies.append(task.get_energy())
+            volumes.append(task.get_equilibrium_cell().get_volume())
+            if self._sampling_mesh is not None:
+                phonon = task.get_phonon()
+                phonon.set_mesh(self._sampling_mesh)
+                phonon.set_thermal_properties(t_step=self._t_step,
+                                              t_max=self._t_max + self._t_step * 2.5,
+                                              t_min=self._t_min)
+                (temperatures,
+                 free_energies,
+                 entropies,
+                 heat_capacities) = phonon.get_thermal_properties()
+                T.append(temperatures)
+                F.append(free_energies)
+                S.append(entropies)
+                Cv.append(heat_capacities)
+                phonon.write_yaml_thermal_properties()
+
+        if self._sampling_mesh:
+            qha = PhonopyQHA(volumes,
+                             energies,
+                             temperatures=T[0],
+                             free_energy=np.transpose(F),
+                             cv=np.transpose(Cv),
+                             entropy=np.transpose(S),
+                             t_max=self._t_max,
+                             verbose=False)
+
+            qha.write_helmholtz_volume()
+            qha.write_volume_temperature()
+            qha.write_thermal_expansion()
+            qha.write_volume_expansion()
+            qha.write_gibbs_temperature()
+            qha.write_bulk_modulus_temperature()
+            qha.write_heat_capacity_P_numerical()
+            qha.write_heat_capacity_P_polyfit()
+            qha.write_gruneisen_temperature()
+                
+        w = open("e-v.dat", 'w')
+        w.write("#   cell volume        energy of cell other than phonon\n")
+        for e, v in zip(energies, volumes):
+            w.write("%20.13f %20.13f\n" % (v, e))
+            
         self._quasiharmonic_phonon = None
         
     def _prepare_next(self, cell):
