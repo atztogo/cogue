@@ -51,7 +51,7 @@ class QuasiHarmonicPhononBase(TaskElement):
                 self._lattices.append(np.eye(3) + np.array(strain))
         self._sampling_mesh = sampling_mesh
         if t_step is None:
-            self._step = 10
+            self._t_step = 10
         else:
             self._t_step = t_step
         if t_max is None:
@@ -137,7 +137,7 @@ class QuasiHarmonicPhononBase(TaskElement):
         F = []
         S = []
         Cv = []
-        for task in self._tasks:
+        for i, task in enumerate(self._tasks):
             energies.append(task.get_energy())
             volumes.append(task.get_equilibrium_cell().get_volume())
             if self._sampling_mesh is not None:
@@ -154,7 +154,8 @@ class QuasiHarmonicPhononBase(TaskElement):
                 F.append(free_energies)
                 S.append(entropies)
                 Cv.append(heat_capacities)
-                phonon.write_yaml_thermal_properties()
+                phonon.write_yaml_thermal_properties(
+                    "thermal_properties-%02d.yaml" % i)
 
         if self._sampling_mesh:
             qha = PhonopyQHA(volumes,

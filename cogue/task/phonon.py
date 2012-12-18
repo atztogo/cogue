@@ -67,6 +67,7 @@ class PhononBase(TaskElement):
             return self._phonon_tasks[0].get_cell()
 
     def get_energy(self):
+        """Return energies at geometry optimization steps"""
         return self._energy
 
     def set_status(self):

@@ -845,8 +845,7 @@ class VasprunxmlExpat:
 
         if self._is_i:
             if self._is_energy:
-                self._energies.append(
-                    [float(x) for x in data.split()])
+                self._energies.append(float(data.strip()))
 
         if self._is_c:
             if self._is_symbols:
@@ -860,36 +859,19 @@ if __name__ == '__main__':
     vxml = VasprunxmlExpat(sys.argv[1])
     vxml.parse()
     
+    print "VasprunxmlExpat"
     print "Forces:"
-    for forces in vxml.get_forces():
-        for line in forces:
-            print [float(x) for x in line.split()]
-        print
-    
+    print vxml.get_forces()
     print "Stress:"
-    for stress in vxml.get_stress():
-        for line in stress:
-            print [float(x) for x in line.split()]
-        print
-    
-    print "Positions:"
-    for positions in vxml.get_positions():
-        for line in positions:
-            print [float(x) for x in line.split()]
-        print
-    
-    print "Basis:"
-    for basis in vxml.get_basis():
-        for line in basis:
-            print [float(x) for x in line.split()]
-        print
-    
+    print vxml.get_stress()
+    print "Atomic points:"
+    print vxml.get_points()
+    print "Lattice:"
+    print vxml.get_lattice()
     print "Energy:"
-    for energies in vxml.get_energies():
-        for line in energies:
-            print float(line)
-        print
+    print vxml.get_energies()
 
+    print "Vasprunxml"
     vxml = Vasprunxml(sys.argv[1])
     vxml.parse_calculation()
     vxml.parse_eigenvalues()
