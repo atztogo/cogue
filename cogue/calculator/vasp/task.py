@@ -655,7 +655,8 @@ class ModeGruneisen(TaskVasp, ModeGruneisenBase):
     def __init__(self,
                  directory="mode_gruneisen",
                  name=None,
-                 strain=0.01,
+                 delta_strain=0.001,
+                 strain=None,
                  bias=None,
                  supercell_matrix=np.eye(3, dtype=int),
                  primitive_matrix=np.eye(3, dtype=int),
@@ -674,6 +675,7 @@ class ModeGruneisen(TaskVasp, ModeGruneisenBase):
             self,
             directory=directory,
             name=name,
+            delta_strain=delta_strain,
             strain=strain,
             bias=bias,
             supercell_matrix=supercell_matrix,
@@ -690,13 +692,13 @@ class ModeGruneisen(TaskVasp, ModeGruneisenBase):
             is_cell_relaxed=is_cell_relaxed)
 
     def _get_phonon_tasks(self, cell):
-        lattice = cell.get_lattice()
+        lattice = np.dot(self._strain, cell.get_lattice())
         cell_orig = cell.copy()
-        cell_orig.set_lattice(np.dot(self._lattice_orig, lattice))
+        cell_orig.set_lattice(np.dot(self._delta_strain_orig, lattice))
         cell_minus = cell.copy()
-        cell_minus.set_lattice(np.dot(self._lattice_minus, lattice))
+        cell_minus.set_lattice(np.dot(self._delta_strain_minus, lattice))
         cell_plus = cell.copy()
-        cell_plus.set_lattice(np.dot(self._lattice_plus, lattice))
+        cell_plus.set_lattice(np.dot(self._delta_strain_plus, lattice))
         
         minus = self._get_phonon_task(cell_minus,
                                       "minus",

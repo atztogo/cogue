@@ -15,6 +15,7 @@ class ModeGruneisenBase(TaskElement):
     def __init__(self,
                  directory=None,
                  name=None,
+                 delta_strain=None,
                  strain=None,
                  bias=None,
                  supercell_matrix=None,
@@ -40,33 +41,17 @@ class ModeGruneisenBase(TaskElement):
         self._task_type = "mode_gruneisen"
 
         self._bias = bias
-        if bias is "plus":
-            if isinstance(strain, int) or isinstance(strain, float):
-                self._lattice_minus = np.eye(3)
-                self._lattice_orig = (1 + strain) ** (1.0 / 3) * np.eye(3)
-                self._lattice_plus = (1 + 2 * strain) ** (1.0 / 3) * np.eye(3)
-            else:
-                self._lattice_minus = np.eye(3)
-                self._lattice_orig = np.eye(3) + np.array(strain)
-                self._lattice_plus = np.eye(3) + 2 * np.array(strain)
-        elif bias is "minus":
-            if isinstance(strain, int) or isinstance(strain, float):
-                self._lattice_minus = (1 - 2 * strain) ** (1.0 / 3) * np.eye(3)
-                self._lattice_orig = (1 - strain) ** (1.0 / 3) * np.eye(3)
-                self._lattice_plus = np.eye(3)
-            else:
-                self._lattice_minus = np.eye(3) - 2 * np.array(strain)
-                self._lattice_orig = np.eye(3) - np.array(strain)
-                self._lattice_plus = np.eye(3)
+        if delta_strain is None:
+            self._delta_strain = 0.001
         else:
-            if isinstance(strain, int) or isinstance(strain, float):
-                self._lattice_minus = (1 - strain) ** (1.0 / 3) * np.eye(3)
-                self._lattice_orig = np.eye(3)
-                self._lattice_plus = (1 + strain) ** (1.0 / 3) * np.eye(3)
-            else:
-                self._lattice_minus = np.eye(3) - np.array(strain)
-                self._lattice_orig = np.eye(3)
-                self._lattice_plus = np.eye(3) + np.array(strain)
+            self._delta_strain = delta_strain
+        (self._delta_strain_minus,
+         self._delta_strain_orig,
+         self._delta_strain_plus) = self._get_delta_strains()
+        if strain is None:
+            self._strain = np.eye(3)
+        else:
+            self._strain = self._get_strain(strain)
         
         self._supercell_matrix = supercell_matrix
         self._primitive_matrix = primitive_matrix
@@ -148,6 +133,26 @@ class ModeGruneisenBase(TaskElement):
         self._mg_tasks += self._get_phonon_tasks(cell)
         self._tasks = self._mg_tasks[1:]
 
+    def _get_delta_strains(self):
+        if self._bias is "plus":
+            return (np.eye(3),
+                    self._get_strain(self._delta_strain, factor=1),
+                    self._get_strain(self._delta_strain, factor=2))
+        elif self._bias is "minus":
+            return (self._get_strain(self._delta_strain, factor=-2),
+                    self._get_strain(self._delta_strain, factor=-1),       
+                    np.eye(3))
+        else:
+            return (self._get_strain(self._delta_strain, factor=-1),
+                    np.eye(3),
+                    self._get_strain(self._delta_strain, factor=1))
+        
+    def _get_strain(self, strain, factor=1):
+        if isinstance(strain, int) or isinstance(strain, float):
+            return (1 + factor * strain) ** (1.0 / 3) * np.eye(3)
+        else:
+            return np.eye(3) + factor * np.array(strain)
+            
     def _write_yaml(self):
         w = open("%s.yaml" % self._directory, 'w')
         if self._mg_tasks[0]:
