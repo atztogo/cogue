@@ -49,7 +49,7 @@ job = ge.job(script="mpirun vasp5212mpi",
 # Task
 task = vasp.mode_gruneisen(max_iteration=10,
                            min_iteration=1,
-                           strain=0.01,
+                           delta_strain=0.002,
                            supercell_matrix=np.diag([2, 2, 2]),
                            cell=cell,
                            pseudo_potential_map=ps_map,
