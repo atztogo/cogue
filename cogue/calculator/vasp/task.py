@@ -43,12 +43,16 @@ class TaskVasp:
         else:
             self._pseudo_potential_map = pseudo_potential_map.copy()
 
-        if k_mesh:
+        if isinstance(k_mesh, np.ndarray):
+            self._k_mesh = list(k_mesh)
+        elif k_mesh:
             self._k_mesh = list(k_mesh)
         else:
             self._k_mesh = k_mesh
 
-        if k_shift:
+        if isinstance(k_shift, np.ndarray):
+            self._k_shift = list(k_shift)
+        elif k_shift:
             self._k_shift = list(k_shift)
         else:
             self._k_shift = k_shift
@@ -58,7 +62,9 @@ class TaskVasp:
         else:
             self._k_gamma = k_gamma
 
-        if isinstance(k_length, tuple):
+        if isinstance(k_length, np.ndarray):
+            self._k_length = list(k_length)
+        elif isinstance(k_length, tuple):
             self._k_length = list(k_length)
         else:
             self._k_length = k_length
