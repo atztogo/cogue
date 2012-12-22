@@ -1,8 +1,10 @@
 /bin
 /build
 /lib
+/dist
 /potcar
 /_build
 *~
 .buildinfo
 /.doctrees
+MANIFEST
