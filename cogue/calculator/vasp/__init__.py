@@ -3,7 +3,7 @@
 import os
 import sys
 import numpy as np
-import cogue.crystal.vasp_io as vasp_io
+import cogue.interface.vasp_io as vasp_io
 from cogue.calculator.vasp.task import *
 
 def incar(addgrid=None,

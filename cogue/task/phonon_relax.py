@@ -24,7 +24,7 @@ import numpy as np
 from cogue.task import TaskElement
 from cogue.crystal.converter import \
     write_cif_P1, write_v_sim, get_lattice_parameters
-from cogue.crystal.vasp_io import write_poscar
+from cogue.interface.vasp_io import write_poscar
 from cogue.crystal.converter import get_primitive
 from cogue.crystal.xtalcomp import compare as xtal_compare
 from cogue.crystal.phonon_modulation import PhononModulation
