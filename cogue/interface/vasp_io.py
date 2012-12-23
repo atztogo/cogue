@@ -492,6 +492,8 @@ class Vasprunxml:
         self._energies = None
         self._eigenvalues_spin1 = None
         self._eigenvalues_spin2 = None
+        self._occupancies_spin1 = None
+        self._occupancies_spin2 = None
         self._kpoints = None
         self._kpoint_weights = None
 
@@ -555,23 +557,29 @@ class Vasprunxml:
 
     def parse_eigenvalues(self):
         xml = etree.iterparse(self._filename, tag='eigenvalues')
+        spin1 = []
+        spin2 = []
+        occ1 = []
+        occ2 = []
         try:
             for event, element in xml:
                 for array in element.xpath('./array/set/set'):
 
                     if array.attrib['comment'] == 'spin 1':
-                        spin1 = []
-                        self._parse_eigenvalues_spin(array, spin1)
+                        self._parse_eigenvalues_spin(array, spin1, occ1)
 
                     if array.attrib['comment'] == 'spin 2':
-                        spin2 = []
-                        self._parse_eigenvalues_spin(array, spin2)
+                        self._parse_eigenvalues_spin(array, spin2, occ2)
 
-            self._eigenvalues_spin1 = np.array(spin1)
-            self._eigenvalues_spin2 = np.array(spin2)
+            if spin1:
+                self._eigenvalues_spin1 = np.array(spin1)
+                self._occupancies_spin1 = np.array(occ1)
+            if spin2:
+                self._eigenvalues_spin2 = np.array(spin2)
+                self._occupancies_spin2 = np.array(occ2)
 
             return self._parse_kpoints()
-
+        
         except:
             return False
 
@@ -598,14 +606,16 @@ class Vasprunxml:
         except:
             return False
 
-    def _parse_eigenvalues_spin(self, array, eigenvals):
+    def _parse_eigenvalues_spin(self, array, eigenvals, occupancies):
         for kset in array.xpath('./set'):
             eigs = []
+            occs = []
             for r in kset.xpath('./r'):
                 vals = r.text.split()
-                eigs.append([float(vals[0]),
-                               float(vals[1])])
+                eigs.append(float(vals[0]))
+                occs.append(float(vals[1]))
             eigenvals.append(eigs)
+            occupancies.append(occs)
 
     def _parse_forces_and_stress(self, varray, forces, stress):
         # force
