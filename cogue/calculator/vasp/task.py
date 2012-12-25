@@ -232,6 +232,7 @@ class ElectronicStructure(TaskVasp, ElectronicStructureBase):
                                     'forces': vxml.get_forces(),
                                     'energies': vxml.get_energies()[:,1],
                                     'eigenvalues': vxml.get_eigenvalues(),
+                                    'occupancies': vxml.get_occupancies(),
                                     'kpoints': kpoints,
                                     'kpoint-weights': weights}
                 self._status = "done"

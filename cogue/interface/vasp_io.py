@@ -514,9 +514,15 @@ class Vasprunxml:
 
     def get_eigenvalues(self):
         if self._eigenvalues_spin2 == None:
-            return self._eigenvalues_spin1
+            return (self._eigenvalues_spin1,)
         else:
-            return self._eigenvalues_spin1, self._eigenvalues_spin2
+            return (self._eigenvalues_spin1, self._eigenvalues_spin2)
+
+    def get_occupancies(self):
+        if self._occupancies_spin2 == None:
+            return (self._occupancies_spin1,)
+        else:
+            return (self._occupancies_spin1, self._occupancies_spin2)
 
     def get_kpoints(self):
         return self._kpoints, self._kpoint_weights

@@ -64,23 +64,38 @@ class ElectronicStructureBase(OneShotCalculation):
     def _write_yaml(self):
         w = open("electronic_structure.yaml", 'w')
         w.write("status: %s\n" % self._status)
-        if self._properties:
+        if 'energies' in self._properties:
             w.write("energy: %20.10f\n" % self._properties['energies'][-1])
+        if 'forces' in self._properties:
             w.write("forces:\n")
             for i, v in enumerate(self._properties['forces'][-1]):
                 w.write("- [ %15.10f, %15.10f, %15.10f ] # %d\n" %
                         (v[0], v[1], v[2], i + 1))
-    
+        if 'stress' in self._properties:
             w.write("stress:\n")
             for v in self._properties['stress'][-1]:
                 w.write("- [ %15.10f, %15.10f, %15.10f ]\n" %
                         tuple(v))
-                
-            w.write("eigenvalues:\n")
-            for i, eigs in enumerate(self._properties['eigenvalues']):
+        if 'eigenvalues' in self._properties:
+            if len(self._properties['eigenvalues']) == 2:
+                w.write("eigenvalues_spin1:\n")
+            else:
+                w.write("eigenvalues:\n")
+            for i, (eigs, occs) in enumerate(zip(
+                    self._properties['eigenvalues'][0],
+                    self._properties['occupancies'][0])):
                 w.write("- # %d\n" % (i + 1))
-                for v in eigs:
-                    w.write("  - [ %15.10f, %15.10f ]\n" % tuple(v))
+                for eig, occ in zip(eigs, occs):
+                    w.write("  - [ %15.10f, %15.10f ]\n" % (eig, occ))
+            if len(self._properties['eigenvalues']) == 2:
+                w.write("eigenvalues_spin2:\n")
+                for i, (eigs, occs) in enumerate(zip(
+                        self._properties['eigenvalues'][1],
+                        self._properties['occupancies'][1])):
+                    w.write("- # %d\n" % (i + 1))
+                    for eig, occ in zip(eigs, occs):
+                        w.write("  - [ %15.10f, %15.10f ]\n" % (eig, occ))
+            
         w.close()
 
         
