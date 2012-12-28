@@ -496,6 +496,8 @@ class Vasprunxml:
         self._occupancies_spin2 = None
         self._kpoints = None
         self._kpoint_weights = None
+        self._born_charges = None
+        self._epsilon = None
 
     def get_forces(self):
         return self._forces
@@ -513,12 +515,18 @@ class Vasprunxml:
         return self._energies
 
     def get_eigenvalues(self):
+        # Degeneracy of electrons
+        # Spin components 1 and 2 are stored in tuple as
+        # (spin1, spin2) or (spin1,) if no spin polarized.
         if self._eigenvalues_spin2 == None:
             return (self._eigenvalues_spin1,)
         else:
             return (self._eigenvalues_spin1, self._eigenvalues_spin2)
 
     def get_occupancies(self):
+        # Degeneracy of electrons
+        # Spin components 1 and 2 are stored in tuple as
+        # (spin1, spin2) or (spin1,) if no spin polarized.
         if self._occupancies_spin2 == None:
             return (self._occupancies_spin1,)
         else:
@@ -527,12 +535,21 @@ class Vasprunxml:
     def get_kpoints(self):
         return self._kpoints, self._kpoint_weights
 
+    def get_born_charges(self):
+        return self._born_charges
+
+    def get_epsilon(self):
+        return self._epsilon
+
+
     def parse_calculation(self):
         forces = []
         stress = []
         lattice = []
         points = []
         energies = []
+        born_charges = []
+        epsilon = []
 
         xml = etree.iterparse(self._filename, tag='calculation')
         try:
@@ -547,14 +564,26 @@ class Vasprunxml:
                 for varray in element.xpath('./structure/crystal/varray'):
                     self._parse_lattice(varray, lattice)
     
-                for varray in element.xpath('./energy'):
-                    self._parse_energies(varray, energies)
+                for energy in element.xpath('./energy'):
+                    self._parse_energies(energy, energies)
+
+                for array in element.xpath('./array'):
+                    if array.attrib['name'] == 'born_charges':
+                        self._parse_born_charges(array, born_charges)
+
+                for varray in element.xpath('./varray'):
+                    if varray.attrib['name'] == 'epsilon':
+                        self._parse_vectors(varray, epsilon)
 
             self._forces = np.array(forces)
             self._stress = np.array(stress)
             self._lattice = np.array(lattice)
             self._points = np.array(points)
             self._energies = np.array(energies)
+            if born_charges:
+                self._born_charges = np.array(born_charges)
+            if epsilon:
+                self._epsilon = np.array(epsilon)
 
             return True
 
@@ -658,12 +687,23 @@ class Vasprunxml:
                         [float(x) for x in v.text.strip().split()]))
             lattice.append(np.transpose(lattice_geomopt))
 
-    def _parse_energies(self, varray, energies):
+    def _parse_energies(self, energy, energies):
         energies_geomopt = []
-        for v in varray.xpath('./i'):
+        for v in energy.xpath('./i'):
             energies_geomopt.append(
                 [float(x) for x in v.text.strip().split()])
         energies.append(energies_geomopt)
+
+    def _parse_born_charges(self, array, born_charges):
+        for ion_set in array.xpath('./set'):
+            tensor = []
+            for v in ion_set.xpath('./v'):
+                tensor.append([float(x) for x in v.text.strip().split()])
+            born_charges.append(tensor)
+
+    def _parse_vectors(self, varray, vectors):
+        for v in varray.xpath('./v'):
+            vectors.append([float(x) for x in v.text.strip().split()])
 
 class VasprunxmlExpat:
     def __init__(self, filename):
@@ -891,11 +931,23 @@ if __name__ == '__main__':
     vxml = Vasprunxml(sys.argv[1])
     vxml.parse_calculation()
     vxml.parse_eigenvalues()
+    print "Forces:"
     print vxml.get_forces()
+    print "Stress:"
     print vxml.get_stress()
+    print "Lattice:"
     print vxml.get_lattice()
+    print "Atomic points:"
     print vxml.get_points()
+    print "Energy:"
     print vxml.get_energies()
+    print "Eigenvalues:"
     print vxml.get_eigenvalues()
+    print "Kpoints:"
     print vxml.get_kpoints()
-
+    print "Occupancies:"
+    print vxml.get_occupancies()
+    print "Born charges"
+    print vxml.get_born_charges()
+    print "Epsilon"
+    print vxml.get_epsilon()
