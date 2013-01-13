@@ -1,6 +1,73 @@
 import random
+import sys
 import numpy as np
 from cogue.crystal.cell import Cell, get_distance
+from cogue.crystal.atom import atomic_symbols, atomic_weights
+
+class CellBuilder(Cell):
+    def __init__(self, cell):
+        Cell.__init__(self,
+                      lattice=cell.get_lattice(),
+                      points=cell.get_points(),
+                      numbers=cell.get_numbers(),
+                      magmoms=cell.get_magnetic_moments(),
+                      masses=cell.get_masses())
+        
+    def push(self,
+             point=None,
+             symbol=None,
+             magmom=None,
+             mass=None,
+             number=None):
+        if self._magmoms is not None and magmom is None:
+            sys.stderr.write("Magmoms has to be set.\n")
+        elif point is not None and (symbol or number):
+            self._points = np.append(self._points, [[point[0]],
+                                                    [point[1]],
+                                                    [point[2]]], axis=1)
+            if symbol:
+                self._symbols.append(symbol)
+            if number:
+                self._numbers = np.append(self._numbers, number)
+            if not symbol:
+                self._symbols.append(atomic_weights[number][0])
+            if not number:
+                self._numbers = np.append(self._numbers, atomic_symbols[symbol])
+            if atomic_symbols[self._symbols[-1]] != self._numbers[-1]:
+                sys.stderr.write(
+                    "Symbol and number don't match. Symbol is taken.\n")
+                self._numbers[-1] = atomic_symbols[symbol]
+            if mass:
+                self._masses = np.append(self._masses, mass)
+            else:
+                self._masses = np.append(self._masses,
+                                         atomic_weights[self._numbers[-1]][3])
+
+            if magmom is not None:
+                if self._magmoms is None:
+                    sys.stderr.write(
+                        "Magmoms is not defined.\n")
+                else:
+                    self._points = np.append(self._magmoms, [magmom], axis=0)
+        else:
+            sys.stderr.write(
+                "At least a pair of point and symbol or "
+                "a pair of point and number have to be set.\n")
+
+    def pop(self, index=None):
+        if index is None:
+            i = len(self._symbols) - 1
+        else:
+            i = index
+        self._points = np.delete(self._points, i, axis=1)
+        self._symbols.pop(i)
+        if self._magmoms is not None:
+            self._magmoms = np.delete(self._magmoms, i)
+        self._masses = np.delete(self._masses, i)
+        self._numbers = np.delete(self._numbers, i)
+
+    def get_cell(self):
+        return self.copy()
 
 class RandomBuilder:
     def __init__(self,
@@ -99,20 +166,3 @@ class RandomBuilder:
                 return False
 
 
-if __name__ == '__main__':
-    import sys
-    from cogue.calculator.vasp import *
-
-    builder = RandomBuilder(['Si'] * 6 + ['O'] * 12,
-                             volume=250)
-    cell = builder.build()
-    if not cell:
-        print "Cell build failed."
-        sys.exit(1)
-
-    write_poscar(cell, "POSCAR")
-
-    for i, p1 in enumerate(cell.get_points().T):
-        for j, p2 in enumerate(cell.get_points().T):
-            print "%3d - %3d: %f" % (i+1, j+1,
-                                     get_distance(cell.get_lattice(), p1, p2))

@@ -17,7 +17,7 @@ def get_distance(lattice, p1, p2, tolerance=1e-5):
     """
     shortest_bases = get_Delaunay_reduction(lattice, tolerance)
     diff = np.dot(np.dot(np.linalg.inv(shortest_bases), lattice),
-                   np.array(p1) - np.array(p2))
+                  np.array(p1) - np.array(p2))
     diff -= diff.round()
 
     distances = []
@@ -26,7 +26,7 @@ def get_distance(lattice, p1, p2, tolerance=1e-5):
             for k in (-1, 0, 1):
                 distances.append(np.linalg.norm(
                         np.dot(shortest_bases,
-                                diff + np.array([i, j, k]))))
+                               diff + np.array([i, j, k]))))
     return min(distances)
 
 
@@ -150,4 +150,6 @@ class Cell:
         """ """
         return Cell(lattice=self._lattice,
                     points=self._points,
-                    numbers=self._numbers)
+                    numbers=self._numbers,
+                    magmoms=self._magmoms,
+                    masses=self._masses)
