@@ -4,14 +4,14 @@ import numpy as np
 from cogue.crystal.cell import Cell, get_distance
 from cogue.crystal.atom import atomic_symbols, atomic_weights
 
-class CellBuilder(Cell):
+class CellBuilder:
     def __init__(self, cell):
-        Cell.__init__(self,
-                      lattice=cell.get_lattice(),
-                      points=cell.get_points(),
-                      numbers=cell.get_numbers(),
-                      magmoms=cell.get_magnetic_moments(),
-                      masses=cell.get_masses())
+        self._points = cell.get_points()
+        self._symbols = cell.get_symbols()
+        self._magmoms = cell.get_magnetic_moments()
+        self._masses = cell.get_masses()
+        self._numbers = cell.get_numbers()
+        self._lattice = cell.get_lattice()
         
     def push(self,
              point=None,
@@ -67,7 +67,12 @@ class CellBuilder(Cell):
         self._numbers = np.delete(self._numbers, i)
 
     def get_cell(self):
-        return self.copy()
+        return Cell(lattice=self._lattice,
+                    magmoms=self._magmoms,
+                    masses=self._masses,
+                    numbers=self._numbers,
+                    points=self._points)
+                    
 
 class RandomBuilder:
     def __init__(self,
