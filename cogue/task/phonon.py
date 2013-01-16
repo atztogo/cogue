@@ -60,7 +60,7 @@ class PhononBase(TaskElement):
     def get_phonon(self):
         return self._phonon
 
-    def get_equilibrium_cell(self):
+    def get_cell(self):
         if self._is_cell_relaxed:
             return self._cell
         else:
@@ -163,7 +163,7 @@ class PhononBase(TaskElement):
         self._phonon_tasks += self._tasks
 
     def _set_phonon(self):
-        cell = self.get_equilibrium_cell()
+        cell = self.get_cell()
         phonopy_cell = Atoms(
             cell=cell.get_lattice().T,
             scaled_positions=cell.get_points().T,

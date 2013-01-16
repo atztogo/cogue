@@ -139,7 +139,7 @@ class QuasiHarmonicPhononBase(TaskElement):
         Cv = []
         for i, task in enumerate(self._tasks):
             energies.append(task.get_energy())
-            volumes.append(task.get_equilibrium_cell().get_volume())
+            volumes.append(task.get_cell().get_volume())
             if self._sampling_mesh is not None:
                 phonon = task.get_phonon()
                 phonon.set_mesh(self._sampling_mesh)

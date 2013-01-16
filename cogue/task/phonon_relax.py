@@ -148,7 +148,7 @@ class PhononRelaxBase(TaskElement):
                 self._comment += " --> %s" % task.get_space_group_type()
                 self._energy = task.get_energy()
                 if self._energy:
-                    num_atom = len(task.get_equilibrium_cell().get_symbols())
+                    num_atom = len(task.get_cell().get_symbols())
                     self._comment += "\\n%f/%d" % (self._energy, num_atom)
                 if imag_modes: # Next phonon-relaxes
                     self._stage = 1
@@ -302,11 +302,11 @@ class PhononRelaxElementBase(TaskElement):
     def get_energy(self):
         return self._energy
 
-    def get_equilibrium_cell(self):
+    def get_cell(self):
         if self._stage == 0:
             return self._cell
         else:
-            return self._phre_tasks[1].get_equilibrium_cell()
+            return self._phre_tasks[1].get_cell()
 
     def set_status(self):
         all_done = True
@@ -454,7 +454,7 @@ class PhononRelaxElementBase(TaskElement):
                     excluded_qpoints=qpoints_done)
 
         sym_dataset = get_symmetry_dataset(
-            self._tasks[0].get_equilibrium_cell())
+            self._tasks[0].get_cell())
         self._space_group_type = sym_dataset['international_standard']
                 
     def _write_yaml(self):
