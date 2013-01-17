@@ -135,10 +135,12 @@ def write_potcar(names, filename="POTCAR"):
 class Incar:
     def __init__(self,
                  addgrid=None,
+                 aggac=None,
                  algo=None,
                  ediff=None,
                  ediffg=None,
                  encut=None,
+                 gga=None,
                  ialgo=None,
                  ibrion=None,
                  isif=None,
@@ -147,6 +149,7 @@ class Incar:
                  lcharg=None,
                  lepsilon=None,
                  lreal=None,
+                 luse_vdw=None,
                  lwave=None,
                  nelm=None,
                  nelmin=None,
@@ -158,10 +161,12 @@ class Incar:
 
         self._tagnames = {
             'addgrid' : "ADDGRID",
+            'aggac'   : "AGGAC",
             'algo'    : "ALGO",
             'ediff'   : "EDIFF",
             'ediffg'  : "EDIFFG",
             'encut'   : "ENCUT",
+            'gga'     : "GGA",
             'ialgo'   : "IALGO",
             'ibrion'  : "IBRION",
             'isif'    : "ISIF",
@@ -170,6 +175,7 @@ class Incar:
             'lcharg'  : "LCHARG",
             'lepsilon': "LEPSILON",
             'lreal'   : "LREAL",
+            'luse_vdw': "LUSE_VDW",
             'lwave'   : "LWAVE",
             'nelm'    : "NELM",
             'nelmin'  : "NELMIN",
@@ -181,10 +187,12 @@ class Incar:
 
         self._tagvals = {
             'addgrid' : addgrid,
+            'aggac'   : aggac,
             'algo'    : algo,
             'ediff'   : ediff, 
             'ediffg'  : ediffg,
             'encut'   : encut,
+            'gga'     : gga,
             'ialgo'   : ialgo,
             'ibrion'  : ibrion,
             'isif'    : isif,
@@ -193,6 +201,7 @@ class Incar:
             'lcharg'  : lcharg,
             'lepsilon': lepsilon,
             'lreal'   : lreal,
+            'luse_vdw': luse_vdw,
             'lwave'   : lwave,
             'nelm'    : nelm,
             'nelmin'  : nelmin,
@@ -203,26 +212,29 @@ class Incar:
             'sigma'   : sigma}
 
         self._tagorder = ['prec',
-                         'ibrion',
-                         'nsw',
-                         'algo',
-                         'nelm',
-                         'nelmin',
-                         'isif',
-                         'encut',
-                         'ediff',
-                         'ediffg',
-                         'ispin',
-                         'ismear',
-                         'sigma',
-                         'pstress',
-                         'ialgo',
-                         'lreal',
-                         'addgrid',
-                         'lwave',
-                         'lcharg',
-                         'lepsilon',
-                         'npar']
+                          'gga',
+                          'luse_vdw',
+                          'aggac',
+                          'ibrion',
+                          'nsw',
+                          'algo',
+                          'nelm',
+                          'nelmin',
+                          'isif',
+                          'encut',
+                          'ediff',
+                          'ediffg',
+                          'ispin',
+                          'ismear',
+                          'sigma',
+                          'pstress',
+                          'ialgo',
+                          'lreal',
+                          'addgrid',
+                          'lwave',
+                          'lcharg',
+                          'lepsilon',
+                          'npar']
 
     def clear(self):
         for k in self._tagvals.keys():
@@ -239,6 +251,12 @@ class Incar:
 
     def get_addgrid(self):
         return self._tagvals['addgrid']
+
+    def set_aggac(self, x):
+        self._tagvals['aggac'] = x
+
+    def get_aggac(self):
+        return self._tagvals['aggac']
 
     def set_algo(self, x):
         self._tagvals['algo'] = x
@@ -263,6 +281,12 @@ class Incar:
 
     def get_encut(self):
         return self._tagvals['encut']
+
+    def set_gga(self, x):
+        self._tagvals['gga'] = x
+
+    def get_gga(self):
+        return self._tagvals['gga']
 
     def set_ialgo(self, x):
         self._tagvals['ialgo'] = x
@@ -311,6 +335,12 @@ class Incar:
 
     def get_lreal(self):
         return self._tagvals['lreal']
+
+    def set_luse_vdw(self, x):
+        self._tagvals['luse_vdw'] = x
+
+    def get_luse_vdw(self):
+        return self._tagvals['luse_vdw']
 
     def set_lwave(self, x):
         self._tagvals['lwave'] = x
