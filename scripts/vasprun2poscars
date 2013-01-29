@@ -2,8 +2,7 @@
 
 import sys
 import os
-from cogue.calculator.vasp.vasp_io import VasprunxmlExpat
-import cogue.calculator.vasp as vasp
+import cogue.interface.vasp_io as vasp
 
 from optparse import OptionParser
 
@@ -25,7 +24,7 @@ for filename in args:
         sys.stderr.write("%s doesn't exist.\n" % filename)
         continue
 
-    vxml = VasprunxmlExpat(filename)
+    vxml = vasp.VasprunxmlExpat(filename)
     if not vxml.parse():
         sys.stderr.write("XML tag of %s is not cleanly closed.\n" % filename)
     cells = vxml.get_cells()

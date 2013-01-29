@@ -5,6 +5,7 @@ import numpy as np
 import cogue.calculator.vasp as vasp
 import cogue.crystal.symmetry as symmetry
 import cogue.crystal.ui_utils as ui_utils
+from cogue.crystal.converter import write_cif_P1
 
 def get_parser():
     from optparse import OptionParser
@@ -39,6 +40,13 @@ def get_parser():
                       action="store_true",
                       help="Show a primitive cell where the lattice vectors and atomic points are not refined. Used togather with -o option, the cell is stored in the file.")
     return parser
+
+def write_to_file(cell, filename):
+    if filename.split('.')[-1] == 'cif':
+        write_cif_P1(cell, filename)
+    else:
+        vasp.write_poscar(cell, filename)
+    
 
 options, args = ui_utils.get_options(get_parser())
 tolerance = options.symprec
@@ -92,14 +100,14 @@ if options.show_operations:
 if options.is_bravais:
     brv_cell = symmetry.get_crystallographic_cell(cell, tolerance)
     if options.output_filename:
-        vasp.write_poscar(brv_cell, options.output_filename)
+        write_to_file(brv_cell, options.output_filename)
     else:
         print "--------"
         vasp.write_poscar(brv_cell)
 elif options.is_primitive:
     prim_cell = symmetry.get_primitive_cell(cell, tolerance)
     if options.output_filename:
-        vasp.write_poscar(prim_cell, options.output_filename)
+        write_to_file(prim_cell, options.output_filename)
     else:
         print "--------"
         vasp.write_poscar(prim_cell)
