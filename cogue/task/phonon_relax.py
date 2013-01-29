@@ -487,7 +487,8 @@ class PhononRelaxElementBase(TaskElement):
                 w.write("- supercell_dimension: [ %d, %d, %d ]\n" % dimension)
                 w.write("  qpoint: [ %6.4f, %6.4f, %6.4f ] # %d\n" %
                         (q[0], q[1], q[2], q_index))
-                w.write("  frequency: %10.5f # %d\n" % (-freq, band_index))
+                w.write("  band: %d\n" % band_index)
+                w.write("  frequency: %10.5f\n" % (-freq))
                 w.write("  degeneracy: %d\n" % degeneracy)
                 w.write("  space_group_type: %s\n" % spg['international_standard'])
                 w.write("  space_group_number: %s\n" % spg['number'])
