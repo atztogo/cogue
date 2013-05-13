@@ -151,6 +151,7 @@ class Incar:
                  lreal=None,
                  luse_vdw=None,
                  lwave=None,
+                 magmom=None,
                  nelm=None,
                  nelmin=None,
                  npar=None,
@@ -177,6 +178,7 @@ class Incar:
             'lreal'   : "LREAL",
             'luse_vdw': "LUSE_VDW",
             'lwave'   : "LWAVE",
+            'magmom'  : "MAGMOM",
             'nelm'    : "NELM",
             'nelmin'  : "NELMIN",
             'npar'    : "NPAR",
@@ -203,6 +205,7 @@ class Incar:
             'lreal'   : lreal,
             'luse_vdw': luse_vdw,
             'lwave'   : lwave,
+            'magmom'  : magmom,
             'nelm'    : nelm,
             'nelmin'  : nelmin,
             'npar'    : npar,
@@ -225,6 +228,7 @@ class Incar:
                           'ediff',
                           'ediffg',
                           'ispin',
+                          'magmom',
                           'ismear',
                           'sigma',
                           'pstress',
@@ -347,6 +351,12 @@ class Incar:
 
     def get_lwave(self):
         return self._tagvals['lwave']
+
+    def set_magmom(self, x):
+        self._tagvals['magmom'] = x
+
+    def get_magmom(self):
+        return self._tagvals['magmom']
 
     def set_nelm(self, x):
         self._tagvals['nelm'] = x
