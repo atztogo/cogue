@@ -353,16 +353,18 @@ class PhononRelaxElementBase(TaskElement):
 
             cell = self._tasks[0].get_cell()
             tid = self._find_equivalent_crystal_structure(cell)
-            if tid > 0:
+            if tid > 0: # Equivalent structure found
                 self._status = "confluence with [%d]" % tid
                 symmetry = get_symmetry_dataset(
                     cell,
                     tolerance=self._symmetry_tolerance)
                 self._space_group_type = symmetry['international_standard']
                 raise StopIteration
-            elif (self._traverse and 
+            elif (self._traverse ==  "restart" and 
                   not os.path.exists("phonon-1")):
-                # In restart mode, the order to parse directory tree can
+                # This condition means the structure optimization terminated 
+                # by that equivalent crystal strucutre was found. However
+                # in restart mode, the order to parse directory tree can
                 # be different from that in run time. So inequivalent
                 # crystal structure can be found different point.
                 # This condition indicates there should be an equivalent
@@ -371,12 +373,12 @@ class PhononRelaxElementBase(TaskElement):
                 # until it will be found.
                 self.begin()
                 return self._tasks
-
-            self._ancestral_cells[self._tid_parent] = cell
-            self._set_stage1(cell)
-            self._stage = 1
-            self._status = "stage 1"
-            return self._tasks
+            else: # No equivalent structure found, move to phonon calculation
+                self._ancestral_cells[self._tid_parent] = cell
+                self._set_stage1(cell)
+                self._stage = 1
+                self._status = "stage 1"
+                return self._tasks
         else:
             if self._status == "next":
                 self._analyze_phonon()
