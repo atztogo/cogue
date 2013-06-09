@@ -1,6 +1,6 @@
 import random
 import numpy as np
-from cogue.crystal.cell import Cell, get_distance
+from cogue.crystal.cell import Cell
 from cogue.crystal.pair_distance import get_distance
 
 class RandomBuilder:

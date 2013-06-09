@@ -15,17 +15,17 @@ class Cell:
         if lattice == None:
             self._lattice = None
         else:
-            self._lattice = np.array(lattice, dtype=float).copy()
+            self._lattice = np.double(lattice).copy()
             
         if points == None:
             self._points = None
         else:
-            self._points = np.array(points, dtype=float).copy()
+            self._points = np.double(points).copy()
 
         if magmoms == None:
             self._magmoms = None
         else:
-            self._magmoms = np.array(mogmoms, dtype=float).copy()
+            self._magmoms = np.double(mogmoms).copy()
 
         if not symbols:
             self._symbols = None
@@ -35,12 +35,12 @@ class Cell:
         if masses == None:
             self._masses = None
         else:
-            self._masses = np.array(masses, dtype=float).copy()
+            self._masses = np.double(masses).copy()
 
         if numbers == None:
             self._numbers = None
         else:
-            self._numbers = np.array(numbers).copy()
+            self._numbers = np.intc(numbers).copy()
 
         if self._numbers == None and self._symbols:
             self._set_numbers_from_symbols()
@@ -52,19 +52,17 @@ class Cell:
             self._set_masses_from_numbers()
 
     def _set_numbers_from_symbols(self):
-        self._numbers = np.array(
-            [atomic_symbols[s] for s in self._symbols])
+        self._numbers = np.intc([atomic_symbols[s] for s in self._symbols])
 
     def _set_symbols_from_numbers(self):
         self._symbols = [atomic_weights[x][0] for x in self._numbers]
 
     def _set_masses_from_numbers(self):
-        self._masses = np.array(
-            [atomic_weights[x][3] for x in self._numbers])
+        self._masses = np.double([atomic_weights[x][3] for x in self._numbers])
 
     def set_lattice(self, lattice):
         """ """
-        self._lattice = np.array(lattice, dtype=float).copy()
+        self._lattice = np.double(lattice).copy()
 
     def get_lattice(self):
         """ """
@@ -76,7 +74,7 @@ class Cell:
 
     def set_points(self, points):
         """ """
-        self._points = np.array(points, dtype=float).copy()
+        self._points = np.double(points).copy()
 
     def get_points(self):
         """ """
@@ -94,7 +92,7 @@ class Cell:
 
     def set_masses(self, masses):
         """ """
-        self._masses = np.array(masses, dtype=float).copy()
+        self._masses = np.double(masses).copy()
 
     def get_masses(self):
         """ """
@@ -102,7 +100,7 @@ class Cell:
 
     def set_magnetic_moments(self, magmoms):
         """ """
-        self._magmoms = np.array(magmoms, dtype=float).copy()
+        self._magmoms = np.double(magmoms).copy()
 
     def get_magnetic_moments(self):
         """ """
