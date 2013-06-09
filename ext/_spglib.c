@@ -13,7 +13,7 @@ static void set_spglib_cell(double lattice[3][3],
 			    const int num_atom,
 			    const double * p_lattice,
 			    const double * p_positions,
-			    const long * types_long);
+			    const int * types_int);
 static PyObject * set_cell(int num_atom,
 			   double lattice[3][3],
 			   double positions[][3],
@@ -47,11 +47,8 @@ static PyObject * get_dataset(PyObject *self, PyObject *args)
   PyArrayObject* atom_types;
   PyObject* array, *vec, *mat, *rot, *trans, *wyckoffs, *equiv_atoms;
   
-  double *p_lattice;
-  double *p_positions;
-  double lattice[3][3];
+  double (*lattice)[3];
   double (*positions)[3];
-  long *types_long;
   int *types;
 
   if (!PyArg_ParseTuple(args, "OOOd",
@@ -62,19 +59,11 @@ static PyObject * get_dataset(PyObject *self, PyObject *args)
     return NULL;
   }
 
-  p_lattice = (double(*))lattice_vectors->data;
-  p_positions = (double(*))atomic_positions->data;
-  num_atom = atomic_positions->dimensions[1];
-  positions = (double(*) [3]) malloc(sizeof(double[3]) * num_atom);
-  types_long = (long*)atom_types->data;
-  types = (int*) malloc(sizeof(int) * num_atom);
-  
-  set_spglib_cell(lattice, positions, types, num_atom,
-		  p_lattice, p_positions, types_long);
+  lattice = (double(*)[3])lattice_vectors->data;
+  positions = (double(*)[3])atomic_positions->data;
+  num_atom = atom_types->dimensions[0];
+  types = (int*)atom_types->data;
   dataset = spg_get_dataset(lattice, positions, types, num_atom, symprec);
-
-  free(types);
-  free(positions);
 
   array = PyList_New(10);
 
@@ -89,7 +78,8 @@ static PyObject * get_dataset(PyObject *self, PyObject *args)
   for (i = 0; i < 3; i++) {
     vec = PyList_New(3);
     for (j = 0; j < 3; j++) {
-      PyList_SetItem(vec, j, PyFloat_FromDouble(dataset->transformation_matrix[i][j]));
+      PyList_SetItem(vec, j,
+		     PyFloat_FromDouble(dataset->transformation_matrix[i][j]));
     }
     PyList_SetItem(mat, i, vec);
   }
@@ -109,7 +99,8 @@ static PyObject * get_dataset(PyObject *self, PyObject *args)
     for (j = 0; j < 3; j++) {
       vec = PyList_New(3);
       for (k = 0; k < 3; k++) {
-	PyList_SetItem(vec, k, PyInt_FromLong((long) dataset->rotations[i][j][k]));
+	PyList_SetItem(vec, k,
+		       PyInt_FromLong((long) dataset->rotations[i][j][k]));
       }
       PyList_SetItem(mat, j, vec);
     }
@@ -133,7 +124,8 @@ static PyObject * get_dataset(PyObject *self, PyObject *args)
   equiv_atoms = PyList_New(dataset->n_atoms);
   for (i = 0; i < dataset->n_atoms; i++) {
     PyList_SetItem(wyckoffs, i, PyInt_FromLong((long) dataset->wyckoffs[i]));
-    PyList_SetItem(equiv_atoms, i, PyInt_FromLong((long) dataset->equivalent_atoms[i]));
+    PyList_SetItem(equiv_atoms, i,
+		   PyInt_FromLong((long) dataset->equivalent_atoms[i]));
   }
   PyList_SetItem(array, 8, wyckoffs);
   PyList_SetItem(array, 9, equiv_atoms);
@@ -156,7 +148,7 @@ static PyObject * get_crystallographic_cell(PyObject *self, PyObject *args)
   double *p_positions;
   double lattice[3][3];
   double (*positions)[3];
-  long *types_long;
+  int *types_int;
   int *types;
 
   if (!PyArg_ParseTuple(args,
@@ -170,13 +162,13 @@ static PyObject * get_crystallographic_cell(PyObject *self, PyObject *args)
 
   p_lattice = (double(*))lattice_vectors->data;
   p_positions = (double(*))atomic_positions->data;
-  num_atom = atomic_positions->dimensions[1];
-  positions = (double(*) [3]) malloc(sizeof(double[3]) * num_atom * 4);
-  types_long = (long*)atom_types->data;
+  num_atom = atom_types->dimensions[0];
+  positions = (double(*)[3]) malloc(sizeof(double[3]) * num_atom * 4);
+  types_int = (int*)atom_types->data;
   types = (int*) malloc(sizeof(int) * num_atom * 4);
 
   set_spglib_cell(lattice, positions, types, num_atom,
-		  p_lattice, p_positions, types_long);
+		  p_lattice, p_positions, types_int);
   num_atom_brv = spg_refine_cell(lattice, positions, types, num_atom, symprec);
   array = set_cell(num_atom_brv, lattice, positions, types);
 
@@ -200,7 +192,7 @@ static PyObject * get_primitive(PyObject *self, PyObject *args)
   double *p_positions;
   double lattice[3][3];
   double (*positions)[3];
-  long *types_long;
+  int *types_int;
   int *types;
 
   if (!PyArg_ParseTuple(args,
@@ -214,14 +206,13 @@ static PyObject * get_primitive(PyObject *self, PyObject *args)
 
   p_lattice = (double(*))lattice_vectors->data;
   p_positions = (double(*))atomic_positions->data;
-  types_long = (long*)atom_types->data;
+  types_int = (int*)atom_types->data;
 
-  num_atom = atomic_positions->dimensions[1];
-  positions = (double(*) [3]) malloc(sizeof(double[3]) * num_atom);
+  num_atom = atom_types->dimensions[0];
+  positions = (double(*)[3]) malloc(sizeof(double[3]) * num_atom);
   types = (int*) malloc(sizeof(int) * num_atom);
-
   set_spglib_cell(lattice, positions, types, num_atom,
-		  p_lattice, p_positions, types_long);
+		  p_lattice, p_positions, types_int);
   num_atom_prim = spg_find_primitive(lattice, positions, types, num_atom,
 				     symprec);
   array = set_cell(num_atom_prim, lattice, positions, types);
@@ -294,7 +285,7 @@ static void set_spglib_cell(double lattice[3][3],
 			    const int num_atom,
 			    const double * p_lattice,
 			    const double * p_positions,
-			    const long * types_long)
+			    const int * types_int)
 {
   int i, j;
   
@@ -311,7 +302,7 @@ static void set_spglib_cell(double lattice[3][3],
   }
 
   for (i = 0; i < num_atom; i++) {
-    types[i] = (int) types_long[i];
+    types[i] = (int) types_int[i];
   }
 }
 

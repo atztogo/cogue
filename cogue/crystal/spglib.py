@@ -30,8 +30,8 @@ def get_symmetry_dataset(cell, tolerance=1e-5):
     wyckoffs: Wyckoff letters
 
     """
-    points = cell.get_points().copy()
-    lattice = cell.get_lattice().copy()
+    points = cell.get_points()
+    lattice = cell.get_lattice()
     numbers = cell.get_numbers()
     keys = ('number',
             'international',
@@ -44,35 +44,37 @@ def get_symmetry_dataset(cell, tolerance=1e-5):
             'wyckoffs',
             'equivalent_atoms')
     dataset = {}
-    for key, data in zip(keys, spg.get_dataset(lattice, points, numbers, tolerance)):
+    for key, data in zip(keys,
+                         spg.get_dataset(lattice, points, numbers, tolerance)):
         dataset[key] = data
 
     dataset['international'] = dataset['international'].strip()
     dataset['hall'] = dataset['hall'].strip()
-    dataset['transformation_matrix'] = np.array(dataset['transformation_matrix'])
-    dataset['origin_shift'] = np.array(dataset['origin_shift'])
-    dataset['rotations'] = np.array(dataset['rotations'])
-    dataset['translations'] = np.array(dataset['translations'])
+    dataset['transformation_matrix'] = np.double(
+        dataset['transformation_matrix'])
+    dataset['origin_shift'] = np.double(dataset['origin_shift'])
+    dataset['rotations'] = np.intc(dataset['rotations'])
+    dataset['translations'] = np.double(dataset['translations'])
     letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
     dataset['wyckoffs'] = [letters[x] for x in dataset['wyckoffs']]
-    dataset['equivalent_atoms'] = np.array(dataset['equivalent_atoms'])
+    dataset['equivalent_atoms'] = np.intc(dataset['equivalent_atoms'])
     dataset['international_standard'] =  standard_HM_symbols[dataset['number']]
 
     return dataset
 
 def get_crystallographic_cell(cell, tolerance=1e-5):
-    points = cell.get_points().copy()
-    lattice = cell.get_lattice().copy()
+    points = cell.get_points()
+    lattice = cell.get_lattice()
     numbers = cell.get_numbers()
-    brv_lattice, brv_points, brv_numbers = \
-        spg.get_crystallographic_cell(lattice, points, numbers, tolerance)
+    brv_lattice, brv_points, brv_numbers = spg.get_crystallographic_cell(
+        lattice, points, numbers, tolerance)
     return Cell(lattice=brv_lattice,
                 points=brv_points,
                 numbers=brv_numbers)
 
 def get_primitive_cell(cell, tolerance=1e-5):
-    points = cell.get_points().copy()
-    lattice = cell.get_lattice().copy()
+    points = cell.get_points()
+    lattice = cell.get_lattice()
     numbers = cell.get_numbers()
     (prim_lattice,
      prim_points,
