@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
 import cogue.calculator.vasp as vasp
-import cogue.crystal.ui_utils as ui_utils
-from cogue.crystal.converter import write_cif_P1
+import cogue.interface.ui_utils as ui_utils
+from cogue.interface.cif import write_cif_P1
 
 options, args = ui_utils.get_options()
 cells = [ui_utils.transform_cell(vasp.parse_poscar(filelines), options)

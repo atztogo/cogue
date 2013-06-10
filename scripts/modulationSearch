@@ -9,7 +9,7 @@ from optparse import OptionParser
 from cogue.phonon.modulation import PhononModulation, PhononModulationOld
 from cogue.crystal.converter import frac2val
 from cogue.crystal.symmetry import get_symmetry_dataset
-import cogue.crystal.vasp_io as vasp_io
+import cogue.interface.vasp_io as vasp_io
 
 def get_parameters():
     parser = OptionParser()

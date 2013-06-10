@@ -2,10 +2,10 @@
 
 import sys
 import numpy as np
-import cogue.crystal.mayavi2 as mayavi2
+import cogue.interface.mayavi2 as mayavi2
 import cogue.crystal.symmetry as symmetry
 import cogue.calculator.vasp as vasp
-import cogue.crystal.ui_utils as ui_utils
+import cogue.interface.ui_utils as ui_utils
 from cogue.crystal.converter import frac2val
 
 parser = ui_utils.get_parser()

@@ -2,7 +2,7 @@ from cogue.crystal.symmetry import \
     get_symmetry_dataset, get_crystallographic_cell
 from cogue.crystal.converter import atoms2cell
 from cogue.crystal.cell import Cell
-from cogue.crystal.xtalcomp import compare as xtal_compare
+from cogue.interface.xtalcomp import compare as xtal_compare
 import numpy as np
 
 class PhononModulation:

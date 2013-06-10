@@ -2,7 +2,7 @@
 Symmetry functions
 """
 
-import cogue.crystal.spglib as spglib
+import cogue.interface.spglib as spglib
 
 def get_symmetry_dataset(cell, tolerance=1e-5):
     return spglib.get_symmetry_dataset(cell, tolerance)

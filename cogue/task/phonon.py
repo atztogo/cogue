@@ -1,5 +1,6 @@
 from cogue.task import TaskElement
-from cogue.crystal.converter import atoms2cell, write_v_sim
+from cogue.crystal.converter import atoms2cell
+from cogue.interface.v_sim import write_v_sim
 from phonopy import Phonopy
 from phonopy.structure.atoms import Atoms
 from phonopy.hphonopy.file_IO import write_disp_yaml

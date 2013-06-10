@@ -4,8 +4,8 @@ import sys
 import numpy as np
 import cogue.calculator.vasp as vasp
 import cogue.crystal.symmetry as symmetry
-import cogue.crystal.ui_utils as ui_utils
-from cogue.crystal.converter import write_cif_P1
+import cogue.interface.ui_utils as ui_utils
+from cogue.interface.cif import write_cif_P1
 
 def get_parser():
     from optparse import OptionParser
