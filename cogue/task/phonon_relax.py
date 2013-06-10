@@ -27,7 +27,7 @@ from cogue.crystal.converter import \
 from cogue.interface.vasp_io import write_poscar
 from cogue.crystal.converter import get_primitive
 from cogue.crystal.xtalcomp import compare as xtal_compare
-from cogue.crystal.phonon_modulation import PhononModulation
+from cogue.phonon.modulation import PhononModulation
 from cogue.crystal.symmetry import \
      get_symmetry_dataset, get_crystallographic_cell
 

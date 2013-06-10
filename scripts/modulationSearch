@@ -6,8 +6,7 @@ from phonopy import Phonopy
 from phonopy.interface.vasp import read_vasp
 from phonopy.hphonopy.file_IO import parse_FORCE_CONSTANTS
 from optparse import OptionParser
-from cogue.crystal.phonon_modulation import \
-    PhononModulation, PhononModulationOld
+from cogue.phonon.modulation import PhononModulation, PhononModulationOld
 from cogue.crystal.converter import frac2val
 from cogue.crystal.symmetry import get_symmetry_dataset
 import cogue.crystal.vasp_io as vasp_io
