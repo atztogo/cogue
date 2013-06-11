@@ -1,5 +1,10 @@
-Run the following before 'make html'
+To create Cogue code reference in rst,
 
-% sphinx-apidoc -H "Cogue code reference" -f -o . ../lib/python
+% sphinx-apidoc -H "Cogue code reference" -f -o . ./lib/python
+
+Then create html files
+
+% make html
 
 Togo
+ 

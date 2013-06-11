@@ -26,7 +26,7 @@
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="cogue 0.1 documentation" href="index.html" />
     <link rel="up" title="cogue Package" href="cogue.html" />
-    <link rel="next" title="qsystem Package" href="cogue.qsystem.html" />
+    <link rel="next" title="electron Package" href="cogue.electron.html" />
     <link rel="prev" title="controller Package" href="cogue.controller.html" /> 
   </head>
   <body>
@@ -40,7 +40,7 @@
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="cogue.qsystem.html" title="qsystem Package"
+          <a href="cogue.electron.html" title="electron Package"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="cogue.controller.html" title="controller Package"
@@ -65,31 +65,21 @@
 <div class="section" id="module-cogue.crystal.builder">
 <span id="builder-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">builder</span></tt> Module<a class="headerlink" href="#module-cogue.crystal.builder" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
-<dt id="cogue.crystal.builder.RandomBuilder">
-<em class="property">class </em><tt class="descclassname">cogue.crystal.builder.</tt><tt class="descname">RandomBuilder</tt><big>(</big><em>symbols</em>, <em>volume=None</em>, <em>min_distance=None</em>, <em>max_distance=None</em><big>)</big><a class="headerlink" href="#cogue.crystal.builder.RandomBuilder" title="Permalink to this definition">¶</a></dt>
+<dt id="cogue.crystal.builder.CellBuilder">
+<em class="property">class </em><tt class="descclassname">cogue.crystal.builder.</tt><tt class="descname">CellBuilder</tt><big>(</big><em>cell</em><big>)</big><a class="headerlink" href="#cogue.crystal.builder.CellBuilder" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="method">
-<dt id="cogue.crystal.builder.RandomBuilder.build">
-<tt class="descname">build</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.crystal.builder.RandomBuilder.build" title="Permalink to this definition">¶</a></dt>
+<dt id="cogue.crystal.builder.CellBuilder.get_cell">
+<tt class="descname">get_cell</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.crystal.builder.CellBuilder.get_cell" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="cogue.crystal.builder.RandomBuilder.get_max_distance">
-<tt class="descname">get_max_distance</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.crystal.builder.RandomBuilder.get_max_distance" title="Permalink to this definition">¶</a></dt>
+<dt id="cogue.crystal.builder.CellBuilder.pop">
+<tt class="descname">pop</tt><big>(</big><em>index=None</em><big>)</big><a class="headerlink" href="#cogue.crystal.builder.CellBuilder.pop" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="cogue.crystal.builder.RandomBuilder.get_min_distance">
-<tt class="descname">get_min_distance</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.crystal.builder.RandomBuilder.get_min_distance" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="cogue.crystal.builder.RandomBuilder.set_max_distance">
-<tt class="descname">set_max_distance</tt><big>(</big><em>max_distance</em><big>)</big><a class="headerlink" href="#cogue.crystal.builder.RandomBuilder.set_max_distance" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="cogue.crystal.builder.RandomBuilder.set_min_distance">
-<tt class="descname">set_min_distance</tt><big>(</big><em>min_distance</em><big>)</big><a class="headerlink" href="#cogue.crystal.builder.RandomBuilder.set_min_distance" title="Permalink to this definition">¶</a></dt>
+<dt id="cogue.crystal.builder.CellBuilder.push">
+<tt class="descname">push</tt><big>(</big><em>point=None</em>, <em>symbol=None</em>, <em>magmom=None</em>, <em>mass=None</em>, <em>number=None</em><big>)</big><a class="headerlink" href="#cogue.crystal.builder.CellBuilder.push" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -99,7 +89,7 @@
 <span id="cell-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">cell</span></tt> Module<a class="headerlink" href="#module-cogue.crystal.cell" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="cogue.crystal.cell.Cell">
-<em class="property">class </em><tt class="descclassname">cogue.crystal.cell.</tt><tt class="descname">Cell</tt><big>(</big><em>lattice=None</em>, <em>points=None</em>, <em>symbols=None</em>, <em>masses=None</em>, <em>numbers=None</em><big>)</big><a class="headerlink" href="#cogue.crystal.cell.Cell" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">cogue.crystal.cell.</tt><tt class="descname">Cell</tt><big>(</big><em>lattice=None</em>, <em>points=None</em>, <em>symbols=None</em>, <em>magmoms=None</em>, <em>masses=None</em>, <em>numbers=None</em><big>)</big><a class="headerlink" href="#cogue.crystal.cell.Cell" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="method">
 <dt id="cogue.crystal.cell.Cell.copy">
 <tt class="descname">copy</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.crystal.cell.Cell.copy" title="Permalink to this definition">¶</a></dt>
@@ -108,6 +98,11 @@
 <dl class="method">
 <dt id="cogue.crystal.cell.Cell.get_lattice">
 <tt class="descname">get_lattice</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.crystal.cell.Cell.get_lattice" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="cogue.crystal.cell.Cell.get_magnetic_moments">
+<tt class="descname">get_magnetic_moments</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.crystal.cell.Cell.get_magnetic_moments" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -141,6 +136,11 @@
 <dd></dd></dl>
 
 <dl class="method">
+<dt id="cogue.crystal.cell.Cell.set_magnetic_moments">
+<tt class="descname">set_magnetic_moments</tt><big>(</big><em>magmoms</em><big>)</big><a class="headerlink" href="#cogue.crystal.cell.Cell.set_magnetic_moments" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="cogue.crystal.cell.Cell.set_masses">
 <tt class="descname">set_masses</tt><big>(</big><em>masses</em><big>)</big><a class="headerlink" href="#cogue.crystal.cell.Cell.set_masses" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -162,53 +162,12 @@
 
 </dd></dl>
 
-<dl class="function">
-<dt id="cogue.crystal.cell.get_distance">
-<tt class="descclassname">cogue.crystal.cell.</tt><tt class="descname">get_distance</tt><big>(</big><em>lattice</em>, <em>p1</em>, <em>p2</em>, <em>tolerance=1e-05</em><big>)</big><a class="headerlink" href="#cogue.crystal.cell.get_distance" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return shortest distance between a pair of atoms in PBC</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="cogue.crystal.cell.get_pair_distances">
-<tt class="descclassname">cogue.crystal.cell.</tt><tt class="descname">get_pair_distances</tt><big>(</big><em>cell</em>, <em>tolerance=1e-05</em><big>)</big><a class="headerlink" href="#cogue.crystal.cell.get_pair_distances" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
 </div>
 <div class="section" id="module-cogue.crystal.converter">
 <span id="converter-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">converter</span></tt> Module<a class="headerlink" href="#module-cogue.crystal.converter" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
-<dt id="cogue.crystal.converter.abc2prim">
-<tt class="descclassname">cogue.crystal.converter.</tt><tt class="descname">abc2prim</tt><big>(</big><em>cell</em><big>)</big><a class="headerlink" href="#cogue.crystal.converter.abc2prim" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
 <dt id="cogue.crystal.converter.atoms2cell">
 <tt class="descclassname">cogue.crystal.converter.</tt><tt class="descname">atoms2cell</tt><big>(</big><em>phonopy_cell</em><big>)</big><a class="headerlink" href="#cogue.crystal.converter.atoms2cell" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="cogue.crystal.converter.bbc2prim">
-<tt class="descclassname">cogue.crystal.converter.</tt><tt class="descname">bbc2prim</tt><big>(</big><em>cell</em><big>)</big><a class="headerlink" href="#cogue.crystal.converter.bbc2prim" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="cogue.crystal.converter.bc2prim">
-<tt class="descclassname">cogue.crystal.converter.</tt><tt class="descname">bc2prim</tt><big>(</big><em>cell</em><big>)</big><a class="headerlink" href="#cogue.crystal.converter.bc2prim" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="cogue.crystal.converter.cbc2prim">
-<tt class="descclassname">cogue.crystal.converter.</tt><tt class="descname">cbc2prim</tt><big>(</big><em>cell</em><big>)</big><a class="headerlink" href="#cogue.crystal.converter.cbc2prim" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="cogue.crystal.converter.expand_symmetry_equiv_pos_as_xyz">
-<tt class="descclassname">cogue.crystal.converter.</tt><tt class="descname">expand_symmetry_equiv_pos_as_xyz</tt><big>(</big><em>str_lines</em><big>)</big><a class="headerlink" href="#cogue.crystal.converter.expand_symmetry_equiv_pos_as_xyz" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="cogue.crystal.converter.fc2prim">
-<tt class="descclassname">cogue.crystal.converter.</tt><tt class="descname">fc2prim</tt><big>(</big><em>cell</em><big>)</big><a class="headerlink" href="#cogue.crystal.converter.fc2prim" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="function">
@@ -222,13 +181,8 @@
 <dd></dd></dl>
 
 <dl class="function">
-<dt id="cogue.crystal.converter.get_cell_from_cif_info">
-<tt class="descclassname">cogue.crystal.converter.</tt><tt class="descname">get_cell_from_cif_info</tt><big>(</big><em>str_sym</em>, <em>str_atom</em>, <em>order</em>, <em>lattice</em><big>)</big><a class="headerlink" href="#cogue.crystal.converter.get_cell_from_cif_info" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="cogue.crystal.converter.get_cell_parameters">
-<tt class="descclassname">cogue.crystal.converter.</tt><tt class="descname">get_cell_parameters</tt><big>(</big><em>lattice</em><big>)</big><a class="headerlink" href="#cogue.crystal.converter.get_cell_parameters" title="Permalink to this definition">¶</a></dt>
+<dt id="cogue.crystal.converter.get_lattice_parameters">
+<tt class="descclassname">cogue.crystal.converter.</tt><tt class="descname">get_lattice_parameters</tt><big>(</big><em>lattice</em><big>)</big><a class="headerlink" href="#cogue.crystal.converter.get_lattice_parameters" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="function">
@@ -249,57 +203,6 @@
 </dd></dl>
 
 <dl class="function">
-<dt id="cogue.crystal.converter.read_atom_site_lines">
-<tt class="descclassname">cogue.crystal.converter.</tt><tt class="descname">read_atom_site_lines</tt><big>(</big><em>str_lines</em>, <em>atom_site_order</em>, <em>lattice</em><big>)</big><a class="headerlink" href="#cogue.crystal.converter.read_atom_site_lines" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="cogue.crystal.converter.read_cif">
-<tt class="descclassname">cogue.crystal.converter.</tt><tt class="descname">read_cif</tt><big>(</big><em>str_cif</em><big>)</big><a class="headerlink" href="#cogue.crystal.converter.read_cif" title="Permalink to this definition">¶</a></dt>
-<dd><p>A sample of cif file generated by openbabel</p>
-<p>data_I
-_chemical_name_common &#8216;filename.cif&#8217;
-_cell_length_a 4.0021
-_cell_length_b 13.8984
-_cell_length_c 3.6111
-_cell_angle_alpha 90
-_cell_angle_beta 90
-_cell_angle_gamma 90
-_space_group_name_H-M_alt &#8216;C m m m&#8217;
-_space_group_name_Hall &#8216;-C 2 2&#8217;
-<a href="#id1"><span class="problematic" id="id2">loop_</span></a></p>
-<blockquote>
-<div>_symmetry_equiv_pos_as_xyz
-&#8216;x,y,z&#8217;
-&#8216;-x,-y,z&#8217;
-&#8216;-x,y,-z&#8217;
-&#8216;x,-y,-z&#8217;
-&#8216;-x,-y,-z&#8217;
-&#8216;x,y,-z&#8217;
-&#8216;x,-y,z&#8217;
-&#8216;-x,y,z&#8217;
-&#8216;1/2+x,1/2+y,z&#8217;
-&#8216;1/2-x,1/2-y,z&#8217;
-&#8216;1/2-x,1/2+y,-z&#8217;
-&#8216;1/2+x,1/2-y,-z&#8217;
-&#8216;1/2-x,1/2-y,-z&#8217;
-&#8216;1/2+x,1/2+y,-z&#8217;
-&#8216;1/2+x,1/2-y,z&#8217;
-&#8216;1/2-x,1/2+y,z&#8217;</div></blockquote>
-<dl class="docutils">
-<dt><a href="#id3"><span class="problematic" id="id4">loop_</span></a></dt>
-<dd>_atom_site_type_symbol
-_atom_site_label
-_atom_site_Cartn_x
-_atom_site_Cartn_y
-_atom_site_Cartn_z
-Er   Er1    -0.00000    5.00759    1.80555
-Ni   Ni2    -0.00000    2.77968    0.00000
-Pb   Pb3     0.00000    0.00000    0.00000</dd>
-</dl>
-</dd></dl>
-
-<dl class="function">
 <dt id="cogue.crystal.converter.read_yaml">
 <tt class="descclassname">cogue.crystal.converter.</tt><tt class="descname">read_yaml</tt><big>(</big><em>filename</em><big>)</big><a class="headerlink" href="#cogue.crystal.converter.read_yaml" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -307,31 +210,6 @@ Pb   Pb3     0.00000    0.00000    0.00000</dd>
 <dl class="function">
 <dt id="cogue.crystal.converter.reduce_points">
 <tt class="descclassname">cogue.crystal.converter.</tt><tt class="descname">reduce_points</tt><big>(</big><em>tmat</em>, <em>cell</em>, <em>tolerance=1e-05</em><big>)</big><a class="headerlink" href="#cogue.crystal.converter.reduce_points" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="cogue.crystal.converter.remove_overlapping_points">
-<tt class="descclassname">cogue.crystal.converter.</tt><tt class="descname">remove_overlapping_points</tt><big>(</big><em>points</em>, <em>symbols</em>, <em>symprec=0.01</em><big>)</big><a class="headerlink" href="#cogue.crystal.converter.remove_overlapping_points" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="cogue.crystal.converter.rhomb2hex">
-<tt class="descclassname">cogue.crystal.converter.</tt><tt class="descname">rhomb2hex</tt><big>(</big><em>cell</em><big>)</big><a class="headerlink" href="#cogue.crystal.converter.rhomb2hex" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="cogue.crystal.converter.split_xyz_symbol">
-<tt class="descclassname">cogue.crystal.converter.</tt><tt class="descname">split_xyz_symbol</tt><big>(</big><em>symbol</em><big>)</big><a class="headerlink" href="#cogue.crystal.converter.split_xyz_symbol" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="cogue.crystal.converter.write_cif_P1">
-<tt class="descclassname">cogue.crystal.converter.</tt><tt class="descname">write_cif_P1</tt><big>(</big><em>cell</em>, <em>filename</em><big>)</big><a class="headerlink" href="#cogue.crystal.converter.write_cif_P1" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="cogue.crystal.converter.write_v_sim">
-<tt class="descclassname">cogue.crystal.converter.</tt><tt class="descname">write_v_sim</tt><big>(</big><em>cell</em>, <em>filename</em><big>)</big><a class="headerlink" href="#cogue.crystal.converter.write_v_sim" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </div>
@@ -351,6 +229,168 @@ Pb   Pb3     0.00000    0.00000    0.00000</dd>
 <dt id="cogue.crystal.delaunay.reduce_bases">
 <tt class="descclassname">cogue.crystal.delaunay.</tt><tt class="descname">reduce_bases</tt><big>(</big><em>extended_bases</em>, <em>tolerance</em><big>)</big><a class="headerlink" href="#cogue.crystal.delaunay.reduce_bases" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
+
+</div>
+<div class="section" id="module-cogue.crystal.mayavi2">
+<span id="mayavi2-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">mayavi2</span></tt> Module<a class="headerlink" href="#module-cogue.crystal.mayavi2" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="cogue.crystal.mayavi2.plot_cell">
+<tt class="descclassname">cogue.crystal.mayavi2.</tt><tt class="descname">plot_cell</tt><big>(</big><em>cell</em>, <em>margin=1e-05</em>, <em>color=(1</em>, <em>0</em>, <em>0)</em><big>)</big><a class="headerlink" href="#cogue.crystal.mayavi2.plot_cell" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="cogue.crystal.mayavi2.savefig">
+<tt class="descclassname">cogue.crystal.mayavi2.</tt><tt class="descname">savefig</tt><big>(</big><em>filename</em>, <em>size=None</em><big>)</big><a class="headerlink" href="#cogue.crystal.mayavi2.savefig" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="cogue.crystal.mayavi2.set_figure">
+<tt class="descclassname">cogue.crystal.mayavi2.</tt><tt class="descname">set_figure</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.crystal.mayavi2.set_figure" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="cogue.crystal.mayavi2.show">
+<tt class="descclassname">cogue.crystal.mayavi2.</tt><tt class="descname">show</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.crystal.mayavi2.show" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-cogue.crystal.pair_distance">
+<span id="pair-distance-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">pair_distance</span></tt> Module<a class="headerlink" href="#module-cogue.crystal.pair_distance" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="cogue.crystal.pair_distance.get_distance">
+<tt class="descclassname">cogue.crystal.pair_distance.</tt><tt class="descname">get_distance</tt><big>(</big><em>lattice</em>, <em>p1</em>, <em>p2</em>, <em>tolerance=1e-05</em><big>)</big><a class="headerlink" href="#cogue.crystal.pair_distance.get_distance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return shortest distance between a pair of atoms in PBC</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="cogue.crystal.pair_distance.get_pair_distances">
+<tt class="descclassname">cogue.crystal.pair_distance.</tt><tt class="descname">get_pair_distances</tt><big>(</big><em>cell</em>, <em>tolerance=1e-05</em><big>)</big><a class="headerlink" href="#cogue.crystal.pair_distance.get_pair_distances" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-cogue.crystal.phonon_modulation">
+<span id="phonon-modulation-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">phonon_modulation</span></tt> Module<a class="headerlink" href="#module-cogue.crystal.phonon_modulation" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="cogue.crystal.phonon_modulation.PhononModulation">
+<em class="property">class </em><tt class="descclassname">cogue.crystal.phonon_modulation.</tt><tt class="descname">PhononModulation</tt><big>(</big><em>phonon</em>, <em>qpoint</em>, <em>band_indices</em>, <em>modulation_dimension</em>, <em>ndiv=180</em>, <em>symmetry_tolerance=0.05</em>, <em>max_displacement=0.1</em><big>)</big><a class="headerlink" href="#cogue.crystal.phonon_modulation.PhononModulation" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="cogue.crystal.phonon_modulation.PhononModulation.get_modulation_cells">
+<tt class="descname">get_modulation_cells</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.crystal.phonon_modulation.PhononModulation.get_modulation_cells" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="cogue.crystal.phonon_modulation.PhononModulation.get_modulations">
+<tt class="descname">get_modulations</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.crystal.phonon_modulation.PhononModulation.get_modulations" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="cogue.crystal.phonon_modulation.PhononModulation.get_points_on_sphere">
+<tt class="descname">get_points_on_sphere</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.crystal.phonon_modulation.PhononModulation.get_points_on_sphere" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="cogue.crystal.phonon_modulation.PhononModulation.get_supercell">
+<tt class="descname">get_supercell</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.crystal.phonon_modulation.PhononModulation.get_supercell" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="cogue.crystal.phonon_modulation.PhononModulation.get_vectors">
+<tt class="descname">get_vectors</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.crystal.phonon_modulation.PhononModulation.get_vectors" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="cogue.crystal.phonon_modulation.PhononModulationOld">
+<em class="property">class </em><tt class="descclassname">cogue.crystal.phonon_modulation.</tt><tt class="descname">PhononModulationOld</tt><big>(</big><em>phonon</em>, <em>qpoint</em>, <em>band_indices</em>, <em>modulation_dimension</em>, <em>ndiv=180</em>, <em>symmetry_tolerance=0.05</em>, <em>max_displacement=0.1</em>, <em>store_all=False</em><big>)</big><a class="headerlink" href="#cogue.crystal.phonon_modulation.PhononModulationOld" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="cogue.crystal.phonon_modulation.PhononModulationOld.get_all_cells">
+<tt class="descname">get_all_cells</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.crystal.phonon_modulation.PhononModulationOld.get_all_cells" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="cogue.crystal.phonon_modulation.PhononModulationOld.get_arguments">
+<tt class="descname">get_arguments</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.crystal.phonon_modulation.PhononModulationOld.get_arguments" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="cogue.crystal.phonon_modulation.PhononModulationOld.get_modulation_cells">
+<tt class="descname">get_modulation_cells</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.crystal.phonon_modulation.PhononModulationOld.get_modulation_cells" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="cogue.crystal.phonon_modulation.PhononModulationOld.get_modulations">
+<tt class="descname">get_modulations</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.crystal.phonon_modulation.PhononModulationOld.get_modulations" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="cogue.crystal.phonon_modulation.PhononModulationOld.get_points_on_sphere">
+<tt class="descname">get_points_on_sphere</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.crystal.phonon_modulation.PhononModulationOld.get_points_on_sphere" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="cogue.crystal.phonon_modulation.PhononModulationOld.get_supercell">
+<tt class="descname">get_supercell</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.crystal.phonon_modulation.PhononModulationOld.get_supercell" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="cogue.crystal.phonon_modulation.PhononModulationOld.get_vectors">
+<tt class="descname">get_vectors</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.crystal.phonon_modulation.PhononModulationOld.get_vectors" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-cogue.crystal.point_defect">
+<span id="point-defect-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">point_defect</span></tt> Module<a class="headerlink" href="#module-cogue.crystal.point_defect" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="cogue.crystal.point_defect.PointDefect">
+<em class="property">class </em><tt class="descclassname">cogue.crystal.point_defect.</tt><tt class="descname">PointDefect</tt><big>(</big><em>cell</em><big>)</big><a class="headerlink" href="#cogue.crystal.point_defect.PointDefect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#cogue.crystal.cell.Cell" title="cogue.crystal.cell.Cell"><tt class="xref py py-class docutils literal"><span class="pre">cogue.crystal.cell.Cell</span></tt></a></p>
+<dl class="method">
+<dt id="cogue.crystal.point_defect.PointDefect.set_cell">
+<tt class="descname">set_cell</tt><big>(</big><em>cell</em><big>)</big><a class="headerlink" href="#cogue.crystal.point_defect.PointDefect.set_cell" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="cogue.crystal.point_defect.PointDefect.set_point_vacancy">
+<tt class="descname">set_point_vacancy</tt><big>(</big><em>index</em><big>)</big><a class="headerlink" href="#cogue.crystal.point_defect.PointDefect.set_point_vacancy" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-cogue.crystal.random_builder">
+<span id="random-builder-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">random_builder</span></tt> Module<a class="headerlink" href="#module-cogue.crystal.random_builder" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="cogue.crystal.random_builder.RandomBuilder">
+<em class="property">class </em><tt class="descclassname">cogue.crystal.random_builder.</tt><tt class="descname">RandomBuilder</tt><big>(</big><em>symbols</em>, <em>volume=None</em>, <em>min_distance=None</em>, <em>max_distance=None</em><big>)</big><a class="headerlink" href="#cogue.crystal.random_builder.RandomBuilder" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="cogue.crystal.random_builder.RandomBuilder.build">
+<tt class="descname">build</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.crystal.random_builder.RandomBuilder.build" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="cogue.crystal.random_builder.RandomBuilder.get_max_distance">
+<tt class="descname">get_max_distance</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.crystal.random_builder.RandomBuilder.get_max_distance" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="cogue.crystal.random_builder.RandomBuilder.get_min_distance">
+<tt class="descname">get_min_distance</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.crystal.random_builder.RandomBuilder.get_min_distance" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="cogue.crystal.random_builder.RandomBuilder.set_max_distance">
+<tt class="descname">set_max_distance</tt><big>(</big><em>max_distance</em><big>)</big><a class="headerlink" href="#cogue.crystal.random_builder.RandomBuilder.set_max_distance" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="cogue.crystal.random_builder.RandomBuilder.set_min_distance">
+<tt class="descname">set_min_distance</tt><big>(</big><em>min_distance</em><big>)</big><a class="headerlink" href="#cogue.crystal.random_builder.RandomBuilder.set_min_distance" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
 
 </div>
 <div class="section" id="module-cogue.crystal.sketch">
@@ -392,17 +432,22 @@ Pb   Pb3     0.00000    0.00000    0.00000</dd>
 <dd></dd></dl>
 
 </div>
-<div class="section" id="module-cogue.crystal.symmetry">
-<span id="symmetry-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">symmetry</span></tt> Module<a class="headerlink" href="#module-cogue.crystal.symmetry" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-cogue.crystal.spglib">
+<span id="spglib-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">spglib</span></tt> Module<a class="headerlink" href="#module-cogue.crystal.spglib" title="Permalink to this headline">¶</a></h2>
 <p>Spglib interface for cogue</p>
 <dl class="function">
-<dt id="cogue.crystal.symmetry.get_crystallographic_cell">
-<tt class="descclassname">cogue.crystal.symmetry.</tt><tt class="descname">get_crystallographic_cell</tt><big>(</big><em>cell</em>, <em>tolerance=1e-05</em><big>)</big><a class="headerlink" href="#cogue.crystal.symmetry.get_crystallographic_cell" title="Permalink to this definition">¶</a></dt>
+<dt id="cogue.crystal.spglib.get_crystallographic_cell">
+<tt class="descclassname">cogue.crystal.spglib.</tt><tt class="descname">get_crystallographic_cell</tt><big>(</big><em>cell</em>, <em>tolerance=1e-05</em><big>)</big><a class="headerlink" href="#cogue.crystal.spglib.get_crystallographic_cell" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="function">
-<dt id="cogue.crystal.symmetry.get_symmetry_dataset">
-<tt class="descclassname">cogue.crystal.symmetry.</tt><tt class="descname">get_symmetry_dataset</tt><big>(</big><em>cell</em>, <em>tolerance=1e-05</em><big>)</big><a class="headerlink" href="#cogue.crystal.symmetry.get_symmetry_dataset" title="Permalink to this definition">¶</a></dt>
+<dt id="cogue.crystal.spglib.get_primitive_cell">
+<tt class="descclassname">cogue.crystal.spglib.</tt><tt class="descname">get_primitive_cell</tt><big>(</big><em>cell</em>, <em>tolerance=1e-05</em><big>)</big><a class="headerlink" href="#cogue.crystal.spglib.get_primitive_cell" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="cogue.crystal.spglib.get_symmetry_dataset">
+<tt class="descclassname">cogue.crystal.spglib.</tt><tt class="descname">get_symmetry_dataset</tt><big>(</big><em>cell</em>, <em>tolerance=1e-05</em><big>)</big><a class="headerlink" href="#cogue.crystal.spglib.get_symmetry_dataset" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return crystal symmetry information by analyzing Cell object.</p>
 <p>number: International space group number</p>
 <p>international: International symbol</p>
@@ -417,6 +462,80 @@ Space group operations are obtained by
 [(r,t) for r, t in zip(rotations, translations)]</p>
 <p>wyckoffs: Wyckoff letters</p>
 </dd></dl>
+
+</div>
+<div class="section" id="module-cogue.crystal.supercell">
+<span id="supercell-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">supercell</span></tt> Module<a class="headerlink" href="#module-cogue.crystal.supercell" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="cogue.crystal.supercell.get_simple_supercell">
+<tt class="descclassname">cogue.crystal.supercell.</tt><tt class="descname">get_simple_supercell</tt><big>(</big><em>multi</em>, <em>cell</em><big>)</big><a class="headerlink" href="#cogue.crystal.supercell.get_simple_supercell" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="cogue.crystal.supercell.get_smallest_surrounding_lattice_multiplicities">
+<tt class="descclassname">cogue.crystal.supercell.</tt><tt class="descname">get_smallest_surrounding_lattice_multiplicities</tt><big>(</big><em>supercell_matrix</em><big>)</big><a class="headerlink" href="#cogue.crystal.supercell.get_smallest_surrounding_lattice_multiplicities" title="Permalink to this definition">¶</a></dt>
+<dd><p>Build a frame surrounding supercell lattice</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="cogue.crystal.supercell.get_supercell">
+<tt class="descclassname">cogue.crystal.supercell.</tt><tt class="descname">get_supercell</tt><big>(</big><em>cell</em>, <em>supercell_matrix</em>, <em>tolerance=1e-05</em><big>)</big><a class="headerlink" href="#cogue.crystal.supercell.get_supercell" title="Permalink to this definition">¶</a></dt>
+<dd><p>Build supercell with supercell matrix as follows:
+1) Create supercell with surrounding simple lattice.
+2) Trim the surrounding supercell with the target lattice.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-cogue.crystal.symmetry">
+<span id="symmetry-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">symmetry</span></tt> Module<a class="headerlink" href="#module-cogue.crystal.symmetry" title="Permalink to this headline">¶</a></h2>
+<p>Symmetry functions</p>
+<dl class="function">
+<dt id="cogue.crystal.symmetry.get_crystallographic_cell">
+<tt class="descclassname">cogue.crystal.symmetry.</tt><tt class="descname">get_crystallographic_cell</tt><big>(</big><em>cell</em>, <em>tolerance=1e-05</em><big>)</big><a class="headerlink" href="#cogue.crystal.symmetry.get_crystallographic_cell" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="cogue.crystal.symmetry.get_primitive_cell">
+<tt class="descclassname">cogue.crystal.symmetry.</tt><tt class="descname">get_primitive_cell</tt><big>(</big><em>cell</em>, <em>tolerance=1e-05</em><big>)</big><a class="headerlink" href="#cogue.crystal.symmetry.get_primitive_cell" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="cogue.crystal.symmetry.get_symmetry_dataset">
+<tt class="descclassname">cogue.crystal.symmetry.</tt><tt class="descname">get_symmetry_dataset</tt><big>(</big><em>cell</em>, <em>tolerance=1e-05</em><big>)</big><a class="headerlink" href="#cogue.crystal.symmetry.get_symmetry_dataset" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-cogue.crystal.ui_utils">
+<span id="ui-utils-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">ui_utils</span></tt> Module<a class="headerlink" href="#module-cogue.crystal.ui_utils" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="cogue.crystal.ui_utils.get_lines">
+<tt class="descclassname">cogue.crystal.ui_utils.</tt><tt class="descname">get_lines</tt><big>(</big><em>filenames</em><big>)</big><a class="headerlink" href="#cogue.crystal.ui_utils.get_lines" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="cogue.crystal.ui_utils.get_options">
+<tt class="descclassname">cogue.crystal.ui_utils.</tt><tt class="descname">get_options</tt><big>(</big><em>parser=None</em><big>)</big><a class="headerlink" href="#cogue.crystal.ui_utils.get_options" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="cogue.crystal.ui_utils.get_parser">
+<tt class="descclassname">cogue.crystal.ui_utils.</tt><tt class="descname">get_parser</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.crystal.ui_utils.get_parser" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="cogue.crystal.ui_utils.set_shift">
+<tt class="descclassname">cogue.crystal.ui_utils.</tt><tt class="descname">set_shift</tt><big>(</big><em>cell</em>, <em>options</em><big>)</big><a class="headerlink" href="#cogue.crystal.ui_utils.set_shift" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="cogue.crystal.ui_utils.transform_cell">
+<tt class="descclassname">cogue.crystal.ui_utils.</tt><tt class="descname">transform_cell</tt><big>(</big><em>cell</em>, <em>options</em>, <em>is_shift=True</em><big>)</big><a class="headerlink" href="#cogue.crystal.ui_utils.transform_cell" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="cogue.crystal.ui_utils.write_cells">
+<tt class="descclassname">cogue.crystal.ui_utils.</tt><tt class="descname">write_cells</tt><big>(</big><em>write_func</em>, <em>cells</em>, <em>input_filenames=None</em>, <em>output_filename=None</em><big>)</big><a class="headerlink" href="#cogue.crystal.ui_utils.write_cells" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 </div>
 <div class="section" id="module-cogue.crystal.xtalcomp">
@@ -443,8 +562,16 @@ Space group operations are obtained by
 <li><a class="reference internal" href="#module-cogue.crystal.cell"><tt class="docutils literal"><span class="pre">cell</span></tt> Module</a></li>
 <li><a class="reference internal" href="#module-cogue.crystal.converter"><tt class="docutils literal"><span class="pre">converter</span></tt> Module</a></li>
 <li><a class="reference internal" href="#module-cogue.crystal.delaunay"><tt class="docutils literal"><span class="pre">delaunay</span></tt> Module</a></li>
+<li><a class="reference internal" href="#module-cogue.crystal.mayavi2"><tt class="docutils literal"><span class="pre">mayavi2</span></tt> Module</a></li>
+<li><a class="reference internal" href="#module-cogue.crystal.pair_distance"><tt class="docutils literal"><span class="pre">pair_distance</span></tt> Module</a></li>
+<li><a class="reference internal" href="#module-cogue.crystal.phonon_modulation"><tt class="docutils literal"><span class="pre">phonon_modulation</span></tt> Module</a></li>
+<li><a class="reference internal" href="#module-cogue.crystal.point_defect"><tt class="docutils literal"><span class="pre">point_defect</span></tt> Module</a></li>
+<li><a class="reference internal" href="#module-cogue.crystal.random_builder"><tt class="docutils literal"><span class="pre">random_builder</span></tt> Module</a></li>
 <li><a class="reference internal" href="#module-cogue.crystal.sketch"><tt class="docutils literal"><span class="pre">sketch</span></tt> Module</a></li>
+<li><a class="reference internal" href="#module-cogue.crystal.spglib"><tt class="docutils literal"><span class="pre">spglib</span></tt> Module</a></li>
+<li><a class="reference internal" href="#module-cogue.crystal.supercell"><tt class="docutils literal"><span class="pre">supercell</span></tt> Module</a></li>
 <li><a class="reference internal" href="#module-cogue.crystal.symmetry"><tt class="docutils literal"><span class="pre">symmetry</span></tt> Module</a></li>
+<li><a class="reference internal" href="#module-cogue.crystal.ui_utils"><tt class="docutils literal"><span class="pre">ui_utils</span></tt> Module</a></li>
 <li><a class="reference internal" href="#module-cogue.crystal.xtalcomp"><tt class="docutils literal"><span class="pre">xtalcomp</span></tt> Module</a></li>
 </ul>
 </li>
@@ -454,8 +581,8 @@ Space group operations are obtained by
   <p class="topless"><a href="cogue.controller.html"
                         title="previous chapter">controller Package</a></p>
   <h4>Next topic</h4>
-  <p class="topless"><a href="cogue.qsystem.html"
-                        title="next chapter">qsystem Package</a></p>
+  <p class="topless"><a href="cogue.electron.html"
+                        title="next chapter">electron Package</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="_sources/cogue.crystal.txt"
@@ -488,7 +615,7 @@ Space group operations are obtained by
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="cogue.qsystem.html" title="qsystem Package"
+          <a href="cogue.electron.html" title="electron Package"
              >next</a> |</li>
         <li class="right" >
           <a href="cogue.controller.html" title="controller Package"

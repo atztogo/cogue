@@ -59,36 +59,53 @@
 <h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="system-requirements">
 <h2>System requirements<a class="headerlink" href="#system-requirements" title="Permalink to this headline">¶</a></h2>
-<p>Current Cogue works only on a private cluster that has the following
-systems:</p>
+<ul class="simple">
+<li>Python and its header files</li>
+<li>numpy</li>
+<li>python-lxml</li>
+<li>python-yaml</li>
+</ul>
+<div class="highlight-python"><pre>% sudo apt-get install python-dev python-numpy python-lxml python-yaml</pre>
+</div>
+<div class="section" id="tools">
+<h3>Tools<a class="headerlink" href="#tools" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="crystalview">
+<h4>crystalView<a class="headerlink" href="#crystalview" title="Permalink to this headline">¶</a></h4>
+<ul class="simple">
+<li>mayavi2</li>
+</ul>
+<div class="highlight-python"><pre>% sudo apt-get install mayavi2</pre>
+</div>
+</div>
+</div>
+<div class="section" id="automation-system">
+<h3>Automation system<a class="headerlink" href="#automation-system" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Grid Engine (currently essential)</li>
+<li>VASP (for most first-principles calclulations)</li>
+<li>Phonopy (for phonon calculations)</li>
+</ul>
+<p>Currently cogue automation system works only on a private cluster that
+has the following systems:</p>
 <blockquote>
 <div><ol class="arabic simple">
-<li>Usual unix system, file system compatible of python <tt class="docutils literal"><span class="pre">os</span></tt>
-module is required.</li>
 <li><tt class="docutils literal"><span class="pre">qsub</span></tt> and <tt class="docutils literal"><span class="pre">qstat</span></tt> of grid-engine queueing system has to
 work on the client node. Probably development for the other
 queueing system like <tt class="docutils literal"><span class="pre">torque</span></tt> is easy.</li>
-<li>VASP is used for the calculator.</li>
+<li>VASP is used as the calculator.</li>
 </ol>
 </div></blockquote>
-<p>The second condition can be critical for the use Cogue on
-super-computers. Maybe in the future remote-job submitting should be
-supported.</p>
+<p>For phonon calculation, <tt class="docutils literal"><span class="pre">phonopy</span></tt> is required to be installed and
+correctly set-up. Please see <a class="reference external" href="http://phonopy.sf.net">phonopy document</a>.</p>
+</div>
 </div>
 <div class="section" id="install">
 <h2>Install<a class="headerlink" href="#install" title="Permalink to this headline">¶</a></h2>
-<p>Firstly <a class="reference external" href="http://spglib.sf.net">spglib</a> has to be installed. Then
-prepare <tt class="docutils literal"><span class="pre">settings.py</span></tt> on the same directory where <tt class="docutils literal"><span class="pre">setup.py</span></tt>
-exists. In <tt class="docutils literal"><span class="pre">settings.py</span></tt>, complie optitions for spglib are written
-as follows:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">library_dirs</span> <span class="o">=</span> <span class="p">[</span> <span class="n">Directory_of_libsymspg</span> <span class="p">]</span>
-<span class="n">include_dirs</span> <span class="o">=</span> <span class="p">[</span> <span class="n">Directory_of_spglib_dot_h</span> <span class="p">]</span>
-</pre></div>
-</div>
 <p>Download Cogue using <tt class="docutils literal"><span class="pre">git</span></tt> command:</p>
 <div class="highlight-python"><pre>git clone git://github.com/atztogo/cogue.git</pre>
 </div>
-<p>Install by <tt class="docutils literal"><span class="pre">setup.py</span></tt> script at current directory:</p>
+<p>Change directory to <tt class="docutils literal"><span class="pre">cogue</span></tt> and run <tt class="docutils literal"><span class="pre">setup.py</span></tt> script at current
+directory:</p>
 <div class="highlight-python"><pre>python setup.py install --home=.</pre>
 </div>
 </div>
@@ -99,10 +116,7 @@ stored has to be told to Cogue using the environment variable
 <tt class="docutils literal"><span class="pre">COGUE_POTCAR_PATH</span></tt>. The details are given in the following sections.</p>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="environment-setup.html">Environment setups</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="environment-setup.html#pseudopotentials-for-vasp">Pseudopotentials for VASP</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="environment-setup.html">Environment setups</a></li>
 </ul>
 </div>
 </div>
@@ -117,7 +131,14 @@ stored has to be told to Cogue using the environment variable
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Installation</a><ul>
-<li><a class="reference internal" href="#system-requirements">System requirements</a></li>
+<li><a class="reference internal" href="#system-requirements">System requirements</a><ul>
+<li><a class="reference internal" href="#tools">Tools</a><ul>
+<li><a class="reference internal" href="#crystalview">crystalView</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#automation-system">Automation system</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#install">Install</a></li>
 <li><a class="reference internal" href="#environment-setup">Environment setup</a><ul>
 </ul>

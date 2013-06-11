@@ -6,4 +6,6 @@
 .doctrees
 .buildinfo
 cogue.*.rst
+cogue.rst
+modules.rst
 *~

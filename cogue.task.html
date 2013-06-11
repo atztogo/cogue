@@ -268,6 +268,51 @@ a task that returns elastic constants.</p>
 </dd></dl>
 
 </div>
+<div class="section" id="module-cogue.task.mode_gruneisen">
+<span id="mode-gruneisen-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">mode_gruneisen</span></tt> Module<a class="headerlink" href="#module-cogue.task.mode_gruneisen" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="cogue.task.mode_gruneisen.ModeGruneisenBase">
+<em class="property">class </em><tt class="descclassname">cogue.task.mode_gruneisen.</tt><tt class="descname">ModeGruneisenBase</tt><big>(</big><em>directory=None</em>, <em>name=None</em>, <em>delta_strain=None</em>, <em>strain=None</em>, <em>bias=None</em>, <em>supercell_matrix=None</em>, <em>primitive_matrix=None</em>, <em>distance=None</em>, <em>lattice_tolerance=None</em>, <em>force_tolerance=None</em>, <em>pressure_target=None</em>, <em>stress_tolerance=None</em>, <em>max_increase=None</em>, <em>max_iteration=None</em>, <em>min_iteration=None</em>, <em>traverse=False</em>, <em>is_cell_relaxed=False</em><big>)</big><a class="headerlink" href="#cogue.task.mode_gruneisen.ModeGruneisenBase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#cogue.task.TaskElement" title="cogue.task.TaskElement"><tt class="xref py py-class docutils literal"><span class="pre">cogue.task.TaskElement</span></tt></a></p>
+<p>ModeGruneisen class</p>
+<p>Three stages:
+1. structure optimization of input cell
+2. create cells with, e.g. +1% and -1% volumes or strains, and optimize them
+3. calculate phonons for three cells
+4. calculate mode-Gruneisen parameters (This is not yet implemented.)</p>
+<dl class="method">
+<dt id="cogue.task.mode_gruneisen.ModeGruneisenBase.begin">
+<tt class="descname">begin</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.task.mode_gruneisen.ModeGruneisenBase.begin" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="cogue.task.mode_gruneisen.ModeGruneisenBase.done">
+<tt class="descname">done</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.task.mode_gruneisen.ModeGruneisenBase.done" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="cogue.task.mode_gruneisen.ModeGruneisenBase.end">
+<tt class="descname">end</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.task.mode_gruneisen.ModeGruneisenBase.end" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="cogue.task.mode_gruneisen.ModeGruneisenBase.get_mode_gruneisen">
+<tt class="descname">get_mode_gruneisen</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.task.mode_gruneisen.ModeGruneisenBase.get_mode_gruneisen" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="cogue.task.mode_gruneisen.ModeGruneisenBase.next">
+<tt class="descname">next</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.task.mode_gruneisen.ModeGruneisenBase.next" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="cogue.task.mode_gruneisen.ModeGruneisenBase.set_status">
+<tt class="descname">set_status</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.task.mode_gruneisen.ModeGruneisenBase.set_status" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
 <div class="section" id="module-cogue.task.oneshot_calculation">
 <span id="oneshot-calculation-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">oneshot_calculation</span></tt> Module<a class="headerlink" href="#module-cogue.task.oneshot_calculation" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
@@ -333,6 +378,11 @@ a task that returns elastic constants.</p>
 <dd></dd></dl>
 
 <dl class="method">
+<dt id="cogue.task.oneshot_calculation.StructureOptimizationElementBase.get_current_cell">
+<tt class="descname">get_current_cell</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.task.oneshot_calculation.StructureOptimizationElementBase.get_current_cell" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="cogue.task.oneshot_calculation.StructureOptimizationElementBase.get_energy">
 <tt class="descname">get_energy</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.task.oneshot_calculation.StructureOptimizationElementBase.get_energy" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -374,14 +424,15 @@ a task that returns elastic constants.</p>
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="cogue.task.phonon.PhononBase.get_energy">
-<tt class="descname">get_energy</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.task.phonon.PhononBase.get_energy" title="Permalink to this definition">¶</a></dt>
+<dt id="cogue.task.phonon.PhononBase.get_cell">
+<tt class="descname">get_cell</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.task.phonon.PhononBase.get_cell" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="cogue.task.phonon.PhononBase.get_equilibrium_cell">
-<tt class="descname">get_equilibrium_cell</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.task.phonon.PhononBase.get_equilibrium_cell" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dt id="cogue.task.phonon.PhononBase.get_energy">
+<tt class="descname">get_energy</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.task.phonon.PhononBase.get_energy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return energies at geometry optimization steps</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="cogue.task.phonon.PhononBase.get_phonon">
@@ -419,48 +470,8 @@ is employed as the eigenvector.</li>
 symmetry than that of distorted structure is expected if possible.</li>
 </ol>
 <dl class="class">
-<dt id="cogue.task.phonon_relax.PhononModulation">
-<em class="property">class </em><tt class="descclassname">cogue.task.phonon_relax.</tt><tt class="descname">PhononModulation</tt><big>(</big><em>phonon</em>, <em>qpoint</em>, <em>band_indices</em>, <em>modulation_dimension</em>, <em>ndiv=180</em>, <em>symmetry_tolerance=0.05</em>, <em>max_displacement=0.1</em>, <em>store_all=False</em><big>)</big><a class="headerlink" href="#cogue.task.phonon_relax.PhononModulation" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="method">
-<dt id="cogue.task.phonon_relax.PhononModulation.get_all_cells">
-<tt class="descname">get_all_cells</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.task.phonon_relax.PhononModulation.get_all_cells" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="cogue.task.phonon_relax.PhononModulation.get_arguments">
-<tt class="descname">get_arguments</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.task.phonon_relax.PhononModulation.get_arguments" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="cogue.task.phonon_relax.PhononModulation.get_modulation_cells">
-<tt class="descname">get_modulation_cells</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.task.phonon_relax.PhononModulation.get_modulation_cells" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="cogue.task.phonon_relax.PhononModulation.get_modulations">
-<tt class="descname">get_modulations</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.task.phonon_relax.PhononModulation.get_modulations" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="cogue.task.phonon_relax.PhononModulation.get_points_on_sphere">
-<tt class="descname">get_points_on_sphere</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.task.phonon_relax.PhononModulation.get_points_on_sphere" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="cogue.task.phonon_relax.PhononModulation.get_supercell">
-<tt class="descname">get_supercell</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.task.phonon_relax.PhononModulation.get_supercell" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="cogue.task.phonon_relax.PhononModulation.get_vectors">
-<tt class="descname">get_vectors</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.task.phonon_relax.PhononModulation.get_vectors" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="class">
 <dt id="cogue.task.phonon_relax.PhononRelaxBase">
-<em class="property">class </em><tt class="descclassname">cogue.task.phonon_relax.</tt><tt class="descname">PhononRelaxBase</tt><big>(</big><em>directory=None</em>, <em>name=None</em>, <em>ancestral_cells=</em><span class="optional">[</span><span class="optional">]</span>, <em>distance=None</em>, <em>lattice_tolerance=None</em>, <em>force_tolerance=None</em>, <em>pressure_target=None</em>, <em>stress_tolerance=None</em>, <em>max_increase=None</em>, <em>max_iteration=None</em>, <em>min_iteration=None</em>, <em>symmetry_tolerance=None</em>, <em>restrict_offspring=False</em>, <em>cutoff_eigenvalue=None</em>, <em>traverse=False</em><big>)</big><a class="headerlink" href="#cogue.task.phonon_relax.PhononRelaxBase" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">cogue.task.phonon_relax.</tt><tt class="descname">PhononRelaxBase</tt><big>(</big><em>directory=None</em>, <em>name=None</em>, <em>ancestral_cells={}</em>, <em>distance=None</em>, <em>lattice_tolerance=None</em>, <em>force_tolerance=None</em>, <em>pressure_target=None</em>, <em>stress_tolerance=None</em>, <em>max_increase=None</em>, <em>max_iteration=None</em>, <em>min_iteration=None</em>, <em>symmetry_tolerance=None</em>, <em>restrict_offspring=False</em>, <em>max_offspring=None</em>, <em>cutoff_eigenvalue=None</em>, <em>max_displacement=None</em>, <em>num_sampling_points=None</em>, <em>traverse=False</em><big>)</big><a class="headerlink" href="#cogue.task.phonon_relax.PhononRelaxBase" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#cogue.task.TaskElement" title="cogue.task.TaskElement"><tt class="xref py py-class docutils literal"><span class="pre">cogue.task.TaskElement</span></tt></a></p>
 <dl class="method">
 <dt id="cogue.task.phonon_relax.PhononRelaxBase.begin">
@@ -491,7 +502,7 @@ symmetry than that of distorted structure is expected if possible.</li>
 
 <dl class="class">
 <dt id="cogue.task.phonon_relax.PhononRelaxElementBase">
-<em class="property">class </em><tt class="descclassname">cogue.task.phonon_relax.</tt><tt class="descname">PhononRelaxElementBase</tt><big>(</big><em>directory=None</em>, <em>name=None</em>, <em>ancestral_cells=</em><span class="optional">[</span><span class="optional">]</span>, <em>distance=None</em>, <em>lattice_tolerance=None</em>, <em>force_tolerance=None</em>, <em>pressure_target=None</em>, <em>stress_tolerance=None</em>, <em>max_increase=None</em>, <em>max_iteration=None</em>, <em>min_iteration=None</em>, <em>symmetry_tolerance=None</em>, <em>cutoff_eigenvalue=None</em>, <em>traverse=False</em><big>)</big><a class="headerlink" href="#cogue.task.phonon_relax.PhononRelaxElementBase" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">cogue.task.phonon_relax.</tt><tt class="descname">PhononRelaxElementBase</tt><big>(</big><em>directory=None</em>, <em>name=None</em>, <em>ancestral_cells={}</em>, <em>tid_parent=None</em>, <em>distance=None</em>, <em>lattice_tolerance=None</em>, <em>force_tolerance=None</em>, <em>pressure_target=None</em>, <em>stress_tolerance=None</em>, <em>max_increase=None</em>, <em>max_iteration=None</em>, <em>min_iteration=None</em>, <em>symmetry_tolerance=None</em>, <em>cutoff_eigenvalue=None</em>, <em>max_displacement=None</em>, <em>num_sampling_points=None</em>, <em>traverse=False</em><big>)</big><a class="headerlink" href="#cogue.task.phonon_relax.PhononRelaxElementBase" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#cogue.task.TaskElement" title="cogue.task.TaskElement"><tt class="xref py py-class docutils literal"><span class="pre">cogue.task.TaskElement</span></tt></a></p>
 <p>PhononRelaxElementBase class</p>
 <p>Relax crystal structure using phonon eigenvector with imaginary
@@ -509,6 +520,11 @@ frequency</p>
 <dl class="method">
 <dt id="cogue.task.phonon_relax.PhononRelaxElementBase.end">
 <tt class="descname">end</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.task.phonon_relax.PhononRelaxElementBase.end" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="cogue.task.phonon_relax.PhononRelaxElementBase.get_cell">
+<tt class="descname">get_cell</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.task.phonon_relax.PhononRelaxElementBase.get_cell" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -545,15 +561,47 @@ frequency</p>
 
 <dl class="function">
 <dt id="cogue.task.phonon_relax.get_unstable_modulations">
-<tt class="descclassname">cogue.task.phonon_relax.</tt><tt class="descname">get_unstable_modulations</tt><big>(</big><em>phonon</em>, <em>supercell_dimension</em>, <em>degeneracy_tolerance=0.001</em>, <em>max_displacement=0.1</em>, <em>cutoff_eigenvalue=None</em><big>)</big><a class="headerlink" href="#cogue.task.phonon_relax.get_unstable_modulations" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">cogue.task.phonon_relax.</tt><tt class="descname">get_unstable_modulations</tt><big>(</big><em>phonon</em>, <em>supercell_dimension</em>, <em>degeneracy_tolerance=0.001</em>, <em>symmetry_tolerance=0.1</em>, <em>max_displacement=0.2</em>, <em>cutoff_eigenvalue=None</em>, <em>ndiv=180</em>, <em>excluded_qpoints=None</em><big>)</big><a class="headerlink" href="#cogue.task.phonon_relax.get_unstable_modulations" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="function">
-<dt id="cogue.task.phonon_relax.write_all_symmetries">
-<tt class="descclassname">cogue.task.phonon_relax.</tt><tt class="descname">write_all_symmetries</tt><big>(</big><em>all_symmetries</em>, <em>i</em>, <em>j</em><big>)</big><a class="headerlink" href="#cogue.task.phonon_relax.write_all_symmetries" title="Permalink to this definition">¶</a></dt>
-<dd><p>Write all symmetry information</p>
-<p>To obtain all_symmetries, PhononModulation has to be invoked with
-store_all=True.</p>
+</div>
+<div class="section" id="module-cogue.task.quasiharmonic_phonon">
+<span id="quasiharmonic-phonon-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">quasiharmonic_phonon</span></tt> Module<a class="headerlink" href="#module-cogue.task.quasiharmonic_phonon" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="cogue.task.quasiharmonic_phonon.QuasiHarmonicPhononBase">
+<em class="property">class </em><tt class="descclassname">cogue.task.quasiharmonic_phonon.</tt><tt class="descname">QuasiHarmonicPhononBase</tt><big>(</big><em>directory=None</em>, <em>name=None</em>, <em>strains=None</em>, <em>sampling_mesh=None</em>, <em>t_step=None</em>, <em>t_max=None</em>, <em>t_min=None</em>, <em>supercell_matrix=None</em>, <em>primitive_matrix=None</em>, <em>distance=None</em>, <em>lattice_tolerance=None</em>, <em>force_tolerance=None</em>, <em>pressure_target=None</em>, <em>stress_tolerance=None</em>, <em>max_increase=None</em>, <em>max_iteration=None</em>, <em>min_iteration=None</em>, <em>traverse=False</em>, <em>is_cell_relaxed=False</em><big>)</big><a class="headerlink" href="#cogue.task.quasiharmonic_phonon.QuasiHarmonicPhononBase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#cogue.task.TaskElement" title="cogue.task.TaskElement"><tt class="xref py py-class docutils literal"><span class="pre">cogue.task.TaskElement</span></tt></a></p>
+<p>QuasiHarmonicPhonon class</p>
+<p>Three stages:
+1. structure optimization of input cell
+2. create cells with various volumes and optimize them
+3. calculate phonons for three cells
+4. calculate quasi-harmonic phonons</p>
+<dl class="method">
+<dt id="cogue.task.quasiharmonic_phonon.QuasiHarmonicPhononBase.begin">
+<tt class="descname">begin</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.task.quasiharmonic_phonon.QuasiHarmonicPhononBase.begin" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="cogue.task.quasiharmonic_phonon.QuasiHarmonicPhononBase.done">
+<tt class="descname">done</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.task.quasiharmonic_phonon.QuasiHarmonicPhononBase.done" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="cogue.task.quasiharmonic_phonon.QuasiHarmonicPhononBase.end">
+<tt class="descname">end</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.task.quasiharmonic_phonon.QuasiHarmonicPhononBase.end" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="cogue.task.quasiharmonic_phonon.QuasiHarmonicPhononBase.next">
+<tt class="descname">next</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.task.quasiharmonic_phonon.QuasiHarmonicPhononBase.next" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="cogue.task.quasiharmonic_phonon.QuasiHarmonicPhononBase.set_status">
+<tt class="descname">set_status</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.task.quasiharmonic_phonon.QuasiHarmonicPhononBase.set_status" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 </div>
@@ -591,6 +639,11 @@ store_all=True.</p>
 <dl class="method">
 <dt id="cogue.task.structure_optimization.StructureOptimizationBase.get_forces">
 <tt class="descname">get_forces</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.task.structure_optimization.StructureOptimizationBase.get_forces" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="cogue.task.structure_optimization.StructureOptimizationBase.get_initial_cell">
+<tt class="descname">get_initial_cell</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.task.structure_optimization.StructureOptimizationBase.get_initial_cell" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -640,9 +693,11 @@ store_all=True.</p>
 <li><a class="reference internal" href="#id1"><tt class="docutils literal"><span class="pre">task</span></tt> Package</a></li>
 <li><a class="reference internal" href="#module-cogue.task.bulk_modulus"><tt class="docutils literal"><span class="pre">bulk_modulus</span></tt> Module</a></li>
 <li><a class="reference internal" href="#module-cogue.task.elastic_constants"><tt class="docutils literal"><span class="pre">elastic_constants</span></tt> Module</a></li>
+<li><a class="reference internal" href="#module-cogue.task.mode_gruneisen"><tt class="docutils literal"><span class="pre">mode_gruneisen</span></tt> Module</a></li>
 <li><a class="reference internal" href="#module-cogue.task.oneshot_calculation"><tt class="docutils literal"><span class="pre">oneshot_calculation</span></tt> Module</a></li>
 <li><a class="reference internal" href="#module-cogue.task.phonon"><tt class="docutils literal"><span class="pre">phonon</span></tt> Module</a></li>
 <li><a class="reference internal" href="#module-cogue.task.phonon_relax"><tt class="docutils literal"><span class="pre">phonon_relax</span></tt> Module</a></li>
+<li><a class="reference internal" href="#module-cogue.task.quasiharmonic_phonon"><tt class="docutils literal"><span class="pre">quasiharmonic_phonon</span></tt> Module</a></li>
 <li><a class="reference internal" href="#module-cogue.task.structure_optimization"><tt class="docutils literal"><span class="pre">structure_optimization</span></tt> Module</a></li>
 </ul>
 </li>

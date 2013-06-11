@@ -57,8 +57,17 @@
 <li>Wrappers of calculators and queueing systems for <a class="reference external" href="http://cms.mpi.univie.ac.at/vasp/vasp/">VASP5</a> and <a class="reference external" href="http://gridengine.org">GridEngine</a></li>
 <li>Automation tools for various tasks</li>
 </ul>
-<div class="section" id="tasks">
-<h2>Tasks<a class="headerlink" href="#tasks" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="convenient-command-line-tools">
+<h2>Convenient command line tools<a class="headerlink" href="#convenient-command-line-tools" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Crystal format converters</li>
+<li>Transformation of crystal structure including supercell builder</li>
+<li>Symmetry finder</li>
+<li>Simple crystal viewer</li>
+</ul>
+</div>
+<div class="section" id="automation-tasks">
+<h2>Automation tasks<a class="headerlink" href="#automation-tasks" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li>Total energy, eigenvalues, forces, stress</li>
 <li>Structure optimizations</li>
@@ -76,23 +85,38 @@
 <li>Crystal symmetry handling with <a class="reference external" href="http://spglib.sf.net">spglib</a></li>
 </ul>
 </div>
-<div class="section" id="architecture-of-automation-system">
-<h2>Architecture of automation system<a class="headerlink" href="#architecture-of-automation-system" title="Permalink to this headline">¶</a></h2>
-<p>Cogue is composed of three objects, task, taskset, and controller
-(<tt class="docutils literal"><span class="pre">autocalc</span></tt>). Task corresponds to a calculation. Taskset is a set of
-tasks and tasksets. A series of tasksets can be contained in a
-task. Complicated process is designed by nesting tasks and tasksets.
-Controller handles tasks and tasksets with the help of a queueing system.</p>
-</div>
 <div class="section" id="documentation">
 <h2>Documentation<a class="headerlink" href="#documentation" title="Permalink to this headline">¶</a></h2>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="contents.html">Contents</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="install.html">Installation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="install.html#system-requirements">System requirements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="install.html#install">Install</a></li>
+<li class="toctree-l3"><a class="reference internal" href="install.html#environment-setup">Environment setup</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qsystem.html">Installation and configure of queueing system</a></li>
-<li class="toctree-l2"><a class="reference internal" href="modules.html">Cogue code reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cui_tools.html">Command line tools</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="cui_tools.html#symmetry-finder">Symmetry finder</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cui_tools.html#converter">Converter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cui_tools.html#crystal-viewer">Crystal viewer</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="automation.html">Automation system</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="automation.html#architecture">Architecture</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="qsystem.html">Installation and configure of queueing system</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="qsystem.html#installation-of-grid-engine">Installation of Grid Engine</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qsystem.html#configuration-of-grid-engine">Configuration of Grid Engine</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qsystem.html#configuration-of-parallel-environment">Configuration of parallel environment</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html">Cogue code reference</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="cogue.html">cogue Package</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -189,9 +213,9 @@ Controller handles tasks and tasksets with the help of a queueing system.</p>
   <h3><a href="#">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Cogue</a><ul>
-<li><a class="reference internal" href="#tasks">Tasks</a></li>
+<li><a class="reference internal" href="#convenient-command-line-tools">Convenient command line tools</a></li>
+<li><a class="reference internal" href="#automation-tasks">Automation tasks</a></li>
 <li><a class="reference internal" href="#useful-functions-and-classes">Useful functions and classes</a></li>
-<li><a class="reference internal" href="#architecture-of-automation-system">Architecture of automation system</a></li>
 <li><a class="reference internal" href="#documentation">Documentation</a><ul>
 </ul>
 </li>
