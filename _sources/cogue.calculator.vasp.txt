@@ -17,11 +17,3 @@ vasp Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`vasp_io` Module
----------------------
-
-.. automodule:: cogue.calculator.vasp.vasp_io
-    :members:
-    :undoc-members:
-    :show-inheritance:
-

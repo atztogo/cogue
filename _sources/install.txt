@@ -4,37 +4,55 @@ Installation
 System requirements
 ---------------------
 
-Current Cogue works only on a private cluster that has the following
-systems:
+* Python and its header files
+* numpy
+* python-lxml
+* python-yaml
 
-   1. Usual unix system, file system compatible of python ``os``
-      module is required. 
-   2. ``qsub`` and ``qstat`` of grid-engine queueing system has to
+::
+
+   % sudo apt-get install python-dev python-numpy python-lxml python-yaml
+
+Tools
+^^^^^^
+
+crystalView
+~~~~~~~~~~~~~
+
+* mayavi2
+
+::
+
+   % sudo apt-get install mayavi2
+
+Automation system
+^^^^^^^^^^^^^^^^^
+
+* Grid Engine (currently essential)
+* VASP (for most first-principles calclulations)
+* Phonopy (for phonon calculations)
+
+Currently cogue automation system works only on a private cluster that
+has the following systems:
+
+   1. ``qsub`` and ``qstat`` of grid-engine queueing system has to
       work on the client node. Probably development for the other
       queueing system like ``torque`` is easy.
-   3. VASP is used for the calculator.
+   2. VASP is used as the calculator.
 
-The second condition can be critical for the use Cogue on
-super-computers. Maybe in the future remote-job submitting should be
-supported.
+For phonon calculation, ``phonopy`` is required to be installed and
+correctly set-up. Please see `phonopy document
+<http://phonopy.sf.net>`_.
 
 Install
 ------------------------
-
-Firstly `spglib <http://spglib.sf.net>`_ has to be installed. Then
-prepare ``settings.py`` on the same directory where ``setup.py``
-exists. In ``settings.py``, complie optitions for spglib are written
-as follows::
-
-   library_dirs = [ Directory_of_libsymspg ]
-   include_dirs = [ Directory_of_spglib_dot_h ]
 
 Download Cogue using ``git`` command::
 
    git clone git://github.com/atztogo/cogue.git
 
- 
-Install by ``setup.py`` script at current directory::
+Change directory to ``cogue`` and run ``setup.py`` script at current
+directory::
 
    python setup.py install --home=.
 
@@ -46,6 +64,6 @@ stored has to be told to Cogue using the environment variable
 ``COGUE_POTCAR_PATH``. The details are given in the following sections.
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    environment-setup

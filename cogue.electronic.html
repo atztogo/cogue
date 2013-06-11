@@ -7,7 +7,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Contents &mdash; cogue 0.1 documentation</title>
+    <title>electronic Package &mdash; cogue 0.1 documentation</title>
     
     <link rel="stylesheet" href="_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -25,8 +25,9 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="cogue 0.1 documentation" href="index.html" />
-    <link rel="next" title="Installation" href="install.html" />
-    <link rel="prev" title="Cogue" href="index.html" /> 
+    <link rel="up" title="cogue Package" href="cogue.html" />
+    <link rel="next" title="interface Package" href="cogue.interface.html" />
+    <link rel="prev" title="electron Package" href="cogue.electron.html" /> 
   </head>
   <body>
     <div class="related">
@@ -39,12 +40,15 @@
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="install.html" title="Installation"
+          <a href="cogue.interface.html" title="interface Package"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="index.html" title="Cogue"
+          <a href="cogue.electron.html" title="electron Package"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">cogue 0.1 documentation</a> &raquo;</li> 
+        <li><a href="index.html">cogue 0.1 documentation</a> &raquo;</li>
+          <li><a href="contents.html" >Contents</a> &raquo;</li>
+          <li><a href="modules.html" >Cogue code reference</a> &raquo;</li>
+          <li><a href="cogue.html" accesskey="U">cogue Package</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -53,38 +57,20 @@
         <div class="bodywrapper">
           <div class="body">
             
-  <div class="section" id="contents">
-<h1>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h1>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="install.html#system-requirements">System requirements</a></li>
-<li class="toctree-l2"><a class="reference internal" href="install.html#install">Install</a></li>
-<li class="toctree-l2"><a class="reference internal" href="install.html#environment-setup">Environment setup</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
-<li class="toctree-l1"><a class="reference internal" href="cui_tools.html">Command line tools</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="cui_tools.html#symmetry-finder">Symmetry finder</a></li>
-<li class="toctree-l2"><a class="reference internal" href="cui_tools.html#converter">Converter</a></li>
-<li class="toctree-l2"><a class="reference internal" href="cui_tools.html#crystal-viewer">Crystal viewer</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="automation.html">Automation system</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="automation.html#architecture">Architecture</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="qsystem.html">Installation and configure of queueing system</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="qsystem.html#installation-of-grid-engine">Installation of Grid Engine</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qsystem.html#configuration-of-grid-engine">Configuration of Grid Engine</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qsystem.html#configuration-of-parallel-environment">Configuration of parallel environment</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="modules.html">Cogue code reference</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="cogue.html">cogue Package</a></li>
-</ul>
-</li>
-</ul>
+  <div class="section" id="electronic-package">
+<h1>electronic Package<a class="headerlink" href="#electronic-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-cogue.electronic.entropy">
+<span id="entropy-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">entropy</span></tt> Module<a class="headerlink" href="#module-cogue.electronic.entropy" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="cogue.electronic.entropy.get_chemical_potential">
+<tt class="descclassname">cogue.electronic.entropy.</tt><tt class="descname">get_chemical_potential</tt><big>(</big><em>energies</em>, <em>weights</em>, <em>temperature</em>, <em>num_electrons</em><big>)</big><a class="headerlink" href="#cogue.electronic.entropy.get_chemical_potential" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="cogue.electronic.entropy.get_entropy">
+<tt class="descclassname">cogue.electronic.entropy.</tt><tt class="descname">get_entropy</tt><big>(</big><em>energies</em>, <em>weights</em>, <em>chemical_potential</em>, <em>temperature</em><big>)</big><a class="headerlink" href="#cogue.electronic.entropy.get_entropy" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </div>
 </div>
 
@@ -94,15 +80,23 @@
       </div>
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">electronic Package</a><ul>
+<li><a class="reference internal" href="#module-cogue.electronic.entropy"><tt class="docutils literal"><span class="pre">entropy</span></tt> Module</a></li>
+</ul>
+</li>
+</ul>
+
   <h4>Previous topic</h4>
-  <p class="topless"><a href="index.html"
-                        title="previous chapter">Cogue</a></p>
+  <p class="topless"><a href="cogue.electron.html"
+                        title="previous chapter">electron Package</a></p>
   <h4>Next topic</h4>
-  <p class="topless"><a href="install.html"
-                        title="next chapter">Installation</a></p>
+  <p class="topless"><a href="cogue.interface.html"
+                        title="next chapter">interface Package</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
-    <li><a href="_sources/contents.txt"
+    <li><a href="_sources/cogue.electronic.txt"
            rel="nofollow">Show Source</a></li>
   </ul>
 <div id="searchbox" style="display: none">
@@ -132,12 +126,15 @@
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="install.html" title="Installation"
+          <a href="cogue.interface.html" title="interface Package"
              >next</a> |</li>
         <li class="right" >
-          <a href="index.html" title="Cogue"
+          <a href="cogue.electron.html" title="electron Package"
              >previous</a> |</li>
-        <li><a href="index.html">cogue 0.1 documentation</a> &raquo;</li> 
+        <li><a href="index.html">cogue 0.1 documentation</a> &raquo;</li>
+          <li><a href="contents.html" >Contents</a> &raquo;</li>
+          <li><a href="modules.html" >Cogue code reference</a> &raquo;</li>
+          <li><a href="cogue.html" >cogue Package</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">

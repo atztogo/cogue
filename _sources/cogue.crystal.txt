@@ -41,10 +41,34 @@ crystal Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`sketch` Module
---------------------
+:mod:`pair_distance` Module
+---------------------------
 
-.. automodule:: cogue.crystal.sketch
+.. automodule:: cogue.crystal.pair_distance
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`point_defect` Module
+--------------------------
+
+.. automodule:: cogue.crystal.point_defect
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`random_builder` Module
+----------------------------
+
+.. automodule:: cogue.crystal.random_builder
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`supercell` Module
+-----------------------
+
+.. automodule:: cogue.crystal.supercell
     :members:
     :undoc-members:
     :show-inheritance:
@@ -53,14 +77,6 @@ crystal Package
 ----------------------
 
 .. automodule:: cogue.crystal.symmetry
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`xtalcomp` Module
-----------------------
-
-.. automodule:: cogue.crystal.xtalcomp
     :members:
     :undoc-members:
     :show-inheritance:

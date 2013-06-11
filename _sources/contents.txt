@@ -6,5 +6,7 @@ Contents
 
    install
    tutorial
+   cui_tools
+   automation
    qsystem
    modules

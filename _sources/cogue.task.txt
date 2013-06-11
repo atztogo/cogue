@@ -25,6 +25,14 @@ task Package
     :undoc-members:
     :show-inheritance:
 
+:mod:`mode_gruneisen` Module
+----------------------------
+
+.. automodule:: cogue.task.mode_gruneisen
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 :mod:`oneshot_calculation` Module
 ---------------------------------
 
@@ -45,6 +53,14 @@ task Package
 --------------------------
 
 .. automodule:: cogue.task.phonon_relax
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`quasiharmonic_phonon` Module
+----------------------------------
+
+.. automodule:: cogue.task.quasiharmonic_phonon
     :members:
     :undoc-members:
     :show-inheritance:

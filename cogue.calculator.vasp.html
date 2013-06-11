@@ -85,6 +85,25 @@
 
 <dl class="function">
 <dt>
+<tt class="descname">mode_gruneisen(directory='mode_gruneisen', name=None, job=None, delta_strain=0.001, strain=None, bias=None, supercell_matrix=array([[1, 0, 0],</tt></dt>
+<dt>
+<tt class="descname">[0, 1, 0],</tt></dt>
+<dt>
+<tt class="descname">[0, 0, 1]]), primitive_matrix=array([[1, 0, 0],</tt></dt>
+<dt>
+<tt class="descname">[0, 1, 0],</tt></dt>
+<dt>
+<tt class="descname">[0, 0, 1]]), distance=0.01, lattice_tolerance=0.1, force_tolerance=0.001, pressure_target=0, stress_tolerance=10, max_increase=1.5, max_iteration=3, min_iteration=1, traverse=False, is_cell_relaxed=False, cell=None, pseudo_potential_map=None, k_mesh=None, k_shift=None, k_gamma=None, k_length=None, incar=None)</tt></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="cogue.calculator.vasp.parse_poscar">
+<tt class="descclassname">cogue.calculator.vasp.</tt><tt class="descname">parse_poscar</tt><big>(</big><em>lines</em><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.parse_poscar" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns Cell object by parsing POSCAR lines list.</p>
+</dd></dl>
+
+<dl class="function">
+<dt>
 <tt class="descname">phonon(directory='phonon', name=None, job=None, supercell_matrix=array([[1, 0, 0],</tt></dt>
 <dt>
 <tt class="descname">[0, 1, 0],</tt></dt>
@@ -98,12 +117,25 @@
 
 <dl class="function">
 <dt id="cogue.calculator.vasp.phonon_relax">
-<tt class="descclassname">cogue.calculator.vasp.</tt><tt class="descname">phonon_relax</tt><big>(</big><em>directory='phonon_relax'</em>, <em>name=None</em>, <em>job=None</em>, <em>distance=0.01</em>, <em>lattice_tolerance=0.1</em>, <em>force_tolerance=0.001</em>, <em>pressure_target=0</em>, <em>stress_tolerance=10</em>, <em>max_increase=1.5</em>, <em>max_iteration=4</em>, <em>min_iteration=1</em>, <em>symmetry_tolerance=0.1</em>, <em>restrict_offspring=False</em>, <em>cutoff_eigenvalue=-0.02</em>, <em>traverse=False</em>, <em>cell=None</em>, <em>pseudo_potential_map=None</em>, <em>k_mesh=None</em>, <em>k_shift=None</em>, <em>k_gamma=None</em>, <em>k_length=None</em>, <em>incar=None</em><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.phonon_relax" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">cogue.calculator.vasp.</tt><tt class="descname">phonon_relax</tt><big>(</big><em>directory='phonon_relax'</em>, <em>name=None</em>, <em>job=None</em>, <em>distance=0.01</em>, <em>lattice_tolerance=0.1</em>, <em>force_tolerance=0.001</em>, <em>pressure_target=0</em>, <em>stress_tolerance=10</em>, <em>max_increase=1.5</em>, <em>max_iteration=4</em>, <em>min_iteration=1</em>, <em>symmetry_tolerance=0.1</em>, <em>restrict_offspring=False</em>, <em>max_offspring=None</em>, <em>cutoff_eigenvalue=-0.02</em>, <em>max_displacement=None</em>, <em>num_sampling_points=60</em>, <em>traverse=False</em>, <em>cell=None</em>, <em>pseudo_potential_map=None</em>, <em>k_mesh=None</em>, <em>k_shift=None</em>, <em>k_gamma=None</em>, <em>k_length=None</em>, <em>incar=None</em><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.phonon_relax" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="function">
 <dt id="cogue.calculator.vasp.phonon_relax_element">
-<tt class="descclassname">cogue.calculator.vasp.</tt><tt class="descname">phonon_relax_element</tt><big>(</big><em>directory='phonon_relax_element'</em>, <em>name=None</em>, <em>job=None</em>, <em>distance=0.01</em>, <em>lattice_tolerance=0.1</em>, <em>force_tolerance=0.001</em>, <em>pressure_target=0</em>, <em>stress_tolerance=10</em>, <em>max_increase=1.5</em>, <em>max_iteration=4</em>, <em>min_iteration=1</em>, <em>symmetry_tolerance=0.1</em>, <em>cutoff_eigenvalue=-0.02</em>, <em>traverse=False</em>, <em>cell=None</em>, <em>pseudo_potential_map=None</em>, <em>k_mesh=None</em>, <em>k_shift=None</em>, <em>k_gamma=None</em>, <em>k_length=None</em>, <em>incar=None</em><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.phonon_relax_element" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">cogue.calculator.vasp.</tt><tt class="descname">phonon_relax_element</tt><big>(</big><em>directory='phonon_relax_element'</em>, <em>name=None</em>, <em>job=None</em>, <em>distance=0.01</em>, <em>lattice_tolerance=0.1</em>, <em>force_tolerance=0.001</em>, <em>pressure_target=0</em>, <em>stress_tolerance=10</em>, <em>max_increase=1.5</em>, <em>max_iteration=4</em>, <em>min_iteration=1</em>, <em>symmetry_tolerance=0.1</em>, <em>cutoff_eigenvalue=-0.02</em>, <em>max_displacement=None</em>, <em>num_sampling_points=60</em>, <em>traverse=False</em>, <em>cell=None</em>, <em>pseudo_potential_map=None</em>, <em>k_mesh=None</em>, <em>k_shift=None</em>, <em>k_gamma=None</em>, <em>k_length=None</em>, <em>incar=None</em><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.phonon_relax_element" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt>
+<tt class="descname">quasiharmonic_phonon(directory='quasiharmonic_phonon', name=None, job=None, strains=[-0.04, -0.02, 0.02, 0.04, 0.06, 0.08], sampling_mesh=None, t_step=None, t_max=None, t_min=None, supercell_matrix=array([[1, 0, 0],</tt></dt>
+<dt>
+<tt class="descname">[0, 1, 0],</tt></dt>
+<dt>
+<tt class="descname">[0, 0, 1]]), primitive_matrix=array([[1, 0, 0],</tt></dt>
+<dt>
+<tt class="descname">[0, 1, 0],</tt></dt>
+<dt>
+<tt class="descname">[0, 0, 1]]), distance=0.01, lattice_tolerance=0.1, force_tolerance=0.001, pressure_target=0, stress_tolerance=10, max_increase=1.5, max_iteration=3, min_iteration=1, traverse=False, is_cell_relaxed=False, cell=None, pseudo_potential_map=None, k_mesh=None, k_shift=None, k_gamma=None, k_length=None, incar=None)</tt></dt>
 <dd></dd></dl>
 
 <dl class="function">
@@ -119,7 +151,7 @@
 
 <dl class="function">
 <dt id="cogue.calculator.vasp.write_poscar">
-<tt class="descclassname">cogue.calculator.vasp.</tt><tt class="descname">write_poscar</tt><big>(</big><em>cell</em>, <em>filename='POSCAR'</em><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.write_poscar" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">cogue.calculator.vasp.</tt><tt class="descname">write_poscar</tt><big>(</big><em>cell</em>, <em>filename=None</em><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.write_poscar" title="Permalink to this definition">¶</a></dt>
 <dd><p>Write Cell object into POSCAR style file.</p>
 </dd></dl>
 
@@ -159,6 +191,21 @@
 
 <dl class="class">
 <dt>
+<tt class="descname">ModeGruneisen(directory='mode_gruneisen', name=None, delta_strain=0.001, strain=None, bias=None, supercell_matrix=array([[1, 0, 0],</tt></dt>
+<dt>
+<tt class="descname">[0, 1, 0],</tt></dt>
+<dt>
+<tt class="descname">[0, 0, 1]]), primitive_matrix=array([[1, 0, 0],</tt></dt>
+<dt>
+<tt class="descname">[0, 1, 0],</tt></dt>
+<dt>
+<tt class="descname">[0, 0, 1]]), distance=0.01, lattice_tolerance=0.1, force_tolerance=0.001, pressure_target=0, stress_tolerance=10, max_increase=1.5, max_iteration=3, min_iteration=1, traverse=False, is_cell_relaxed=False)</tt></dt>
+<dd><p>Bases: <a class="reference internal" href="#cogue.calculator.vasp.task.TaskVasp" title="cogue.calculator.vasp.task.TaskVasp"><tt class="xref py py-class docutils literal"><span class="pre">cogue.calculator.vasp.task.TaskVasp</span></tt></a>, <a class="reference internal" href="cogue.task.html#cogue.task.mode_gruneisen.ModeGruneisenBase" title="cogue.task.mode_gruneisen.ModeGruneisenBase"><tt class="xref py py-class docutils literal"><span class="pre">cogue.task.mode_gruneisen.ModeGruneisenBase</span></tt></a></p>
+<p>Task to calculate mode Gruneisen parameters by VASP.</p>
+</dd></dl>
+
+<dl class="class">
+<dt>
 <tt class="descname">Phonon(directory='phonon', name=None, supercell_matrix=array([[1, 0, 0],</tt></dt>
 <dt>
 <tt class="descname">[0, 1, 0],</tt></dt>
@@ -173,14 +220,29 @@
 
 <dl class="class">
 <dt id="cogue.calculator.vasp.task.PhononRelax">
-<em class="property">class </em><tt class="descclassname">cogue.calculator.vasp.task.</tt><tt class="descname">PhononRelax</tt><big>(</big><em>directory='phonon_relax'</em>, <em>name=None</em>, <em>ancestral_cells=</em><span class="optional">[</span><span class="optional">]</span>, <em>distance=0.01</em>, <em>lattice_tolerance=0.1</em>, <em>force_tolerance=1e-05</em>, <em>pressure_target=0</em>, <em>stress_tolerance=1</em>, <em>max_increase=1.5</em>, <em>max_iteration=10</em>, <em>min_iteration=5</em>, <em>symmetry_tolerance=0.1</em>, <em>restrict_offspring=False</em>, <em>cutoff_eigenvalue=-0.02</em>, <em>traverse=False</em><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.task.PhononRelax" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">cogue.calculator.vasp.task.</tt><tt class="descname">PhononRelax</tt><big>(</big><em>directory='phonon_relax'</em>, <em>name=None</em>, <em>ancestral_cells={}</em>, <em>distance=0.01</em>, <em>lattice_tolerance=0.1</em>, <em>force_tolerance=1e-05</em>, <em>pressure_target=0</em>, <em>stress_tolerance=1</em>, <em>max_increase=1.5</em>, <em>max_iteration=10</em>, <em>min_iteration=5</em>, <em>symmetry_tolerance=0.1</em>, <em>restrict_offspring=False</em>, <em>max_offspring=None</em>, <em>cutoff_eigenvalue=-0.02</em>, <em>max_displacement=None</em>, <em>num_sampling_points=60</em>, <em>traverse=False</em><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.task.PhononRelax" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#cogue.calculator.vasp.task.TaskVasp" title="cogue.calculator.vasp.task.TaskVasp"><tt class="xref py py-class docutils literal"><span class="pre">cogue.calculator.vasp.task.TaskVasp</span></tt></a>, <a class="reference internal" href="cogue.task.html#cogue.task.phonon_relax.PhononRelaxBase" title="cogue.task.phonon_relax.PhononRelaxBase"><tt class="xref py py-class docutils literal"><span class="pre">cogue.task.phonon_relax.PhononRelaxBase</span></tt></a></p>
 </dd></dl>
 
 <dl class="class">
 <dt id="cogue.calculator.vasp.task.PhononRelaxElement">
-<em class="property">class </em><tt class="descclassname">cogue.calculator.vasp.task.</tt><tt class="descname">PhononRelaxElement</tt><big>(</big><em>directory='phonon_relax_element'</em>, <em>name=None</em>, <em>ancestral_cells=</em><span class="optional">[</span><span class="optional">]</span>, <em>distance=0.01</em>, <em>lattice_tolerance=0.1</em>, <em>force_tolerance=1e-05</em>, <em>pressure_target=0</em>, <em>stress_tolerance=1</em>, <em>max_increase=1.5</em>, <em>max_iteration=10</em>, <em>min_iteration=5</em>, <em>symmetry_tolerance=0.1</em>, <em>cutoff_eigenvalue=-0.02</em>, <em>traverse=False</em><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.task.PhononRelaxElement" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">cogue.calculator.vasp.task.</tt><tt class="descname">PhononRelaxElement</tt><big>(</big><em>directory='phonon_relax_element'</em>, <em>name=None</em>, <em>ancestral_cells={}</em>, <em>tid_parent=None</em>, <em>distance=0.01</em>, <em>lattice_tolerance=0.1</em>, <em>force_tolerance=1e-05</em>, <em>pressure_target=0</em>, <em>stress_tolerance=1</em>, <em>max_increase=1.5</em>, <em>max_iteration=10</em>, <em>min_iteration=5</em>, <em>symmetry_tolerance=0.1</em>, <em>cutoff_eigenvalue=-0.02</em>, <em>max_displacement=None</em>, <em>num_sampling_points=60</em>, <em>traverse=False</em><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.task.PhononRelaxElement" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#cogue.calculator.vasp.task.TaskVasp" title="cogue.calculator.vasp.task.TaskVasp"><tt class="xref py py-class docutils literal"><span class="pre">cogue.calculator.vasp.task.TaskVasp</span></tt></a>, <a class="reference internal" href="cogue.task.html#cogue.task.phonon_relax.PhononRelaxElementBase" title="cogue.task.phonon_relax.PhononRelaxElementBase"><tt class="xref py py-class docutils literal"><span class="pre">cogue.task.phonon_relax.PhononRelaxElementBase</span></tt></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt>
+<tt class="descname">QuasiHarmonicPhonon(directory='quasiharmonic_phonon', name=None, strains=[-0.04, -0.02, 0.02, 0.04, 0.06, 0.08], sampling_mesh=None, t_step=None, t_max=None, t_min=None, supercell_matrix=array([[1, 0, 0],</tt></dt>
+<dt>
+<tt class="descname">[0, 1, 0],</tt></dt>
+<dt>
+<tt class="descname">[0, 0, 1]]), primitive_matrix=array([[1, 0, 0],</tt></dt>
+<dt>
+<tt class="descname">[0, 1, 0],</tt></dt>
+<dt>
+<tt class="descname">[0, 0, 1]]), distance=0.01, lattice_tolerance=0.1, force_tolerance=0.001, pressure_target=0, stress_tolerance=10, max_increase=1.5, max_iteration=3, min_iteration=1, traverse=False, is_cell_relaxed=False)</tt></dt>
+<dd><p>Bases: <a class="reference internal" href="#cogue.calculator.vasp.task.TaskVasp" title="cogue.calculator.vasp.task.TaskVasp"><tt class="xref py py-class docutils literal"><span class="pre">cogue.calculator.vasp.task.TaskVasp</span></tt></a>, <a class="reference internal" href="cogue.task.html#cogue.task.quasiharmonic_phonon.QuasiHarmonicPhononBase" title="cogue.task.quasiharmonic_phonon.QuasiHarmonicPhononBase"><tt class="xref py py-class docutils literal"><span class="pre">cogue.task.quasiharmonic_phonon.QuasiHarmonicPhononBase</span></tt></a></p>
+<p>Task to calculate quasi-harmonic phonons by VASP.</p>
 </dd></dl>
 
 <dl class="class">
@@ -213,364 +275,6 @@
 </dd></dl>
 
 </div>
-<div class="section" id="module-cogue.calculator.vasp.vasp_io">
-<span id="vasp-io-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">vasp_io</span></tt> Module<a class="headerlink" href="#module-cogue.calculator.vasp.vasp_io" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
-<dt id="cogue.calculator.vasp.vasp_io.Incar">
-<em class="property">class </em><tt class="descclassname">cogue.calculator.vasp.vasp_io.</tt><tt class="descname">Incar</tt><big>(</big><em>addgrid=None</em>, <em>ediff=None</em>, <em>ediffg=None</em>, <em>encut=None</em>, <em>ialgo=None</em>, <em>ibrion=None</em>, <em>isif=None</em>, <em>ismear=None</em>, <em>ispin=None</em>, <em>lcharg=None</em>, <em>lepsilon=None</em>, <em>lreal=None</em>, <em>lwave=None</em>, <em>nelmin=None</em>, <em>npar=None</em>, <em>nsw=None</em>, <em>prec=None</em>, <em>pstress=None</em>, <em>sigma=None</em><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.vasp_io.Incar" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="method">
-<dt id="cogue.calculator.vasp.vasp_io.Incar.clear">
-<tt class="descname">clear</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.vasp_io.Incar.clear" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="cogue.calculator.vasp.vasp_io.Incar.copy">
-<tt class="descname">copy</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.vasp_io.Incar.copy" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="cogue.calculator.vasp.vasp_io.Incar.get_addgrid">
-<tt class="descname">get_addgrid</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.vasp_io.Incar.get_addgrid" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="cogue.calculator.vasp.vasp_io.Incar.get_ediff">
-<tt class="descname">get_ediff</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.vasp_io.Incar.get_ediff" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="cogue.calculator.vasp.vasp_io.Incar.get_ediffg">
-<tt class="descname">get_ediffg</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.vasp_io.Incar.get_ediffg" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="cogue.calculator.vasp.vasp_io.Incar.get_encut">
-<tt class="descname">get_encut</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.vasp_io.Incar.get_encut" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="cogue.calculator.vasp.vasp_io.Incar.get_ialgo">
-<tt class="descname">get_ialgo</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.vasp_io.Incar.get_ialgo" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="cogue.calculator.vasp.vasp_io.Incar.get_ibrion">
-<tt class="descname">get_ibrion</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.vasp_io.Incar.get_ibrion" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="cogue.calculator.vasp.vasp_io.Incar.get_isif">
-<tt class="descname">get_isif</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.vasp_io.Incar.get_isif" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="cogue.calculator.vasp.vasp_io.Incar.get_ismear">
-<tt class="descname">get_ismear</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.vasp_io.Incar.get_ismear" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="cogue.calculator.vasp.vasp_io.Incar.get_ispin">
-<tt class="descname">get_ispin</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.vasp_io.Incar.get_ispin" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="cogue.calculator.vasp.vasp_io.Incar.get_lcharg">
-<tt class="descname">get_lcharg</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.vasp_io.Incar.get_lcharg" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="cogue.calculator.vasp.vasp_io.Incar.get_lepsilon">
-<tt class="descname">get_lepsilon</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.vasp_io.Incar.get_lepsilon" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="cogue.calculator.vasp.vasp_io.Incar.get_lreal">
-<tt class="descname">get_lreal</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.vasp_io.Incar.get_lreal" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="cogue.calculator.vasp.vasp_io.Incar.get_lwave">
-<tt class="descname">get_lwave</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.vasp_io.Incar.get_lwave" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="cogue.calculator.vasp.vasp_io.Incar.get_nelmin">
-<tt class="descname">get_nelmin</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.vasp_io.Incar.get_nelmin" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="cogue.calculator.vasp.vasp_io.Incar.get_npar">
-<tt class="descname">get_npar</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.vasp_io.Incar.get_npar" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="cogue.calculator.vasp.vasp_io.Incar.get_nsw">
-<tt class="descname">get_nsw</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.vasp_io.Incar.get_nsw" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="cogue.calculator.vasp.vasp_io.Incar.get_prec">
-<tt class="descname">get_prec</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.vasp_io.Incar.get_prec" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="cogue.calculator.vasp.vasp_io.Incar.get_pstress">
-<tt class="descname">get_pstress</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.vasp_io.Incar.get_pstress" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="cogue.calculator.vasp.vasp_io.Incar.get_sigma">
-<tt class="descname">get_sigma</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.vasp_io.Incar.get_sigma" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="cogue.calculator.vasp.vasp_io.Incar.set_addgrid">
-<tt class="descname">set_addgrid</tt><big>(</big><em>x</em><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.vasp_io.Incar.set_addgrid" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="cogue.calculator.vasp.vasp_io.Incar.set_ediff">
-<tt class="descname">set_ediff</tt><big>(</big><em>x</em><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.vasp_io.Incar.set_ediff" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="cogue.calculator.vasp.vasp_io.Incar.set_ediffg">
-<tt class="descname">set_ediffg</tt><big>(</big><em>x</em><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.vasp_io.Incar.set_ediffg" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="cogue.calculator.vasp.vasp_io.Incar.set_electronic_structure">
-<tt class="descname">set_electronic_structure</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.vasp_io.Incar.set_electronic_structure" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="cogue.calculator.vasp.vasp_io.Incar.set_encut">
-<tt class="descname">set_encut</tt><big>(</big><em>x</em><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.vasp_io.Incar.set_encut" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="cogue.calculator.vasp.vasp_io.Incar.set_ialgo">
-<tt class="descname">set_ialgo</tt><big>(</big><em>x</em><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.vasp_io.Incar.set_ialgo" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="cogue.calculator.vasp.vasp_io.Incar.set_ibrion">
-<tt class="descname">set_ibrion</tt><big>(</big><em>x</em><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.vasp_io.Incar.set_ibrion" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="cogue.calculator.vasp.vasp_io.Incar.set_isif">
-<tt class="descname">set_isif</tt><big>(</big><em>x</em><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.vasp_io.Incar.set_isif" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="cogue.calculator.vasp.vasp_io.Incar.set_ismear">
-<tt class="descname">set_ismear</tt><big>(</big><em>x</em><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.vasp_io.Incar.set_ismear" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="cogue.calculator.vasp.vasp_io.Incar.set_ispin">
-<tt class="descname">set_ispin</tt><big>(</big><em>x</em><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.vasp_io.Incar.set_ispin" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="cogue.calculator.vasp.vasp_io.Incar.set_lcharg">
-<tt class="descname">set_lcharg</tt><big>(</big><em>x</em><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.vasp_io.Incar.set_lcharg" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="cogue.calculator.vasp.vasp_io.Incar.set_lepsilon">
-<tt class="descname">set_lepsilon</tt><big>(</big><em>x</em><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.vasp_io.Incar.set_lepsilon" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="cogue.calculator.vasp.vasp_io.Incar.set_lreal">
-<tt class="descname">set_lreal</tt><big>(</big><em>x</em><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.vasp_io.Incar.set_lreal" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="cogue.calculator.vasp.vasp_io.Incar.set_lwave">
-<tt class="descname">set_lwave</tt><big>(</big><em>x</em><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.vasp_io.Incar.set_lwave" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="cogue.calculator.vasp.vasp_io.Incar.set_nelmin">
-<tt class="descname">set_nelmin</tt><big>(</big><em>x</em><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.vasp_io.Incar.set_nelmin" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="cogue.calculator.vasp.vasp_io.Incar.set_npar">
-<tt class="descname">set_npar</tt><big>(</big><em>x</em><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.vasp_io.Incar.set_npar" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="cogue.calculator.vasp.vasp_io.Incar.set_nsw">
-<tt class="descname">set_nsw</tt><big>(</big><em>x</em><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.vasp_io.Incar.set_nsw" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="cogue.calculator.vasp.vasp_io.Incar.set_prec">
-<tt class="descname">set_prec</tt><big>(</big><em>x</em><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.vasp_io.Incar.set_prec" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="cogue.calculator.vasp.vasp_io.Incar.set_pstress">
-<tt class="descname">set_pstress</tt><big>(</big><em>x</em><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.vasp_io.Incar.set_pstress" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="cogue.calculator.vasp.vasp_io.Incar.set_sigma">
-<tt class="descname">set_sigma</tt><big>(</big><em>x</em><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.vasp_io.Incar.set_sigma" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="cogue.calculator.vasp.vasp_io.Incar.set_structure_optimization">
-<tt class="descname">set_structure_optimization</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.vasp_io.Incar.set_structure_optimization" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="cogue.calculator.vasp.vasp_io.Incar.set_tag">
-<tt class="descname">set_tag</tt><big>(</big><em>k</em>, <em>v</em><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.vasp_io.Incar.set_tag" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="cogue.calculator.vasp.vasp_io.Incar.write">
-<tt class="descname">write</tt><big>(</big><em>filename='INCAR'</em><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.vasp_io.Incar.write" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="cogue.calculator.vasp.vasp_io.Outcar">
-<em class="property">class </em><tt class="descclassname">cogue.calculator.vasp.vasp_io.</tt><tt class="descname">Outcar</tt><big>(</big><em>filename='OUTCAR'</em><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.vasp_io.Outcar" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="method">
-<dt id="cogue.calculator.vasp.vasp_io.Outcar.get_elastic_constants">
-<tt class="descname">get_elastic_constants</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.vasp_io.Outcar.get_elastic_constants" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="cogue.calculator.vasp.vasp_io.Outcar.parse_elastic_constants">
-<tt class="descname">parse_elastic_constants</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.vasp_io.Outcar.parse_elastic_constants" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="cogue.calculator.vasp.vasp_io.Vasprunxml">
-<em class="property">class </em><tt class="descclassname">cogue.calculator.vasp.vasp_io.</tt><tt class="descname">Vasprunxml</tt><big>(</big><em>filename='vasprun.xml'</em><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.vasp_io.Vasprunxml" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="method">
-<dt id="cogue.calculator.vasp.vasp_io.Vasprunxml.get_eigenvalues">
-<tt class="descname">get_eigenvalues</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.vasp_io.Vasprunxml.get_eigenvalues" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="cogue.calculator.vasp.vasp_io.Vasprunxml.get_energies">
-<tt class="descname">get_energies</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.vasp_io.Vasprunxml.get_energies" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="cogue.calculator.vasp.vasp_io.Vasprunxml.get_forces">
-<tt class="descname">get_forces</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.vasp_io.Vasprunxml.get_forces" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="cogue.calculator.vasp.vasp_io.Vasprunxml.get_kpoints">
-<tt class="descname">get_kpoints</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.vasp_io.Vasprunxml.get_kpoints" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="cogue.calculator.vasp.vasp_io.Vasprunxml.get_lattice">
-<tt class="descname">get_lattice</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.vasp_io.Vasprunxml.get_lattice" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="cogue.calculator.vasp.vasp_io.Vasprunxml.get_points">
-<tt class="descname">get_points</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.vasp_io.Vasprunxml.get_points" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="cogue.calculator.vasp.vasp_io.Vasprunxml.get_stress">
-<tt class="descname">get_stress</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.vasp_io.Vasprunxml.get_stress" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="cogue.calculator.vasp.vasp_io.Vasprunxml.parse_calculation">
-<tt class="descname">parse_calculation</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.vasp_io.Vasprunxml.parse_calculation" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="cogue.calculator.vasp.vasp_io.Vasprunxml.parse_eigenvalues">
-<tt class="descname">parse_eigenvalues</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.vasp_io.Vasprunxml.parse_eigenvalues" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="cogue.calculator.vasp.vasp_io.VasprunxmlExpat">
-<em class="property">class </em><tt class="descclassname">cogue.calculator.vasp.vasp_io.</tt><tt class="descname">VasprunxmlExpat</tt><big>(</big><em>filename</em><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.vasp_io.VasprunxmlExpat" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="method">
-<dt id="cogue.calculator.vasp.vasp_io.VasprunxmlExpat.get_cells">
-<tt class="descname">get_cells</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.vasp_io.VasprunxmlExpat.get_cells" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="cogue.calculator.vasp.vasp_io.VasprunxmlExpat.get_energies">
-<tt class="descname">get_energies</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.vasp_io.VasprunxmlExpat.get_energies" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="cogue.calculator.vasp.vasp_io.VasprunxmlExpat.get_forces">
-<tt class="descname">get_forces</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.vasp_io.VasprunxmlExpat.get_forces" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="cogue.calculator.vasp.vasp_io.VasprunxmlExpat.get_lattice">
-<tt class="descname">get_lattice</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.vasp_io.VasprunxmlExpat.get_lattice" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="cogue.calculator.vasp.vasp_io.VasprunxmlExpat.get_points">
-<tt class="descname">get_points</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.vasp_io.VasprunxmlExpat.get_points" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="cogue.calculator.vasp.vasp_io.VasprunxmlExpat.get_stress">
-<tt class="descname">get_stress</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.vasp_io.VasprunxmlExpat.get_stress" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="cogue.calculator.vasp.vasp_io.VasprunxmlExpat.get_symbols">
-<tt class="descname">get_symbols</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.vasp_io.VasprunxmlExpat.get_symbols" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="cogue.calculator.vasp.vasp_io.VasprunxmlExpat.parse">
-<tt class="descname">parse</tt><big>(</big><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.vasp_io.VasprunxmlExpat.parse" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="function">
-<dt id="cogue.calculator.vasp.vasp_io.read_poscar">
-<tt class="descclassname">cogue.calculator.vasp.vasp_io.</tt><tt class="descname">read_poscar</tt><big>(</big><em>filename='POSCAR'</em><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.vasp_io.read_poscar" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="cogue.calculator.vasp.vasp_io.write_kpoints">
-<tt class="descclassname">cogue.calculator.vasp.vasp_io.</tt><tt class="descname">write_kpoints</tt><big>(</big><em>filename='KPOINTS'</em>, <em>mesh=None</em>, <em>shift=None</em>, <em>gamma=False</em>, <em>length=None</em><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.vasp_io.write_kpoints" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="cogue.calculator.vasp.vasp_io.write_poscar">
-<tt class="descclassname">cogue.calculator.vasp.vasp_io.</tt><tt class="descname">write_poscar</tt><big>(</big><em>cell</em>, <em>filename='POSCAR'</em><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.vasp_io.write_poscar" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="cogue.calculator.vasp.vasp_io.write_potcar">
-<tt class="descclassname">cogue.calculator.vasp.vasp_io.</tt><tt class="descname">write_potcar</tt><big>(</big><em>names</em>, <em>filename='POTCAR'</em><big>)</big><a class="headerlink" href="#cogue.calculator.vasp.vasp_io.write_potcar" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</div>
 </div>
 
 
@@ -584,7 +288,6 @@
 <li><a class="reference internal" href="#">vasp Package</a><ul>
 <li><a class="reference internal" href="#id1"><tt class="docutils literal"><span class="pre">vasp</span></tt> Package</a></li>
 <li><a class="reference internal" href="#module-cogue.calculator.vasp.task"><tt class="docutils literal"><span class="pre">task</span></tt> Module</a></li>
-<li><a class="reference internal" href="#module-cogue.calculator.vasp.vasp_io"><tt class="docutils literal"><span class="pre">vasp_io</span></tt> Module</a></li>
 </ul>
 </li>
 </ul>

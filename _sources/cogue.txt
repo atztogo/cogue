@@ -9,6 +9,14 @@ cogue Package
     :undoc-members:
     :show-inheritance:
 
+:mod:`units` Module
+-------------------
+
+.. automodule:: cogue.units
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 Subpackages
 -----------
 
@@ -17,6 +25,9 @@ Subpackages
     cogue.calculator
     cogue.controller
     cogue.crystal
+    cogue.electron
+    cogue.interface
+    cogue.phonon
     cogue.qsystem
     cogue.task
 
