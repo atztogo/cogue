@@ -6,7 +6,10 @@ Then create HTML files by
 
 % make html
 
-HTML files are created in _build. Copy them to the top directory.
+HTML files are created under _build/html.
+Copy them to the top directory by
+
+% rsync -av _build/html/ .
 
 Togo
  
