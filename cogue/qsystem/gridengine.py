@@ -66,7 +66,8 @@ class Queue:
 
         # subprocess.check_out is new in python 2.7
         # for line in subprocess.check_output(["qstat"]).split('\n'):
-        for line in subprocess.Popen(["qstat"], stdout=subprocess.PIPE).communicate()[0].split('\n'):
+        for line in subprocess.Popen(
+            ["qstat"], stdout=subprocess.PIPE).communicate()[0].split('\n'):
             if len(line.split()) > 5:
                 jobid = line.split()[0]
                 if jobid.isdigit():
@@ -134,7 +135,9 @@ class Queue:
         # stdout = subprocess.check_output(shlex.split(
         #         self._qsub_command + " " + filename))
         job.write_script()
-        stdout = subprocess.Popen(shlex.split(self._qsub_command + " " + filename), stdout=subprocess.PIPE).communicate()[0]
+        stdout = subprocess.Popen(shlex.split(self._qsub_command + " " +
+                                              filename),
+                                  stdout=subprocess.PIPE).communicate()[0]
         jobid = int(stdout.split()[2])
         return jobid
 

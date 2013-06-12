@@ -69,10 +69,10 @@ class AutoCalc:
         self._tid_count += 1
         task.begin()
         subtasks = task.get_tasks()
-        if subtasks:
+        if subtasks: # Task-set
             for subtask in task.get_tasks():
                 self._deep_begin(subtask)
-        else:
+        else: # Execution task
             self._queue.register(task)
 
         self._chdir_out(cwd, task.get_status())
@@ -81,12 +81,12 @@ class AutoCalc:
         cwd = self._chdir_in(task.get_directory())
 
         subtasks = task.get_tasks()
-        if subtasks: # taskset
+        if subtasks: # Task-set
             for subtask in subtasks:
                 if not subtask.done():
                     self._deep_run(subtask)
 
-        else: # job task
+        else: # Execution task
             self._queue.set_job_status(task)
             
         task.set_status()
