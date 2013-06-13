@@ -8,10 +8,16 @@ System requirements
 * numpy
 * python-lxml
 * python-yaml
+* spur.py
+
+In the case of Ubuntu, the installation has be made as follows:
 
 ::
 
-   % sudo apt-get install python-dev python-numpy python-lxml python-yaml
+   % sudo apt-get install python-dev python-numpy python-lxml python-yaml python-paramiko python-pip
+   % sudo pip install spur
+
+spur.py is an interface for ssh. This is built on paramiko. So python-paramiko has to be installed. Ubuntu doesn't have spur.py package. Pip gives the easy way to install spur.py.
 
 Tools
 ^^^^^^
