@@ -2,9 +2,21 @@ __all__ = ['queue', 'job']
 
 import subprocess
 import shlex
+import spur
+import os
+import shutil
+import tarfile
 
-def queue(max_jobs=None):
-    return Queue(max_jobs=max_jobs)
+def queue(max_jobs=None,
+          ssh_shell=None,
+          temporary_dir=None):
+    if ssh_shell is None:
+        return LocalQueue(max_jobs=max_jobs)
+    elif temporary_dir is not None:
+        return RemoteQueue(ssh_shell,
+                           temporary_dir,
+                           max_jobs=max_jobs)
+        
 
 def job(script=None,
         shell=None,
@@ -48,12 +60,21 @@ class Queue:
     def __init__(self,
                  max_jobs = None,
                  qsub_command="qsub"):
+        self._max_jobs = max_jobs
         self._qsub_command = qsub_command
-
         self._qstatus = None
         self._tid_queue = []
         self._tid2jobid = {}
-        self._max_jobs = max_jobs
+        self._shell = None
+        self._shell_type = None
+
+    def register(self, task):
+        self._tid_queue.append(task.get_tid())
+        job = task.get_job()
+        job.set_status("preparing")
+
+    def get_qstatus(self):
+        return self._qstatus
 
     def qstat(self):
         """qstatout
@@ -62,12 +83,12 @@ class Queue:
         If this is None, qstat is exectued in python.
 
         """
+        qstat_out = self._shell.run(["qstat"]).output.split('\n')
         self._qstatus = {}
 
         # subprocess.check_out is new in python 2.7
         # for line in subprocess.check_output(["qstat"]).split('\n'):
-        for line in subprocess.Popen(
-            ["qstat"], stdout=subprocess.PIPE).communicate()[0].split('\n'):
+        for line in qstat_out:
             if len(line.split()) > 5:
                 jobid = line.split()[0]
                 if jobid.isdigit():
@@ -79,32 +100,9 @@ class Queue:
                     elif s == 'qw':
                         self._qstatus[jobid] = 'Pending'
 
-    def register(self, task):
-        self._tid_queue.append(task.get_tid())
-        job = task.get_job()
-        job.set_status("preparing")
-
-    def get_qstatus(self):
-        return self._qstatus
-
-    def set_job_status(self, task):
-        job = task.get_job()
-        tid = task.get_tid()
-        if "preparing" in job.get_status():
-            if tid == self._tid_queue[0]:
-                if self._max_jobs:
-                    if len(self._tid2jobid) < self._max_jobs:
-                        self._submit(tid, job, task.get_traverse())
-                else:
-                    self._submit(tid, job, task.get_traverse())
-        else:
-            jobid = self._tid2jobid[tid]
-            if jobid in self._qstatus:
-                if self._qstatus[jobid] == 'Running':
-                    job.set_status("running", jobid)
-            else:
-                del self._tid2jobid[tid]
-                job.set_status("done")
+    
+    def set_max_jobs(self, max_jobs):
+        self._max_jobs = max_jobs
 
     def write_qstatus(self, name):
         f_qstat = open("%s.qstat" % name, 'w')
@@ -118,30 +116,110 @@ class Queue:
                               (tid, jobid, self._qstatus[jobid]))
         f_qstat.close()
 
-    def set_max_jobs(self, max_jobs):
-        self._max_jobs = max_jobs
-        
-    def _submit(self, tid, job, traverse=False):
-        if traverse:
-            jobid = None
+    def _set_job_status(self, job, tid):
+        if "preparing" in job.get_status():
+            if tid == self._tid_queue[0]:
+                will_submit = True
+                if self._max_jobs:
+                    if len(self._tid2jobid) > self._max_jobs:
+                        will_submit = False
+
+                if will_submit:
+                    job.set_status("ready")
         else:
-            jobid = self._qsub(job)
-        self._tid2jobid[tid] = jobid
-        self._tid_queue.pop(0)
-        job.set_status("submitted", jobid)
+            jobid = self._tid2jobid[tid]
+            if jobid in self._qstatus:
+                if self._qstatus[jobid] == 'Running':
+                    job.set_status("running", jobid)
+            else:
+                del self._tid2jobid[tid]
+                job.set_status("done")
 
-    def _qsub(self, job, filename="job.sh"):
-        # subprocess.check_out is new in python 2.7
-        # stdout = subprocess.check_output(shlex.split(
-        #         self._qsub_command + " " + filename))
-        job.write_script()
-        stdout = subprocess.Popen(shlex.split(self._qsub_command + " " +
-                                              filename),
-                                  stdout=subprocess.PIPE).communicate()[0]
-        jobid = int(stdout.split()[2])
-        return jobid
+    def _upload_files(self):
+        pass
 
-            
+    def _download_files(self):
+        pass
+        
+
+class RemoteQueue(Queue):
+    def __init__(self,
+                 ssh_shell,
+                 temporary_dir,
+                 max_jobs=None,
+                 qsub_command="qsub"):
+        Queue.__init__(self,
+                       max_jobs=max_jobs,
+                       qsub_command=qsub_command)
+        self._shell = ssh_shell
+        self._temporary_dir = temporary_dir
+
+    def submit(self, task):
+        job = task.get_job()
+        tid = task.get_tid()
+        remote_dir = "%s/c%05d" % (self._temporary_dir, tid)
+        self._set_job_status(job, tid)
+        if "ready" in job.get_status():
+            job.write_script()
+            self._shell.run(["mkdir", "-p", remote_dir])
+            tar = tarfile.open("cogue.tar", "w")
+            for name in os.listdir("."):
+                tar.add(name)
+            tar.close()
+            with open("cogue.tar", "rb") as local_file:
+                with self._shell.open("%s/%s" % (remote_dir, "cogue.tar"), "wb") as remote_file:
+                    shutil.copyfileobj(local_file, remote_file)
+                    os.remove("cogue.tar")
+                    self._shell.run(["tar", "xvf", "cogue.tar"], cwd=remote_dir)
+                    self._shell.run(["rm", "cogue.tar"], cwd=remote_dir)
+            if task.get_traverse():
+                jobid = None
+            else:
+                qsub_out = self._shell.run(
+                    shlex.split(self._qsub_command + " " + "job.sh"),
+                    cwd=remote_dir).output
+                jobid = int(qsub_out.split()[2])
+            self._tid2jobid[tid] = jobid
+            self._tid_queue.pop(0)
+            job.set_status("submitted", jobid)
+
+        elif "done" in job.get_status():
+            names = self._shell.run(["/bin/ls"], cwd=remote_dir).output.split()
+            self._shell.run(["tar", "cvf", "cogue.tar"] + names, cwd=remote_dir)
+            with self._shell.open("%s/%s" % (remote_dir, "cogue.tar"), "rb") as remote_file:
+                with open("cogue.tar", "wb") as local_file:
+                    shutil.copyfileobj(remote_file, local_file)
+                    tar = tarfile.open("cogue.tar")
+                    tar.extractall()
+                    tar.close()
+                    os.remove("cogue.tar")
+                    self._shell.run(["rm", "cogue.tar"], cwd=remote_dir)
+
+class LocalQueue(Queue):
+    def __init__(self,
+                 max_jobs=None,
+                 qsub_command="qsub"):
+        Queue.__init__(self,
+                       max_jobs=max_jobs,
+                       qsub_command=qsub_command)
+        self._shell = spur.LocalShell()
+
+    def submit(self, task):
+        job = task.get_job()
+        tid = task.get_tid()
+        self._set_job_status(job, tid)
+        if "ready" in job.get_status():
+            job.write_script()
+            if task.get_traverse():
+                jobid = None
+            else:
+                qsub_out = self._shell.run(
+                    shlex.split(self._qsub_command + " " + "job.sh"),
+                    cwd=os.getcwd()).output
+                jobid = int(qsub_out.split()[2])
+            self._tid2jobid[tid] = jobid
+            self._tid_queue.pop(0)
+            job.set_status("submitted", jobid)
 
 class Job:
     def __init__(self,

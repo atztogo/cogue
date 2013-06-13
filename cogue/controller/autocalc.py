@@ -49,7 +49,7 @@ class AutoCalc:
     def _begin(self):
         if self._verbose:
             self._f_log = open("%s.log" % self._name, 'w')
-        self._cwd = os.getcwd() + "/"
+        self._cwd = os.getcwd()
         self._deep_begin(self._taskset)
 
     def _end(self):
@@ -78,7 +78,7 @@ class AutoCalc:
         self._chdir_out(cwd, task.get_status())
         
     def _deep_run(self, task):
-        cwd = self._chdir_in(task.get_directory())
+        orig_cwd = self._chdir_in(task.get_directory())
 
         subtasks = task.get_tasks()
         if subtasks: # Task-set
@@ -87,7 +87,7 @@ class AutoCalc:
                     self._deep_run(subtask)
 
         else: # Execution task
-            self._queue.set_job_status(task)
+            self._queue.submit(task)
             
         task.set_status()
         if task.done():
@@ -99,7 +99,7 @@ class AutoCalc:
                 for next_subtask in next_subtasks:
                     self._deep_begin(next_subtask)
 
-        self._chdir_out(cwd, task.get_status())
+        self._chdir_out(orig_cwd, task.get_status())
 
     def _chdir_in(self, directory_in):
         if directory_in == None:
@@ -108,13 +108,16 @@ class AutoCalc:
             cwd = os.getcwd()
             os.chdir(directory_in)
             self._write_log("--> %s\n" %
-                            os.getcwd().replace(self._cwd, ''))
+                            os.getcwd().replace(self._cwd, '').lstrip('/'))
             return cwd
 
     def _chdir_out(self, cwd, status): 
        if not cwd == None:
-           self._write_log("<-- %s %s\n" % (
-                   os.getcwd().replace(self._cwd, ''), status))
+           self._write_log("        [ %s ]\n" % status)
+           directory = cwd.replace(self._cwd, '').lstrip('/')
+           if directory == "":
+               directory = '.'
+           self._write_log("    %s <--\n" % directory)
            os.chdir(cwd)
 
     def _overwrite_settings(self):
