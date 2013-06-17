@@ -8,9 +8,11 @@ Cogue
 
 Cogue is a package of crystal simulation tools:
 
+- Automation tools for various :ref:`VASP tasks <VASP_tasks>` 
 - Convenient tools to handle crystal structures, e.g., Crsytal format converter
-- Wrappers of calculators and queueing systems for `VASP5 <http://cms.mpi.univie.ac.at/vasp/vasp/>`_ and `GridEngine <http://gridengine.org>`_
-- Automation tools for various tasks
+- Wrappers of calculators and queueing systems for `VASP5
+  <http://cms.mpi.univie.ac.at/vasp/vasp/>`_ and `GridEngine
+  <http://gridengine.org>`_
 
 Convenient command line tools
 ------------------------------
@@ -19,17 +21,6 @@ Convenient command line tools
 - Transformation of crystal structure including supercell builder
 - Symmetry finder
 - Simple crystal viewer
-
-Automation tasks
------------------
-
-- Total energy, eigenvalues, forces, stress
-- Structure optimizations
-- Elastic constants (finite difference approach in VASP)
-- Phonon with `phonopy <http://phonopy.sf.net>`_ (finite difference approach)
-- Bulk modulus (finite difference approach)
-
-More tasks will be supported on demand.
 
 Useful functions and classes
 -----------------------------

@@ -7,6 +7,7 @@ Contents
    install
    tutorial
    cui_tools
+   vasp_interface
    automation
    qsystem
    modules
