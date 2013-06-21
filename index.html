@@ -35,9 +35,6 @@
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="right" >
           <a href="contents.html" title="Contents"
              accesskey="N">next</a> |</li>
         <li><a href="#">cogue 0.1 documentation</a> &raquo;</li> 
@@ -53,9 +50,9 @@
 <h1>Cogue<a class="headerlink" href="#cogue" title="Permalink to this headline">¶</a></h1>
 <p>Cogue is a package of crystal simulation tools:</p>
 <ul class="simple">
+<li>Automation tools for various <a class="reference internal" href="vasp_interface.html#vasp-tasks"><em>VASP tasks</em></a></li>
 <li>Convenient tools to handle crystal structures, e.g., Crsytal format converter</li>
 <li>Wrappers of calculators and queueing systems for <a class="reference external" href="http://cms.mpi.univie.ac.at/vasp/vasp/">VASP5</a> and <a class="reference external" href="http://gridengine.org">GridEngine</a></li>
-<li>Automation tools for various tasks</li>
 </ul>
 <div class="section" id="convenient-command-line-tools">
 <h2>Convenient command line tools<a class="headerlink" href="#convenient-command-line-tools" title="Permalink to this headline">¶</a></h2>
@@ -65,17 +62,6 @@
 <li>Symmetry finder</li>
 <li>Simple crystal viewer</li>
 </ul>
-</div>
-<div class="section" id="automation-tasks">
-<h2>Automation tasks<a class="headerlink" href="#automation-tasks" title="Permalink to this headline">¶</a></h2>
-<ul class="simple">
-<li>Total energy, eigenvalues, forces, stress</li>
-<li>Structure optimizations</li>
-<li>Elastic constants (finite difference approach in VASP)</li>
-<li>Phonon with <a class="reference external" href="http://phonopy.sf.net">phonopy</a> (finite difference approach)</li>
-<li>Bulk modulus (finite difference approach)</li>
-</ul>
-<p>More tasks will be supported on demand.</p>
 </div>
 <div class="section" id="useful-functions-and-classes">
 <h2>Useful functions and classes<a class="headerlink" href="#useful-functions-and-classes" title="Permalink to this headline">¶</a></h2>
@@ -103,6 +89,10 @@
 <li class="toctree-l3"><a class="reference internal" href="cui_tools.html#crystal-viewer">Crystal viewer</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="vasp_interface.html">VASP interface</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="vasp_interface.html#tasks">Tasks</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="automation.html">Automation system</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="automation.html#architecture">Architecture</a></li>
 </ul>
@@ -113,14 +103,13 @@
 <li class="toctree-l3"><a class="reference internal" href="qsystem.html#configuration-of-parallel-environment">Configuration of parallel environment</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="modules.html">Cogue code reference</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="cogue.html">cogue Package</a></li>
-</ul>
-</li>
 </ul>
 </li>
 </ul>
 </div>
+<ul class="simple">
+<li><a class="reference external" href="https://github.com/atztogo/cogue/blob/gh-pages/cogue-presentation.pdf?raw=true">Presentaion slide</a></li>
+</ul>
 </div>
 <div class="section" id="example-calculation-of-bulk-modulus">
 <span id="example-rutile"></span><h2>Example: calculation of bulk modulus<a class="headerlink" href="#example-calculation-of-bulk-modulus" title="Permalink to this headline">¶</a></h2>
@@ -214,7 +203,6 @@
   <ul>
 <li><a class="reference internal" href="#">Cogue</a><ul>
 <li><a class="reference internal" href="#convenient-command-line-tools">Convenient command line tools</a></li>
-<li><a class="reference internal" href="#automation-tasks">Automation tasks</a></li>
 <li><a class="reference internal" href="#useful-functions-and-classes">Useful functions and classes</a></li>
 <li><a class="reference internal" href="#documentation">Documentation</a><ul>
 </ul>
@@ -257,9 +245,6 @@
         <li class="right" style="margin-right: 10px">
           <a href="genindex.html" title="General Index"
              >index</a></li>
-        <li class="right" >
-          <a href="py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
         <li class="right" >
           <a href="contents.html" title="Contents"
              >next</a> |</li>

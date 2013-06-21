@@ -37,7 +37,7 @@ Documentation
 
    contents
 
-
+- `Presentaion slide <https://github.com/atztogo/cogue/blob/gh-pages/cogue-presentation.pdf?raw=true>`_
 
 .. _example_rutile:
 
