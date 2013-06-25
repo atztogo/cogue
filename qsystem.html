@@ -1,0 +1,196 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Installation and configure of queueing system &mdash; cogue 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="cogue 0.1 documentation" href="index.html" />
+    <link rel="up" title="Installation" href="install.html" />
+    <link rel="next" title="Environment setups" href="environment-setup.html" />
+    <link rel="prev" title="Installation" href="install.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="environment-setup.html" title="Environment setups"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="install.html" title="Installation"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">cogue 0.1 documentation</a> &raquo;</li>
+          <li><a href="contents.html" >Contents</a> &raquo;</li>
+          <li><a href="install.html" accesskey="U">Installation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="installation-and-configure-of-queueing-system">
+<span id="qsystem"></span><h1>Installation and configure of queueing system<a class="headerlink" href="#installation-and-configure-of-queueing-system" title="Permalink to this headline">¶</a></h1>
+<p>Queueing system is one of the most important component of the Cogue
+package. Probably researchers around first-principles calculation are
+familiar with how to use queueing systems, however may not have
+experience how to build the queueing system. In fact, it is not very
+difficult to install and configure a queueing system. In this section,
+installation and configuration of the Grid Engine software are
+explained to take Ubuntu linux as an example of the operating system.</p>
+<div class="section" id="installation-of-grid-engine">
+<h2>Installation of Grid Engine<a class="headerlink" href="#installation-of-grid-engine" title="Permalink to this headline">¶</a></h2>
+<p>Grid Engine is in the list of Ubuntu packages. So the installation is
+very simple. On the server node:</p>
+<div class="highlight-python"><pre>% sudo apt-get install gridengine-client gridengine-common gridengine-master gridengine-qmon</pre>
+</div>
+<p>On the client nodes:</p>
+<div class="highlight-python"><pre>% sudo apt-get install gridengine-exec gridengine-client</pre>
+</div>
+<p>During the installation, you are asked several questions. For postfix,
+you can choose no configuration. For Grid Engine, &#8216;Configure Grid
+Engine automatically&#8217; is Yes. Cell name is arbitrary and &#8216;default&#8217; is
+OK. Master hostname has to be resolved by <tt class="docutils literal"><span class="pre">/etc/hosts</span></tt> or DNS. A few
+initial settings are stored under <tt class="docutils literal"><span class="pre">/var/lib/gridengine</span></tt> in the case
+of Ubuntu linux.</p>
+<p>If there is only one computer, it can behave as both server and
+client simultaneously.</p>
+</div>
+<div class="section" id="configuration-of-grid-engine">
+<h2>Configuration of Grid Engine<a class="headerlink" href="#configuration-of-grid-engine" title="Permalink to this headline">¶</a></h2>
+<p>Grid Engine has a graphical user interface for the configuration
+called &#8216;qmon&#8217;. On the master node, it is opened by:</p>
+<div class="highlight-python"><pre>% sudo qmon</pre>
+</div>
+<p>If the master node is located on the remote place, <tt class="docutils literal"><span class="pre">ssh</span> <span class="pre">-X</span></tt> is used
+to login the master node. Then the graphics will be forwarded to your
+computer. After opening qmon, if qmon reports some
+authorization problem, then you should check the hostname written in
+<tt class="docutils literal"><span class="pre">/var/lib/gridengine/CELL_NAME/common/act_qmaster</span></tt>. If you modify
+the hostname in it, you need to restart gridendinge-master by:</p>
+<div class="highlight-python"><pre>% sudo service gridengine-master restart</pre>
+</div>
+<p>In most cases, to add to something already exists can be done from
+&#8220;Modify&#8221; button, not from &#8220;Add&#8221; in qmon.  The first steps of the
+configurations are as follows:</p>
+<ol class="arabic simple">
+<li>In &#8220;Host Configuration&#8221; -&gt; &#8220;Execution Host&#8221; tab, execution hosts
+are added. The master host is probably already set as an
+administration host and a submit host.</li>
+<li>In &#8220;User Configuration&#8221; -&gt; &#8220;Userset&#8221; tab, users are added to the
+userset &#8220;arusers&#8221;.</li>
+<li>In &#8220;Queue Control&#8221; -&gt; &#8220;Cluster Queues&#8221; tab, a new cluster queue is
+added.<ul>
+<li>In &#8220;General Configuration&#8221; tab, the number of cores in an
+execution node is specified in &#8220;Slots&#8221; field.</li>
+<li>In &#8220;Use Access&#8221; tab, &#8220;arusers&#8221; is added to &#8220;Allow Access to&#8221;
+field.</li>
+<li>If you have already created a PE (parallel environment) object,
+in &#8220;Parallel Environment&#8221; tab, the PE may be added to
+&#8220;Referenced PEs&#8221; field. The configuration of PE is tricky and
+will be explained in the next section.</li>
+</ul>
+</li>
+</ol>
+<p>The detailed information is found <a class="reference external" href="http://docs.oracle.com/cd/E24901_01/index.htm">here</a>.
+<a class="reference external" href="http://pka.engr.ccny.cuny.edu/~jmao/node/49">This web site</a> is
+helpful when starting configuration for the first time.</p>
+</div>
+<div class="section" id="configuration-of-parallel-environment">
+<h2>Configuration of parallel environment<a class="headerlink" href="#configuration-of-parallel-environment" title="Permalink to this headline">¶</a></h2>
+<p>If you want to use multi-cores on CPU or multiple computers in MPI,
+you have to configure the parallel environment of grid engine.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Installation and configure of queueing system</a><ul>
+<li><a class="reference internal" href="#installation-of-grid-engine">Installation of Grid Engine</a></li>
+<li><a class="reference internal" href="#configuration-of-grid-engine">Configuration of Grid Engine</a></li>
+<li><a class="reference internal" href="#configuration-of-parallel-environment">Configuration of parallel environment</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="install.html"
+                        title="previous chapter">Installation</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="environment-setup.html"
+                        title="next chapter">Environment setups</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/qsystem.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="environment-setup.html" title="Environment setups"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="install.html" title="Installation"
+             >previous</a> |</li>
+        <li><a href="index.html">cogue 0.1 documentation</a> &raquo;</li>
+          <li><a href="contents.html" >Contents</a> &raquo;</li>
+          <li><a href="install.html" >Installation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Atz Togo.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

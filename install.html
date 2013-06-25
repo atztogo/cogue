@@ -1,0 +1,199 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Installation &mdash; cogue 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="cogue 0.1 documentation" href="index.html" />
+    <link rel="up" title="Contents" href="contents.html" />
+    <link rel="next" title="Installation and configure of queueing system" href="qsystem.html" />
+    <link rel="prev" title="Contents" href="contents.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="qsystem.html" title="Installation and configure of queueing system"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="contents.html" title="Contents"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">cogue 0.1 documentation</a> &raquo;</li>
+          <li><a href="contents.html" accesskey="U">Contents</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="installation">
+<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="system-requirements">
+<h2>System requirements<a class="headerlink" href="#system-requirements" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="general-system-requirements">
+<h3>General system requirements<a class="headerlink" href="#general-system-requirements" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Python and its header files (python-dev)</li>
+<li>numpy (python-numpy)</li>
+<li>hdf5 interface (python-h5py)</li>
+<li>python-lxml</li>
+<li>python-yaml</li>
+<li>python-paramiko</li>
+<li>spur.py (<a class="reference external" href="https://github.com/mwilliamson/spur.py">https://github.com/mwilliamson/spur.py</a>)</li>
+</ul>
+<p>In the case of Ubuntu, the installation has be made as follows:</p>
+<div class="highlight-python"><pre>% sudo apt-get install python-dev python-numpy python-lxml python-yaml python-paramiko python-h5py python-pip
+% sudo pip install spur</pre>
+</div>
+<p>spur.py is an interface for ssh. python-paramiko is used by spur.py.
+Since Ubuntu doesn&#8217;t contain spur.py deb-package, using pip is
+recommended to install spur.py.</p>
+</div>
+<div class="section" id="automation-system">
+<h3>Automation system<a class="headerlink" href="#automation-system" title="Permalink to this headline">¶</a></h3>
+<p>Cogue automation system controls computer clusters via queueing
+system. It is supported that the following software are installed on
+your computer cluster:</p>
+<div class="highlight-python"><pre>* Grid-engine queueing system
+* VASP (http://vasp.at)</pre>
+</div>
+<p>PBE-like queueing system is not yet prepared.</p>
+<p>For the automation of phonon related calculation, phonopy
+(<a class="reference external" href="http://phonopy.sf.net">http://phonopy.sf.net</a>) has to be installed on a local machine where
+cogue is executed.</p>
+<p>If you want to run everything on a local machine, see the following
+contents for how to set-up the grid-engine queueing system:</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="qsystem.html">Installation and configure of queueing system</a></li>
+</ul>
+</div>
+</div>
+<div class="section" id="utility-tools">
+<h3>Utility tools<a class="headerlink" href="#utility-tools" title="Permalink to this headline">¶</a></h3>
+<p><tt class="docutils literal"><span class="pre">crystalView</span></tt> requires mayavi (<a class="reference external" href="http://docs.enthought.com/mayavi/mayavi/">http://docs.enthought.com/mayavi/mayavi/</a>).</p>
+<div class="highlight-python"><pre>% sudo apt-get install mayavi2</pre>
+</div>
+</div>
+</div>
+<div class="section" id="install">
+<h2>Install<a class="headerlink" href="#install" title="Permalink to this headline">¶</a></h2>
+<p>Download Cogue from <a class="reference external" href="https://github.com/atztogo/cogue/tags">https://github.com/atztogo/cogue/tags</a> .</p>
+<p>Move into cogue directory and run <tt class="docutils literal"><span class="pre">setup.py</span></tt> script as follows:</p>
+<div class="highlight-python"><pre>python setup.py install --home=.</pre>
+</div>
+</div>
+<div class="section" id="environment-setup">
+<h2>Environment setup<a class="headerlink" href="#environment-setup" title="Permalink to this headline">¶</a></h2>
+<p>When using with VASP, location of pseudopotentials has to be told to
+Cogue using the environment variable <tt class="docutils literal"><span class="pre">COGUE_POTCAR_PATH</span></tt>. The
+details are given in the following sections.</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="environment-setup.html">Environment setups</a></li>
+</ul>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Installation</a><ul>
+<li><a class="reference internal" href="#system-requirements">System requirements</a><ul>
+<li><a class="reference internal" href="#general-system-requirements">General system requirements</a></li>
+<li><a class="reference internal" href="#automation-system">Automation system</a><ul>
+</ul>
+</li>
+<li><a class="reference internal" href="#utility-tools">Utility tools</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#install">Install</a></li>
+<li><a class="reference internal" href="#environment-setup">Environment setup</a><ul>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="contents.html"
+                        title="previous chapter">Contents</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="qsystem.html"
+                        title="next chapter">Installation and configure of queueing system</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/install.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="qsystem.html" title="Installation and configure of queueing system"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="contents.html" title="Contents"
+             >previous</a> |</li>
+        <li><a href="index.html">cogue 0.1 documentation</a> &raquo;</li>
+          <li><a href="contents.html" >Contents</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Atz Togo.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

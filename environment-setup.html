@@ -1,0 +1,149 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Environment setups &mdash; cogue 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="cogue 0.1 documentation" href="index.html" />
+    <link rel="up" title="Installation" href="install.html" />
+    <link rel="next" title="Tutorial" href="tutorial.html" />
+    <link rel="prev" title="Installation and configure of queueing system" href="qsystem.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="tutorial.html" title="Tutorial"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="qsystem.html" title="Installation and configure of queueing system"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">cogue 0.1 documentation</a> &raquo;</li>
+          <li><a href="contents.html" >Contents</a> &raquo;</li>
+          <li><a href="install.html" accesskey="U">Installation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="environment-setups">
+<span id="id1"></span><h1>Environment setups<a class="headerlink" href="#environment-setups" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="pseudopotentials-for-vasp">
+<h2>Pseudopotentials for VASP<a class="headerlink" href="#pseudopotentials-for-vasp" title="Permalink to this headline">¶</a></h2>
+<p>For automatic generation of <tt class="docutils literal"><span class="pre">POTCAR</span></tt> files, directory of VASP
+pseudopotentails has to be informed to cogue by setting environment
+variable of <tt class="docutils literal"><span class="pre">COGUE_POTCAR_PATH</span></tt>. This is specified by setting the
+following line in your shell configuration file, e.g., <tt class="docutils literal"><span class="pre">.bashrc</span></tt> or <tt class="docutils literal"><span class="pre">.zshenv</span></tt>.</p>
+<div class="highlight-python"><pre>COGUE_POTCAR_PATH=$DIR_PREFIX/cogue_potcar_dir</pre>
+</div>
+<p>where $DIR_PREFIX is the directory prefix, for instance home
+directory, <tt class="docutils literal"><span class="pre">/home/your_unix_name</span></tt>.</p>
+<p>All the <tt class="docutils literal"><span class="pre">POTCAR</span></tt> files for every atom and electronic configuration
+have to be extracted to plane text files. the filenames of the
+extracted files are used to notify pseudopotential files used in
+cogue through python dictionary.</p>
+<p>For example, <tt class="docutils literal"><span class="pre">POTCAR</span></tt> files of GGA-PBE may be prepared by running
+the following command in <tt class="docutils literal"><span class="pre">potpaw_PBE</span></tt> directory using zsh:</p>
+<div class="highlight-python"><pre>for i in `/bin/ls -d *(/)`;do zcat $i/POTCAR.Z &gt; cogue_potcar_dir/"$i_PBE";done</pre>
+</div>
+<p>In this example, the PAW potential files are created in
+<tt class="docutils literal"><span class="pre">cogue_potcar_dir</span></tt>. Then a dictionary is used to pass this filename
+to a VASP task using the keyword <tt class="docutils literal"><span class="pre">pseudo_potential_map</span></tt> like:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">pseudo_potential_map</span> <span class="o">=</span> <span class="p">{</span> <span class="s">&#39;Si&#39;</span><span class="p">:</span> <span class="s">&#39;Si_PBE&#39;</span><span class="p">,</span> <span class="s">&#39;O&#39;</span><span class="p">:</span> <span class="s">&#39;O_PBE&#39;</span> <span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Environment setups</a><ul>
+<li><a class="reference internal" href="#pseudopotentials-for-vasp">Pseudopotentials for VASP</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="qsystem.html"
+                        title="previous chapter">Installation and configure of queueing system</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="tutorial.html"
+                        title="next chapter">Tutorial</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/environment-setup.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="tutorial.html" title="Tutorial"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="qsystem.html" title="Installation and configure of queueing system"
+             >previous</a> |</li>
+        <li><a href="index.html">cogue 0.1 documentation</a> &raquo;</li>
+          <li><a href="contents.html" >Contents</a> &raquo;</li>
+          <li><a href="install.html" >Installation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Atz Togo.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>
