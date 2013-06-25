@@ -9,4 +9,3 @@ Contents
    automation
    vasp_interface
    command_line_tool
-   modules
