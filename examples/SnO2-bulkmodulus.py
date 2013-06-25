@@ -30,14 +30,14 @@ incar.set_structure_optimization()
 incar.set_encut(400)
 incar.set_prec("Normal")
 
-# Queue
+# Grid engine job
 job = ge.job(script="vasp5212serial",
              shell="/bin/zsh",
              jobname=task_name,
              stdout="std.log",
              stderr="err.log")
 
-# Task
+# VASP bulk modulus task
 task = vasp.bulk_modulus(max_iteration=2,
                          cell=cell,
                          pseudo_potential_map=ps_map,
@@ -48,9 +48,9 @@ task = vasp.bulk_modulus(max_iteration=2,
 # Automatic calculation
 calc = cogue.autocalc()
 calc.append(task_name, task) # More tasks can be appended.
-calc.set_queue(ge.queue())
+calc.set_queue(ge.queue()) # Running on a local machine
 calc.run(check_period=5)
+
 print "space group:", cogue.symmetry(cell)['international']
 print "status:", task.get_status()
-# 201.411956183 GPa
 print "bulk modulus:", task.get_bulk_modulus(), "GPa"

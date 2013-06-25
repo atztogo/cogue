@@ -21,10 +21,18 @@ Documentation
 
 .. _example_rutile:
 
-Example: calculation of bulk modulus
--------------------------------------
+Examples
+---------
+
+Bulk modulus task on a local machine
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. literalinclude:: ./examples/SnO2-bulkmodulus.py
+
+Phonon task on a remote cluster
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. literalinclude:: ./examples/ZnO-phonon-remote.py
 
 
 About this code
