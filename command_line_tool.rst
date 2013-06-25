@@ -54,8 +54,7 @@ VASP POSCAR format is converted to CIF format with P1 symmetry.
 ``poscar2vsim``
 ^^^^^^^^^^^^^^^^^^^
 
-VASP POSCAR format is converted to ``v_sim
-<http://www-drfmc.cea.fr/sp2m/L_Sim/V_Sim/index.en.html>``_  format.
+VASP POSCAR format is converted to `v_sim <http://www-drfmc.cea.fr/sp2m/L_Sim/V_Sim/index.en.html>`_  format.
 
 Crystal viewer
 ---------------
