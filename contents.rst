@@ -6,8 +6,7 @@ Contents
 
    install
    tutorial
-   cui_tools
-   vasp_interface
    automation
-   qsystem
+   vasp_interface
+   command_line_tool
    modules

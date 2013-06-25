@@ -6,34 +6,14 @@
 Cogue
 ==================================
 
-Cogue is a package of crystal simulation tools:
-
-- Automation tools for various :ref:`VASP tasks <VASP_tasks>` 
-- Convenient tools to handle crystal structures, e.g., Crsytal format converter
-- Wrappers of calculators and queueing systems for `VASP5
-  <http://cms.mpi.univie.ac.at/vasp/vasp/>`_ and `GridEngine
-  <http://gridengine.org>`_
-
-Convenient command line tools
-------------------------------
-
-- Crystal format converters
-- Transformation of crystal structure including supercell builder
-- Symmetry finder
-- Simple crystal viewer
-
-Useful functions and classes
------------------------------
-
-- Crystal structure
-- Calculator file parsers and writers
-- Crystal symmetry handling with `spglib <http://spglib.sf.net>`_
+Cogue is a package of crystal simulation tools constituting of
+interfaces of calculator (VASP) and queueing system (GridEngine).
 
 Documentation
 --------------
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
 
    contents
 
@@ -58,13 +38,4 @@ The code is mainly written in Python.
 
 For the crystal structure comparison, Xtalcomp
 (https://github.com/dlonie/XtalComp) by David Lonie is used.
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-
 

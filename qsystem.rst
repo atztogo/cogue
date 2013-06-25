@@ -18,8 +18,7 @@ Installation of Grid Engine
 Grid Engine is in the list of Ubuntu packages. So the installation is
 very simple. On the server node::
 
-   % sudo apt-get install gridengine-client gridengine-common \
-     gridengine-master gridengine-qmon
+   % sudo apt-get install gridengine-client gridengine-common gridengine-master gridengine-qmon
 
 On the client nodes::
 
