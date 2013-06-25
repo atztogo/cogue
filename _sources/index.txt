@@ -21,6 +21,13 @@ Documentation
 
 .. _example_rutile:
 
+Source code repository
+-----------------------
+
+The source code repository is hosted on github.
+
+* https://github.com/atztogo/cogue
+
 Examples
 ---------
 
