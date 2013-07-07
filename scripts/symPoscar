@@ -109,5 +109,10 @@ elif options.is_primitive:
     if options.output_filename:
         write_to_file(prim_cell, options.output_filename)
     else:
-        print "--------"
+        print "--------------------"
+        tmat = np.dot(np.linalg.inv(cell.get_lattice()),
+                      prim_cell.get_lattice())
+        for v in tmat:
+            print "%6.3f %6.3f %6.3f" % tuple(v)
+        print "--------------------"
         vasp.write_poscar(prim_cell)
