@@ -814,16 +814,21 @@ class StructureOptimizationElement(TaskVasp,
                 self._max_increase * np.linalg.det(lattice_init):
             self._log += "Too large volume expansion.\n"
         else:
-            if (abs(d_vecs2_ratio) > self._lattice_tolerance ** 2).any():
-                self._log += "Lattice is not enough relaxed.\n"
-                self._status = "next"
-            if (abs(self._stress - np.eye(3) * self._pressure_target)
-                > self._stress_tolerance).any():
-                self._log += "Stress is not enough relaxed.\n"
-                self._status = "next"
+            if self._lattice_tolerance is not None:
+                if (abs(d_vecs2_ratio) > self._lattice_tolerance ** 2).any():
+                    self._log += "Lattice is not enough relaxed.\n"
+                    self._status = "next"
+
+            if self._stress_tolerance is not None:
+                if (abs(self._stress - np.eye(3) * self._pressure_target)
+                    > self._stress_tolerance).any():
+                    self._log += "Stress is not enough relaxed.\n"
+                    self._status = "next"
+
             if (abs(self._forces) > self._force_tolerance).any():
                 self._log += "Forces are not enough relaxed.\n"
                 self._status = "next"
+
             if not self._status == "next":
                 self._status = "done"
 

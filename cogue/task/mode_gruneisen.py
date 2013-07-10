@@ -156,9 +156,11 @@ class ModeGruneisenBase(TaskElement):
     def _write_yaml(self):
         w = open("%s.yaml" % self._directory, 'w')
         if self._mg_tasks[0]:
-            w.write("lattice_tolerance: %f\n" % self._lattice_tolerance)
-            w.write("pressure_target: %f\n" % self._pressure_target)
-            w.write("stress_tolerance: %f\n" % self._stress_tolerance)
+            if self._lattice_tolerance is not None:
+                w.write("lattice_tolerance: %f\n" % self._lattice_tolerance)
+            if self._stress_tolerance is not None:
+                w.write("stress_tolerance: %f\n" % self._stress_tolerance)
+                w.write("pressure_target: %f\n" % self._pressure_target)
             w.write("force_tolerance: %f\n" % self._force_tolerance)
             w.write("max_increase: %f\n" % self._max_increase)
             w.write("max_iteration: %d\n" % self._max_iteration)
