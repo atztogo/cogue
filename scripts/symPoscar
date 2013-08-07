@@ -11,6 +11,7 @@ def get_parser():
     from optparse import OptionParser
     parser = OptionParser()
     parser.set_defaults(symprec=1e-5,
+                        orbits=None,
                         output_filename=None,
                         show_details=False,
                         show_operations=False,
@@ -18,6 +19,8 @@ def get_parser():
                         is_primitive=False)
     parser.add_option("-s", "--tolerance", dest="symprec", type="float",
                       help="Symmetry tolerance to search")
+    parser.add_option("--orbits", dest="orbits", type="int",
+                      help="Centring point where orbits are searched")
     parser.add_option("-d", "--detail",
                       dest="show_details",
                       action="store_true",
@@ -116,3 +119,25 @@ elif options.is_primitive:
             print "%6.3f %6.3f %6.3f" % tuple(v)
         print "--------------------"
         vasp.write_poscar(prim_cell)
+
+if options.orbits is not None:
+    site_sym = []
+    points = cell.get_points()
+    for r, t in zip(rots, trans):
+        pos = points[:, options.orbits - 1]
+        diff = np.dot(r, pos) + t - pos
+        if (np.abs(diff - np.rint(diff)) < tolerance).all():
+            site_sym.append((r, t))
+
+    print
+    print "Orbits at site %d" % options.orbits
+    print "--------------------"
+    for i, pos_i in enumerate(points.T):
+        orbits = []
+        for (r, t) in site_sym:
+            rot_pos_i = np.dot(r, pos_i)
+            for j, pos_j in enumerate(points.T):
+                diff = rot_pos_i - pos_j
+                if (np.abs(diff - np.rint(diff)) < tolerance).all():
+                    orbits.append(j)
+        print "%3d:" % (i + 1), np.unique(orbits) + 1
