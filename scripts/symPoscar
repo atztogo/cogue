@@ -135,7 +135,7 @@ if options.orbits is not None:
     for i, pos_i in enumerate(points.T):
         orbits = []
         for (r, t) in site_sym:
-            rot_pos_i = np.dot(r, pos_i)
+            rot_pos_i = np.dot(r, pos_i) + t
             for j, pos_j in enumerate(points.T):
                 diff = rot_pos_i - pos_j
                 if (np.abs(diff - np.rint(diff)) < tolerance).all():
