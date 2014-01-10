@@ -1,7 +1,20 @@
 #!/usr/bin/env python
 
-from cogue.calculator.vasp.vasp_io import Vasprunxml
+import numpy as np
+from cogue.interface.vasp_io import Vasprunxml
 
 import argparse
-parser = argparse.ArgumentParser()
-parser.parse_args()
+parser = argparse.ArgumentParser(description="Collect eigenvalues from vasprun.xml")
+parser.add_argument('filenames', nargs='*')
+args = parser.parse_args()
+
+for filename in args.filenames:
+    vasprun = Vasprunxml(filename=filename)
+    if vasprun.parse_eigenvalues():
+        eigvals = vasprun.get_eigenvalues()
+        if len(eigvals) == 1:
+            eigvals = eigvals[0].flatten()
+            occ = vasprun.get_occupancies()[0].flatten()
+            indices = np.argsort(eigvals)
+            for e, o in zip(eigvals[indices], occ[indices]):
+                print "%10.5f %7.5f" % (e, o)
