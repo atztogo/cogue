@@ -1,11 +1,8 @@
 from cogue.task import TaskElement
-from cogue.crystal.converter import atoms2cell
-from cogue.interface.v_sim import write_v_sim
-from phonopy import Phonopy
 from anharmonic.phonon3 import Phono3py
 from phonopy.structure.atoms import Atoms
-from phonopy.file_IO import write_disp_yaml
-from phonopy.file_IO import write_FORCE_SETS
+from anharmonic.file_IO import write_disp_yaml
+from anharmonic.file_IO import write_FORCES_FC3
 from cogue.interface.vasp_io import write_poscar
 
 class AnharmonicPhononBase(TaskElement):
@@ -57,7 +54,8 @@ class AnharmonicPhononBase(TaskElement):
 
         self._energy = None
         self._cell = None
-        self._phonon = None # Phonopy object
+        self._phonopy = None # Phonopy object
+        self._phono3py = None # Phono3py object
 
     def get_phonon(self):
         return self._phonon
