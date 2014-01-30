@@ -129,9 +129,9 @@ class PhononBase(TaskElement):
                 for task in self._phonon_tasks[1:]:
                     forces.append(task.get_properties()['forces'][-1])
                 self._write_FORCE_SETS(forces)
-                self._phonon.set_post_process(self._primitive_matrix,
-                                              forces,
-                                              force_constants_decimals=14)
+                self._phonon.set_forces(forces)
+                self._phonon.produce_force_constants(decimals=14)
+                self._phonon.set_dynamical_matrix(decimals=14)
                 self._tasks = []
                 raise StopIteration
             elif "terminate" in self._status and self._traverse == "restart":
@@ -172,6 +172,7 @@ class PhononBase(TaskElement):
         
         self._phonon = Phonopy(phonopy_cell,
                                self._supercell_matrix,
+                               primitive_matrix=self._primitive_matrix,
                                is_auto_displacements=False)
         self._phonon.generate_displacements(distance=self._distance,
                                             is_diagonal=False)
