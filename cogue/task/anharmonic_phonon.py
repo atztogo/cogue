@@ -1,7 +1,7 @@
 from cogue.task import TaskElement
 from anharmonic.phonon3 import Phono3py
 from phonopy.structure.atoms import Atoms
-from anharmonic.file_IO import write_disp_yaml
+from anharmonic.file_IO import write_supercells_with_displacements
 from anharmonic.file_IO import write_FORCES_FC3
 from cogue.interface.vasp_io import write_poscar
 
@@ -54,8 +54,8 @@ class AnharmonicPhononBase(TaskElement):
 
         self._energy = None
         self._cell = None
-        self._phonopy = None # Phonopy object
-        self._phono3py = None # Phono3py object
+        self._phonon = None # Phonopy object
+        self._ah_phonon = None # Phono3py object
 
     def get_phonon(self):
         return self._phonon
@@ -126,9 +126,9 @@ class AnharmonicPhononBase(TaskElement):
                 for task in self._phonon_tasks[1:]:
                     forces.append(task.get_properties()['forces'][-1])
                 self._write_FORCE_SETS(forces)
-                self._phonon.set_post_process(self._primitive_matrix,
-                                              forces,
-                                              force_constants_decimals=14)
+                self._phonon.set_forces(forces)
+                self._phonon.produce_force_constants(decimals=14)
+                self._phonon.set_dynamical_matrix(decimals=14)
                 self._tasks = []
                 raise StopIteration
             elif "terminate" in self._status and self._traverse == "restart":
@@ -160,7 +160,7 @@ class AnharmonicPhononBase(TaskElement):
         self._tasks = self._get_displacement_tasks()[1:]
         self._phonon_tasks += self._tasks
 
-    def _set_phonon(self):
+    def _set_anharmonic_phonon(self):
         cell = self.get_cell()
         phonopy_cell = Atoms(
             cell=cell.get_lattice().T,
@@ -169,15 +169,16 @@ class AnharmonicPhononBase(TaskElement):
         
         self._phonon = Phonopy(phonopy_cell,
                                self._supercell_matrix,
+                               primitive_matrix=self._primitive_matrix,
                                is_auto_displacements=False)
-        self._phonon.generate_displacements(distance=self._distance,
-                                            is_diagonal=False)
-
-        supercell = self._phonon.get_supercell()
-        displacements = self._phonon.get_displacements()
-
+        self._ah_phonon = Phono3py(phonopy_cell,
+                                   self._supercell_matrix,
+                                   primitive_matrix=self._primitive_matrix)
+        self._ah_phonon.generate_displacements(distance=self._distance)
+        supercell = self._ah_phonon.get_supercell()
+        disp_dataset = self._ah_phonon.get_displacements()
         write_poscar(cell, "POSCAR-unitcell")
-        write_disp_yaml(displacements, supercell)
+        write_disp_fc3_yaml(supercell, disp_dataset)
 
     def _write_FORCE_SETS(self, forces):
         displacements = [[x[0], x[1:4]]
