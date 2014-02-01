@@ -6,6 +6,10 @@ class TaskBase:
         self._comment = ""
         self._log = ""
         self._tid = None
+        self._name = None
+        self._task_type = None
+        self._directory = None
+        self._tasks = None
     
     def __iter__(self):
         return self

@@ -1,11 +1,20 @@
 from cogue.task import TaskElement
-from cogue.crystal.converter import atoms2cell
-from cogue.interface.v_sim import write_v_sim
 from phonopy import Phonopy
 from phonopy.structure.atoms import Atoms
 from phonopy.file_IO import write_disp_yaml
 from phonopy.file_IO import write_FORCE_SETS
 from cogue.interface.vasp_io import write_poscar
+from cogue.crystal.cell import Cell
+
+#########################
+# Cell to Phonopy Atoms #
+#########################
+def cell2atoms(cell):
+    return Atoms(cell=cell.get_lattice().T,
+                 scaled_positions=cell.get_points().T,
+                 masses=cell.get_masses(),
+                 magmoms=cell.get_magnetic_moments(),
+                 symbols=cell.get_symbols())
 
 class PhononBase(TaskElement):
     """PhononBase class
@@ -57,6 +66,7 @@ class PhononBase(TaskElement):
         self._energy = None
         self._cell = None
         self._phonon = None # Phonopy object
+        self._phonon_tasks = None # Phonopy object
 
     def get_phonon(self):
         return self._phonon
@@ -130,8 +140,7 @@ class PhononBase(TaskElement):
                     forces.append(task.get_properties()['forces'][-1])
                 self._write_FORCE_SETS(forces)
                 self._phonon.set_forces(forces)
-                self._phonon.produce_force_constants(decimals=14)
-                self._phonon.set_dynamical_matrix(decimals=14)
+                self._phonon.produce_force_constants()
                 self._tasks = []
                 raise StopIteration
             elif "terminate" in self._status and self._traverse == "restart":
@@ -140,7 +149,7 @@ class PhononBase(TaskElement):
                 for i, task in enumerate(self._tasks):
                     if task.get_status() == "terminate":
                         disp_terminated.append(i)
-                tasks = self._get_displacement_tasks()[1:]
+                tasks = self._get_displacement_tasks()
                 self._tasks = []
                 for i in disp_terminated:
                     self._tasks.append(tasks[i])
@@ -160,23 +169,20 @@ class PhononBase(TaskElement):
         self._stage = 1
         self._status = "displacements"
         self._set_phonon()
-        self._tasks = self._get_displacement_tasks()[1:]
+        self._tasks = self._get_displacement_tasks()
         self._phonon_tasks += self._tasks
 
     def _set_phonon(self):
         cell = self.get_cell()
-        phonopy_cell = Atoms(
-            cell=cell.get_lattice().T,
-            scaled_positions=cell.get_points().T,
-            symbols=cell.get_symbols())
-        
+        phonopy_cell = cell2atoms(cell)
         self._phonon = Phonopy(phonopy_cell,
                                self._supercell_matrix,
                                primitive_matrix=self._primitive_matrix,
-                               is_auto_displacements=False)
+                               is_auto_displacements=False,
+                               dynamical_matrix_decimals=14,
+                               force_constants_decimals=14)
         self._phonon.generate_displacements(distance=self._distance,
                                             is_diagonal=False)
-
         supercell = self._phonon.get_supercell()
         displacements = self._phonon.get_displacements()
 

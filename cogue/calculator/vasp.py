@@ -11,6 +11,7 @@ from cogue.task.structure_optimization import *
 from cogue.task.bulk_modulus import *
 from cogue.task.mode_gruneisen import *
 from cogue.task.phonon import *
+from cogue.task.phonon_fc3 import *
 from cogue.task.phonon_relax import *
 from cogue.task.elastic_constants import *
 from cogue.task.quasiharmonic_phonon import *
@@ -174,8 +175,8 @@ def bulk_modulus(directory="bulk_modulus",
 def phonon(directory="phonon",
            name=None,
            job=None,
-           supercell_matrix=np.eye(3, dtype=int),
-           primitive_matrix=np.eye(3, dtype=int),
+           supercell_matrix=np.eye(3, dtype='intc'),
+           primitive_matrix=np.eye(3, dtype='double'),
            distance=0.01,
            lattice_tolerance=0.1,
            force_tolerance=1e-3,
@@ -272,8 +273,8 @@ def mode_gruneisen(directory="mode_gruneisen",
                    delta_strain=0.001,
                    strain=None,
                    bias=None,
-                   supercell_matrix=np.eye(3, dtype=int),
-                   primitive_matrix=np.eye(3, dtype=int),
+                   supercell_matrix=np.eye(3, dtype='intc'),
+                   primitive_matrix=np.eye(3, dtype='double'),
                    distance=0.01,
                    lattice_tolerance=0.1,
                    force_tolerance=1e-3,
@@ -329,8 +330,8 @@ def quasiharmonic_phonon(directory="quasiharmonic_phonon",
                          t_step=None,
                          t_max=None,
                          t_min=None,
-                         supercell_matrix=np.eye(3, dtype=int),
-                         primitive_matrix=np.eye(3, dtype=int),
+                         supercell_matrix=np.eye(3, dtype='intc'),
+                         primitive_matrix=np.eye(3, dtype='double'),
                          distance=0.01,
                          lattice_tolerance=0.1,
                          force_tolerance=1e-3,
@@ -965,60 +966,29 @@ class BulkModulus(TaskVasp, BulkModulusBase):
                               (job.get_jobname(), directory)))
         return task
 
-
-class Phonon(TaskVasp, PhononBase):
-    def __init__(self,
-                 directory="phonon",
-                 name=None,
-                 supercell_matrix=np.eye(3, dtype=int),
-                 primitive_matrix=np.eye(3, dtype=int),
-                 distance=0.01,
-                 lattice_tolerance=0.1,
-                 force_tolerance=1e-3,
-                 pressure_target=0,
-                 stress_tolerance=10,
-                 max_increase=1.5,
-                 max_iteration=3,
-                 min_iteration=1,
-                 traverse=False,
-                 is_cell_relaxed=False):
-
-        PhononBase.__init__(
-            self,
-            directory=directory,
-            name=name,
-            supercell_matrix=supercell_matrix,
-            primitive_matrix=primitive_matrix,
-            distance=distance,
-            lattice_tolerance=lattice_tolerance,
-            force_tolerance=force_tolerance,
-            pressure_target=pressure_target,
-            stress_tolerance=stress_tolerance,
-            max_increase=max_increase,
-            max_iteration=max_iteration,
-            min_iteration=min_iteration,
-            traverse=traverse,
-            is_cell_relaxed=is_cell_relaxed)
-
-    def _get_displacement_tasks(self):
+class TaskVaspPhonon:
+    def _get_vasp_displacement_tasks(self, phonon, start=0, stop=None):
         incar = self._incar[1].copy()
+        if stop is None:
+            disp_cells = phonon.get_supercells_with_displacements()[start:]
+        else:
+            disp_cells = phonon.get_supercells_with_displacements()[start:stop]
 
-        # Perfect supercell
-        supercell = self._phonon.get_supercell()
-        tasks = [self._get_disp_task(atoms2cell(supercell),
-                                     incar,
-                                     "perfect")]
-        # Displacements
-        for i, disp in enumerate(
-            self._phonon.get_supercells_with_displacements()):
+        tasks = []
+        for i, disp in enumerate(disp_cells):
             tasks.append(self._get_disp_task(atoms2cell(disp),
                                              incar,
                                              "disp-%03d" % (i+1)))
         return tasks
 
+    def _get_vasp_supercell_task(self, phonon):
+        incar = self._incar[1].copy()
+        supercell = phonon.get_supercell()
+        task = self._get_disp_task(atoms2cell(supercell), incar, "perfect")
+    
     def _get_disp_task(self, cell, incar, directory):
-        job, incar, k_mesh, k_shift, k_gamma, k_length = \
-            self._choose_configuration(index=1)
+        (job, incar, k_mesh,
+         k_shift, k_gamma, k_length) =  self._choose_configuration(index=1)
 
         if k_length:
             k_mesh = klength2mesh(k_length, cell.get_lattice())
@@ -1047,7 +1017,85 @@ class Phonon(TaskVasp, PhononBase):
         task.set_job(job.copy("%s-%s" % (job.get_jobname(), directory)))
 
         return task
-            
+    
+    
+class Phonon(TaskVasp, TaskVaspPhonon, PhononBase):
+    def __init__(self,
+                 directory="phonon",
+                 name=None,
+                 supercell_matrix=np.eye(3, dtype='intc'),
+                 primitive_matrix=np.eye(3, dtype='double'),
+                 distance=0.01,
+                 lattice_tolerance=0.1,
+                 force_tolerance=1e-3,
+                 pressure_target=0,
+                 stress_tolerance=10,
+                 max_increase=1.5,
+                 max_iteration=3,
+                 min_iteration=1,
+                 traverse=False,
+                 is_cell_relaxed=False):
+
+        PhononBase.__init__(
+            self,
+            directory=directory,
+            name=name,
+            supercell_matrix=supercell_matrix,
+            primitive_matrix=primitive_matrix,
+            distance=distance,
+            lattice_tolerance=lattice_tolerance,
+            force_tolerance=force_tolerance,
+            pressure_target=pressure_target,
+            stress_tolerance=stress_tolerance,
+            max_increase=max_increase,
+            max_iteration=max_iteration,
+            min_iteration=min_iteration,
+            traverse=traverse,
+            is_cell_relaxed=is_cell_relaxed)
+
+    def _get_displacement_tasks(self, start=0, stop=None):
+        return self._get_vasp_displacement_tasks(
+            self._phonon, start=start, stop=stop)
+
+class PhononFC3(TaskVasp, TaskVaspPhonon, PhononFC3Base):
+    def __init__(self,
+                 directory="phonon_fc3",
+                 name=None,
+                 supercell_matrix=np.eye(3, dtype='intc'),
+                 primitive_matrix=np.eye(3, dtype='double'),
+                 distance=0.03,
+                 lattice_tolerance=0.1,
+                 force_tolerance=1e-3,
+                 pressure_target=0,
+                 stress_tolerance=10,
+                 max_increase=1.5,
+                 max_iteration=3,
+                 min_iteration=1,
+                 traverse=False,
+                 is_cell_relaxed=False):
+
+        PhononFC3Base.__init__(
+            self,
+            directory=directory,
+            name=name,
+            supercell_matrix=supercell_matrix,
+            primitive_matrix=primitive_matrix,
+            distance=distance,
+            lattice_tolerance=lattice_tolerance,
+            force_tolerance=force_tolerance,
+            pressure_target=pressure_target,
+            stress_tolerance=stress_tolerance,
+            max_increase=max_increase,
+            max_iteration=max_iteration,
+            min_iteration=min_iteration,
+            traverse=traverse,
+            is_cell_relaxed=is_cell_relaxed)
+
+    def _get_displacement_tasks(self, start=0, stop=None):
+        return self._get_vasp_displacement_tasks(
+            self._phonon_fc3, start=start, stop=stop)
+
+    
 class ElasticConstants(TaskVasp, ElasticConstantsBase):
     def __init__(self,
                  directory="elastic_constants",
@@ -1144,8 +1192,8 @@ class ModeGruneisen(TaskVasp, ModeGruneisenBase):
                  delta_strain=0.001,
                  strain=None,
                  bias=None,
-                 supercell_matrix=np.eye(3, dtype=int),
-                 primitive_matrix=np.eye(3, dtype=int),
+                 supercell_matrix=np.eye(3, dtype='intc'),
+                 primitive_matrix=np.eye(3, dtype='double'),
                  distance=0.01,
                  lattice_tolerance=0.1,
                  force_tolerance=1e-3,
@@ -1281,8 +1329,8 @@ class QuasiHarmonicPhonon(TaskVasp, QuasiHarmonicPhononBase):
                  t_step=None,
                  t_max=None,
                  t_min=None,
-                 supercell_matrix=np.eye(3, dtype=int),
-                 primitive_matrix=np.eye(3, dtype=int),
+                 supercell_matrix=np.eye(3, dtype='intc'),
+                 primitive_matrix=np.eye(3, dtype='double'),
                  distance=0.01,
                  lattice_tolerance=0.1,
                  force_tolerance=1e-3,

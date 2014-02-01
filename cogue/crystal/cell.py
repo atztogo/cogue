@@ -12,61 +12,63 @@ class Cell:
                  masses=None,
                  numbers=None):
 
-        if lattice == None:
+        if lattice is None:
             self._lattice = None
         else:
-            self._lattice = np.double(lattice).copy()
+            self._lattice = np.array(lattice, dtype='double')
             
-        if points == None:
+        if points is None:
             self._points = None
         else:
-            self._points = np.double(points).copy()
+            self._points = np.array(points, dtype='double')
 
-        if magmoms == None:
+        if magmoms is None:
             self._magmoms = None
         else:
-            self._magmoms = np.double(mogmoms).copy()
+            self._magmoms = np.array(mogmoms, dtype='double')
 
         if not symbols:
             self._symbols = None
         else:
             self._symbols = symbols[:]
 
-        if masses == None:
+        if masses is None:
             self._masses = None
         else:
-            self._masses = np.double(masses).copy()
+            self._masses = np.array(masses, dtype='double')
 
-        if numbers == None:
+        if numbers is None:
             self._numbers = None
         else:
-            self._numbers = np.intc(numbers).copy()
+            self._numbers = np.array(numbers, dtype='intc')
 
-        if self._numbers == None and self._symbols:
+        if self._numbers is None and self._symbols:
             self._set_numbers_from_symbols()
             
-        if not self._symbols and not self._numbers == None:
+        if not self._symbols and self._numbers is not None:
             self._set_symbols_from_numbers()
 
-        if self._masses == None:
+        if self._masses is None:
             self._set_masses_from_numbers()
 
     def _set_numbers_from_symbols(self):
-        self._numbers = np.intc([atomic_symbols[s] for s in self._symbols])
+        self._numbers = np.array([atomic_symbols[s] for s in self._symbols],
+                                 dtype='intc')
 
     def _set_symbols_from_numbers(self):
         self._symbols = [atomic_weights[x][0] for x in self._numbers]
 
     def _set_masses_from_numbers(self):
-        self._masses = np.double([atomic_weights[x][3] for x in self._numbers])
+        self._masses = np.array([atomic_weights[x][3] for x in self._numbers],
+                                dtype='double')
 
     def set_lattice(self, lattice):
         """ """
-        self._lattice = np.double(lattice).copy()
+        self._lattice = np.array(lattice, dtype='double')
 
     def get_lattice(self):
         """ """
-        return self._lattice
+        return self._lattice.copy()
 
     def get_volume(self):
         """ """
@@ -74,7 +76,7 @@ class Cell:
 
     def set_points(self, points):
         """ """
-        self._points = np.double(points).copy()
+        self._points = np.array(points, dtype='double')
 
     def get_points(self):
         """ """
@@ -88,33 +90,36 @@ class Cell:
         
     def get_symbols(self):
         """ """
-        return self._symbols
+        return self._symbols[:]
 
     def set_masses(self, masses):
         """ """
-        self._masses = np.double(masses).copy()
+        self._masses = np.array(masses, dtype='double')
 
     def get_masses(self):
         """ """
-        return self._masses
+        return self._masses.copy()
 
     def set_magnetic_moments(self, magmoms):
         """ """
-        self._magmoms = np.double(magmoms).copy()
+        self._magmoms = np.array(magmoms, dtype='double')
 
     def get_magnetic_moments(self):
         """ """
-        return self._magmoms
+        if self._magmoms is None:
+            return None
+        else:
+            return self._magmoms.copy()
 
     def set_numbers(self, numbers):
         """ """
-        self._numbers = np.array(numbers).copy()
+        self._numbers = np.array(numbers, dtype='intc')
         self._set_symbols_from_numbers()
         self._set_masses_from_numbers()
 
     def get_numbers(self):
         """ """
-        return self._numbers
+        return self._numbers.copy()
 
     def copy(self):
         """ """
