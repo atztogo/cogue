@@ -2,7 +2,7 @@ from cogue.task import TaskElement
 from phonopy import Phonopy
 from phonopy.structure.atoms import Atoms
 from phonopy.file_IO import write_disp_yaml
-from phonopy.file_IO import write_FORCE_SETS
+from phonopy.file_IO import write_FORCE_SETS_from_dataset
 from cogue.interface.vasp_io import write_poscar
 from cogue.crystal.cell import Cell
 
@@ -136,11 +136,11 @@ class PhononBase(TaskElement):
             if "next" in self._status:
                 self._status = "done"
                 forces = []
-                for task in self._phonon_tasks[1:]:
+                for task in self._tasks:
                     forces.append(task.get_properties()['forces'][-1])
-                self._write_FORCE_SETS(forces)
-                self._phonon.set_forces(forces)
-                self._phonon.produce_force_constants()
+                self._phonon.produce_force_constants(forces)
+                write_FORCE_SETS_from_dataset(
+                    self._phonon.get_displacement_dataset())
                 self._tasks = []
                 raise StopIteration
             elif "terminate" in self._status and self._traverse == "restart":
@@ -188,16 +188,6 @@ class PhononBase(TaskElement):
 
         write_poscar(cell, "POSCAR-unitcell")
         write_disp_yaml(displacements, supercell)
-
-    def _write_FORCE_SETS(self, forces):
-        displacements = [[x[0], x[1:4]]
-                         for x in self._phonon.get_displacements()]
-        natom = self._phonon.get_supercell().get_number_of_atoms()
-        write_FORCE_SETS("FORCE_SETS",
-                         natom,
-                         displacements,
-                         forces,
-                         verbose=False)
 
     def _write_yaml(self):
         w = open("%s.yaml" % self._directory, 'w')

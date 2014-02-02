@@ -127,13 +127,37 @@ class PhononFC3Base(TaskElement):
         elif self._stage == 1:
             if "next" in self._status:
                 self._status = "done"
+                disp_dataset = self._phonon_fc3.get_displacements()
+                for disp1, task in zip(disp_dataset['first_atom'], self._tasks):
+                    disp1['forces'] = task.get_properties()['forces'][-1]
+                self._phonon.set_displacement_dataset(disp_dataset)
+                write_FORCE_SETS_from_dataset(disp_dataset)
+                self._phonon.produce_force_constants()
+                self._set_stage2()
+                return self._tasks
+            elif "terminate" in self._status and self._traverse == "restart":
+                self._traverse = False
+                disp_terminated = []
+                for i, task in enumerate(self._tasks):
+                    if task.get_status() == "terminate":
+                        disp_terminated.append(i)
+                disp_dataset = self._phonon_fc3.get_displacements()
+                num_fc2_displacements = len(disp_dataset['first_atoms'])
+                tasks = self._get_displacement_tasks(stop=num_fc2_displacements)
+                self._tasks = []
+                for i in disp_terminated:
+                    self._tasks.append(tasks[i])
+                    self._phonon_fc3_tasks[i + 1] = tasks[i]
+                self._status = "fc2_displacements"
+                return self._tasks
+            else:
+                raise StopIteration
+        elif self._stage == 2:
+            if "next" in self._status:
+                self._status = "done"
                 forces = []
-                for task in self._phonon_tasks[1:]:
+                for task in self._tasks:
                     forces.append(task.get_properties()['forces'][-1])
-                self._write_FORCE_SETS(forces)
-                self._phonon.set_forces(forces)
-                self._phonon.produce_force_constants(decimals=14)
-                self._phonon.set_dynamical_matrix(decimals=14)
                 self._tasks = []
                 raise StopIteration
             elif "terminate" in self._status and self._traverse == "restart":
@@ -142,12 +166,14 @@ class PhononFC3Base(TaskElement):
                 for i, task in enumerate(self._tasks):
                     if task.get_status() == "terminate":
                         disp_terminated.append(i)
-                tasks = self._get_displacement_tasks()[1:]
+                disp_dataset = self._phonon_fc3.get_displacements()
+                num_fc2_displacements = len(disp_dataset['first_atoms'])
+                tasks = self._get_displacement_tasks(stop=num_fc2_displacements)
                 self._tasks = []
                 for i in disp_terminated:
                     self._tasks.append(tasks[i])
-                    self._phonon_tasks[i + 1] = tasks[i]
-                self._status = "displacements"
+                    self._phonon_fc3_tasks[i + 1] = tasks[i]
+                self._status = "fc3_displacements"
                 return self._tasks
             else:
                 raise StopIteration
