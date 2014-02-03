@@ -1028,7 +1028,7 @@ class TaskVaspPhonon:
         for i, disp in enumerate(disp_cells):
             tasks.append(self._get_disp_task(atoms2cell(disp),
                                              incar,
-                                             "disp-%03d" % (i+1)))
+                                             "disp-%03d" % (i + 1 + start)))
         return tasks
 
     def _get_vasp_supercell_task(self, phonon):

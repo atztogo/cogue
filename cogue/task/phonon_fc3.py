@@ -1,6 +1,9 @@
 from cogue.task import TaskElement
+from phonopy import Phonopy
 from anharmonic.phonon3 import Phono3py
 from phonopy.structure.atoms import Atoms
+from phonopy.file_IO import write_FORCE_SETS_from_dataset
+from phonopy.file_IO import write_disp_yaml
 from anharmonic.file_IO import write_disp_fc3_yaml
 from anharmonic.file_IO import write_FORCES_FC3
 from cogue.interface.vasp_io import write_poscar
@@ -127,8 +130,8 @@ class PhononFC3Base(TaskElement):
         elif self._stage == 1:
             if "next" in self._status:
                 self._status = "done"
-                disp_dataset = self._phonon_fc3.get_displacements()
-                for disp1, task in zip(disp_dataset['first_atom'], self._tasks):
+                disp_dataset = self._phonon_fc3.get_displacement_dataset()
+                for disp1, task in zip(disp_dataset['first_atoms'], self._tasks):
                     disp1['forces'] = task.get_properties()['forces'][-1]
                 self._phonon.set_displacement_dataset(disp_dataset)
                 write_FORCE_SETS_from_dataset(disp_dataset)
@@ -145,7 +148,7 @@ class PhononFC3Base(TaskElement):
                 self._status = "done"
                 forces_fc3 = [task.get_properties()['forces'][-1]
                               for task in self._tasks]
-                disp_dataset = self._phonon_fc3.get_displacements()
+                disp_dataset = self._phonon_fc3.get_displacement_dataset()
                 write_FORCE_FC3(disp_dataset, forces_fc3)
                 self._phonon_fc3.produce_fc3(forces_fc3)
                 self._tasks = []
@@ -168,7 +171,7 @@ class PhononFC3Base(TaskElement):
         self._stage = 1
         self._status = "fc2_displacements"
         self._set_phonon_fc3()
-        disp_dataset = self._phonon_fc3.get_displacements()
+        disp_dataset = self._phonon_fc3.get_displacement_dataset()
         num_fc2_displacements = len(disp_dataset['first_atoms'])
         self._tasks = self._get_displacement_tasks(stop=num_fc2_displacements)
         self._phonon_fc3_tasks += self._tasks
@@ -179,7 +182,7 @@ class PhononFC3Base(TaskElement):
         for i, task in enumerate(self._tasks):
             if task.get_status() == "terminate":
                 disp_terminated.append(i)
-        disp_dataset = self._phonon_fc3.get_displacements()
+        disp_dataset = self._phonon_fc3.get_displacement_dataset()
         num_fc2_displacements = len(disp_dataset['first_atoms'])
         tasks = self._get_displacement_tasks(stop=num_fc2_displacements)
         self._tasks = []
@@ -191,7 +194,7 @@ class PhononFC3Base(TaskElement):
     def _set_stage2(self):
         self._stage = 2
         self._status = "fc3_displacements"
-        disp_dataset = self._phonon_fc3.get_displacements()
+        disp_dataset = self._phonon_fc3.get_displacement_dataset()
         num_fc2_displacements = len(disp_dataset['first_atoms'])
         self._tasks = self._get_displacement_tasks(start=num_fc2_displacements)
         self._phonon_fc3_tasks += self._tasks
@@ -202,7 +205,7 @@ class PhononFC3Base(TaskElement):
         for i, task in enumerate(self._tasks):
             if task.get_status() == "terminate":
                 disp_terminated.append(i)
-        disp_dataset = self._phonon_fc3.get_displacements()
+        disp_dataset = self._phonon_fc3.get_displacement_dataset()
         num_fc2_displacements = len(disp_dataset['first_atoms'])
         tasks = self._get_displacement_tasks(start=num_fc2_displacements)
         self._tasks = []
@@ -225,19 +228,9 @@ class PhononFC3Base(TaskElement):
                                     primitive_matrix=self._primitive_matrix)
         self._phonon_fc3.generate_displacements(distance=self._distance)
         supercell = self._phonon_fc3.get_supercell()
-        disp_dataset = self._phonon_fc3.get_displacements()
+        disp_dataset = self._phonon_fc3.get_displacement_dataset()
         write_poscar(cell, "POSCAR-unitcell")
         write_disp_fc3_yaml(disp_dataset, supercell)
-
-    def _write_FORCE_SETS(self, forces):
-        displacements = [[x[0], x[1:4]]
-                         for x in self._phonon.get_displacements()]
-        natom = self._phonon.get_supercell().get_number_of_atoms()
-        write_FORCE_SETS("FORCE_SETS",
-                         natom,
-                         displacements,
-                         forces,
-                         verbose=False)
 
     def _write_yaml(self):
         w = open("%s.yaml" % self._directory, 'w')
