@@ -241,7 +241,7 @@ class PhononFC3Base(TaskElement):
 
     def _write_yaml(self):
         w = open("%s.yaml" % self._directory, 'w')
-        if self._phonon_tasks[0]:
+        if self._phonon_fc3_tasks[0]:
             if self._lattice_tolerance is not None:
                 w.write("lattice_tolerance: %f\n" % self._lattice_tolerance)
             if self._stress_tolerance is not None:
@@ -258,12 +258,12 @@ class PhononFC3Base(TaskElement):
             for row in self._primitive_matrix:
                 w.write("- [ %6.3f, %6.3f, %6.3f ]\n" % tuple(row))
             w.write("distance: %f\n" % self._distance)
-            w.write("iteration: %d\n" % self._phonon_tasks[0].get_stage())
+            w.write("iteration: %d\n" % self._phonon_fc3_tasks[0].get_stage())
             if self._energy:
                 w.write("electric_total_energy: %20.10f\n" % self._energy)
         w.write("status: %s\n" % self._status)
         w.write("tasks:\n")
-        for task in self._phonon_tasks:
+        for task in self._phonon_fc3_tasks:
             if task and task.get_status():
                 w.write("- name:   %s\n" % task.get_name())
                 w.write("  status: %s\n" % task.get_status())
