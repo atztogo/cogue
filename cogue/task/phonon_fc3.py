@@ -136,44 +136,22 @@ class PhononFC3Base(TaskElement):
                 self._set_stage2()
                 return self._tasks
             elif "terminate" in self._status and self._traverse == "restart":
-                self._traverse = False
-                disp_terminated = []
-                for i, task in enumerate(self._tasks):
-                    if task.get_status() == "terminate":
-                        disp_terminated.append(i)
-                disp_dataset = self._phonon_fc3.get_displacements()
-                num_fc2_displacements = len(disp_dataset['first_atoms'])
-                tasks = self._get_displacement_tasks(stop=num_fc2_displacements)
-                self._tasks = []
-                for i in disp_terminated:
-                    self._tasks.append(tasks[i])
-                    self._phonon_fc3_tasks[i + 1] = tasks[i]
-                self._status = "fc2_displacements"
+                self._reset_stage1()
                 return self._tasks
             else:
                 raise StopIteration
         elif self._stage == 2:
             if "next" in self._status:
                 self._status = "done"
-                forces = []
-                for task in self._tasks:
-                    forces.append(task.get_properties()['forces'][-1])
+                forces_fc3 = [task.get_properties()['forces'][-1]
+                              for task in self._tasks]
+                disp_dataset = self._phonon_fc3.get_displacements()
+                write_FORCE_FC3(disp_dataset, forces_fc3)
+                self._phonon_fc3.produce_fc3(forces_fc3)
                 self._tasks = []
                 raise StopIteration
             elif "terminate" in self._status and self._traverse == "restart":
-                self._traverse = False
-                disp_terminated = []
-                for i, task in enumerate(self._tasks):
-                    if task.get_status() == "terminate":
-                        disp_terminated.append(i)
-                disp_dataset = self._phonon_fc3.get_displacements()
-                num_fc2_displacements = len(disp_dataset['first_atoms'])
-                tasks = self._get_displacement_tasks(stop=num_fc2_displacements)
-                self._tasks = []
-                for i in disp_terminated:
-                    self._tasks.append(tasks[i])
-                    self._phonon_fc3_tasks[i + 1] = tasks[i]
-                self._status = "fc3_displacements"
+                self._reset_stage2()
                 return self._tasks
             else:
                 raise StopIteration
@@ -195,6 +173,21 @@ class PhononFC3Base(TaskElement):
         self._tasks = self._get_displacement_tasks(stop=num_fc2_displacements)
         self._phonon_fc3_tasks += self._tasks
 
+    def _reset_stage1(self):
+        self._traverse = False
+        disp_terminated = []
+        for i, task in enumerate(self._tasks):
+            if task.get_status() == "terminate":
+                disp_terminated.append(i)
+        disp_dataset = self._phonon_fc3.get_displacements()
+        num_fc2_displacements = len(disp_dataset['first_atoms'])
+        tasks = self._get_displacement_tasks(stop=num_fc2_displacements)
+        self._tasks = []
+        for i in disp_terminated:
+            self._tasks.append(tasks[i])
+            self._phonon_fc3_tasks[i + 1] = tasks[i]
+        self._status = "fc2_displacements"
+
     def _set_stage2(self):
         self._stage = 2
         self._status = "fc3_displacements"
@@ -202,6 +195,21 @@ class PhononFC3Base(TaskElement):
         num_fc2_displacements = len(disp_dataset['first_atoms'])
         self._tasks = self._get_displacement_tasks(start=num_fc2_displacements)
         self._phonon_fc3_tasks += self._tasks
+
+    def _reset_stage2(self):
+        self._traverse = False
+        disp_terminated = []
+        for i, task in enumerate(self._tasks):
+            if task.get_status() == "terminate":
+                disp_terminated.append(i)
+        disp_dataset = self._phonon_fc3.get_displacements()
+        num_fc2_displacements = len(disp_dataset['first_atoms'])
+        tasks = self._get_displacement_tasks(start=num_fc2_displacements)
+        self._tasks = []
+        for i in disp_terminated:
+            self._tasks.append(tasks[i])
+            self._phonon_fc3_tasks[i + 1] = tasks[i]
+        self._status = "fc3_displacements"
         
     def _set_phonon_fc3(self):
         cell = self.get_cell()

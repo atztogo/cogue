@@ -221,6 +221,56 @@ def phonon(directory="phonon",
 
     return ph
 
+def phonon_fc3(directory="phonon_fc3",
+               name=None,
+               job=None,
+               supercell_matrix=np.eye(3, dtype='intc'),
+               primitive_matrix=np.eye(3, dtype='double'),
+               distance=0.03,
+               lattice_tolerance=0.1,
+               force_tolerance=1e-3,
+               pressure_target=0,
+               stress_tolerance=10,
+               max_increase=1.5,
+               max_iteration=4,
+               min_iteration=1,
+               traverse=False,
+               is_cell_relaxed=False,
+               cell=None,
+               pseudo_potential_map=None,
+               k_mesh=None,
+               k_shift=None,
+               k_gamma=None,
+               k_length=None,
+               incar=None):
+
+    ph3 = PhononFC3(directory=directory,
+                    name=name,
+                    supercell_matrix=supercell_matrix,
+                    primitive_matrix=primitive_matrix,
+                    distance=distance,
+                    lattice_tolerance=lattice_tolerance,
+                    force_tolerance=force_tolerance,
+                    pressure_target=pressure_target,
+                    stress_tolerance=stress_tolerance,
+                    max_increase=max_increase,
+                    max_iteration=max_iteration,
+                    min_iteration=min_iteration,
+                    traverse=traverse,
+                    is_cell_relaxed=is_cell_relaxed)
+
+    ph3.set_configurations(cell=cell,
+                           pseudo_potential_map=pseudo_potential_map,
+                           k_mesh=k_mesh,
+                           k_shift=k_shift,
+                           k_gamma=k_gamma,
+                           k_length=k_length,
+                           incar=incar)
+    ph3.set_job(job)
+
+    return ph3
+
+
 
 def elastic_constants(directory="elastic_constants",
                       name=None,
