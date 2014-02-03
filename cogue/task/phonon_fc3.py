@@ -147,9 +147,9 @@ class PhononFC3Base(TaskElement):
             if "next" in self._status:
                 self._status = "done"
                 forces_fc3 = [task.get_properties()['forces'][-1]
-                              for task in self._tasks]
+                              for task in self._phonon_fc3_tasks[1:]]
                 disp_dataset = self._phonon_fc3.get_displacement_dataset()
-                write_FORCE_FC3(disp_dataset, forces_fc3)
+                write_FORCES_FC3(disp_dataset, forces_fc3)
                 self._phonon_fc3.produce_fc3(forces_fc3)
                 self._tasks = []
                 raise StopIteration
