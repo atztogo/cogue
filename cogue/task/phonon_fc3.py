@@ -133,8 +133,8 @@ class PhononFC3Base(TaskElement):
                 disp_dataset = self._phonon_fc3.get_displacement_dataset()
                 for disp1, task in zip(disp_dataset['first_atoms'], self._tasks):
                     disp1['forces'] = task.get_properties()['forces'][-1]
-                self._phonon.set_displacement_dataset(disp_dataset)
                 write_FORCE_SETS_from_dataset(disp_dataset)
+                self._phonon.set_displacement_dataset(disp_dataset)
                 self._phonon.produce_force_constants()
                 self._set_stage2()
                 return self._tasks
@@ -229,8 +229,11 @@ class PhononFC3Base(TaskElement):
         self._phonon_fc3.generate_displacements(distance=self._distance)
         supercell = self._phonon_fc3.get_supercell()
         disp_dataset = self._phonon_fc3.get_displacement_dataset()
+        self._phonon.set_displacement_dataset(disp_dataset)
         write_poscar(cell, "POSCAR-unitcell")
-        write_disp_fc3_yaml(disp_dataset, supercell)
+        write_disp_yaml(self._phonon.get_displacements(),
+                        supercell,
+                        directions=self._phonon.get_displacement_directions())
 
     def _write_yaml(self):
         w = open("%s.yaml" % self._directory, 'w')
