@@ -129,15 +129,19 @@ class PhononFC3Base(TaskElement):
                 raise StopIteration
         elif self._stage == 1:
             if "next" in self._status:
-                self._status = "done"
                 disp_dataset = self._phonon_fc3.get_displacement_dataset()
                 for disp1, task in zip(disp_dataset['first_atoms'], self._tasks):
                     disp1['forces'] = task.get_properties()['forces'][-1]
                 write_FORCE_SETS_from_dataset(disp_dataset)
                 self._phonon.set_displacement_dataset(disp_dataset)
                 self._phonon.produce_force_constants()
-                self._set_stage2()
-                return self._tasks
+                if self._exist_imaginary_modes():
+                    self._status = "dynamical_instability"
+                    self._tasks = []
+                    raise StopIteration
+                else:
+                    self._set_stage2()
+                    return self._tasks
             elif "terminate" in self._status and self._traverse == "restart":
                 self._reset_stage1()
                 return self._tasks
