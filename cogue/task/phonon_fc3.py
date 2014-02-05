@@ -135,7 +135,7 @@ class PhononFC3Base(TaskElement):
                 write_FORCE_SETS_from_dataset(disp_dataset)
                 self._phonon.set_displacement_dataset(disp_dataset)
                 self._phonon.produce_force_constants()
-                if self._exist_imaginary_modes():
+                if self._exist_imaginary_mode():
                     self._status = "dynamical_instability"
                     self._tasks = []
                     raise StopIteration
@@ -239,6 +239,9 @@ class PhononFC3Base(TaskElement):
                         supercell,
                         directions=self._phonon.get_displacement_directions())
 
+    def _exist_imaginary_mode(self):
+        self._phonon.set_mesh(mesh, is_gamma_center=True)
+        
     def _write_yaml(self):
         w = open("%s.yaml" % self._directory, 'w')
         if self._phonon_fc3_tasks[0]:
