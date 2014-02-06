@@ -1,3 +1,4 @@
+import numpy as np
 from cogue.task import TaskElement
 from phonopy import Phonopy
 from anharmonic.phonon3 import Phono3py
@@ -22,6 +23,7 @@ class PhononFC3Base(TaskElement):
                  supercell_matrix=None,
                  primitive_matrix=None,
                  distance=None,
+                 cutoff_frequency=None,
                  lattice_tolerance=None,
                  force_tolerance=None,
                  pressure_target=None,
@@ -43,6 +45,7 @@ class PhononFC3Base(TaskElement):
         self._supercell_matrix = supercell_matrix
         self._primitive_matrix = primitive_matrix
         self._distance = distance
+        self._cutoff_frequency = cutoff_frequency # determine imaginary freq.
         self._lattice_tolerance = lattice_tolerance
         self._pressure_target = pressure_target
         self._stress_tolerance = stress_tolerance
@@ -136,7 +139,7 @@ class PhononFC3Base(TaskElement):
                 self._phonon.set_displacement_dataset(disp_dataset)
                 self._phonon.produce_force_constants()
                 if self._exist_imaginary_mode():
-                    self._status = "dynamical_instability"
+                    self._status = "terminate"
                     self._tasks = []
                     raise StopIteration
                 else:
@@ -238,9 +241,26 @@ class PhononFC3Base(TaskElement):
         write_disp_yaml(self._phonon.get_displacements(),
                         supercell,
                         directions=self._phonon.get_displacement_directions())
+        write_disp_fc3_yaml(disp_dataset, supercell)
 
     def _exist_imaginary_mode(self):
-        self._phonon.set_mesh(mesh, is_gamma_center=True)
+        exact_point_matrix = np.dot(np.linalg.inv(self._supercell_matrix),
+                                    self._primitive_matrix).T
+        max_integer = np.rint(np.amax(np.abs(np.linalg.inv(exact_point_matrix))))
+        q_points = []
+        for i in np.arange(-max_integer, max_integer + 1):
+            for j in np.arange(-max_integer, max_integer + 1):
+                for k in np.arange(-max_integer, max_integer + 1):
+                    q = np.dot(exact_point_matrix, [i, j, k])
+                    if (-1 < q).all() and (q < 1).all():
+                        q_points.append(q)
+        self._phonon.set_qpoints_phonon(q_points)
+        frequencies = self._phonon.get_qpoints_phonon()[0]
+        if (frequencies < self._cutoff_frequency).any():
+            self._log = "Stop at phonon calculation due to imaginary modes"
+            return True
+        else:
+            return False
         
     def _write_yaml(self):
         w = open("%s.yaml" % self._directory, 'w')

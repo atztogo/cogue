@@ -227,6 +227,7 @@ def phonon_fc3(directory="phonon_fc3",
                supercell_matrix=np.eye(3, dtype='intc'),
                primitive_matrix=np.eye(3, dtype='double'),
                distance=0.03,
+               cutoff_frequency=-0.5,
                lattice_tolerance=0.1,
                force_tolerance=1e-3,
                pressure_target=0,
@@ -1017,7 +1018,11 @@ class BulkModulus(TaskVasp, BulkModulusBase):
         return task
 
 class TaskVaspPhonon:
-    def _get_vasp_displacement_tasks(self, phonon, start=0, stop=None):
+    def _get_vasp_displacement_tasks(self,
+                                     phonon,
+                                     start=0,
+                                     stop=None,
+                                     digit_number=3):
         incar = self._incar[1].copy()
         if stop is None:
             disp_cells = phonon.get_supercells_with_displacements()[start:]
@@ -1028,7 +1033,8 @@ class TaskVaspPhonon:
         for i, disp in enumerate(disp_cells):
             tasks.append(self._get_disp_task(atoms2cell(disp),
                                              incar,
-                                             "disp-%03d" % (i + 1 + start)))
+                                             i + 1 + start,
+                                             digit_number=digit_number))
         return tasks
 
     def _get_vasp_supercell_task(self, phonon):
@@ -1036,9 +1042,11 @@ class TaskVaspPhonon:
         supercell = phonon.get_supercell()
         task = self._get_disp_task(atoms2cell(supercell), incar, "perfect")
     
-    def _get_disp_task(self, cell, incar, directory):
+    def _get_disp_task(self, cell, incar, disp_number, digit_number=3):
         (job, incar, k_mesh,
          k_shift, k_gamma, k_length) =  self._choose_configuration(index=1)
+
+        directory = ("disp-%0" + "%d" % digit_number + "d") % disp_number
 
         if k_length:
             k_mesh = klength2mesh(k_length, cell.get_lattice())
@@ -1114,6 +1122,7 @@ class PhononFC3(TaskVasp, TaskVaspPhonon, PhononFC3Base):
                  supercell_matrix=np.eye(3, dtype='intc'),
                  primitive_matrix=np.eye(3, dtype='double'),
                  distance=0.03,
+                 cutoff_frequency=-0.5,
                  lattice_tolerance=0.1,
                  force_tolerance=1e-3,
                  pressure_target=0,
@@ -1131,6 +1140,7 @@ class PhononFC3(TaskVasp, TaskVaspPhonon, PhononFC3Base):
             supercell_matrix=supercell_matrix,
             primitive_matrix=primitive_matrix,
             distance=distance,
+            cutoff_frequency=cutoff_frequency,
             lattice_tolerance=lattice_tolerance,
             force_tolerance=force_tolerance,
             pressure_target=pressure_target,
@@ -1143,7 +1153,7 @@ class PhononFC3(TaskVasp, TaskVaspPhonon, PhononFC3Base):
 
     def _get_displacement_tasks(self, start=0, stop=None):
         return self._get_vasp_displacement_tasks(
-            self._phonon_fc3, start=start, stop=stop)
+            self._phonon_fc3, start=start, stop=stop, digit_number=5)
 
     
 class ElasticConstants(TaskVasp, ElasticConstantsBase):

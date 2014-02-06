@@ -99,6 +99,8 @@ class AutoCalc:
                 for next_subtask in next_subtasks:
                     self._deep_begin(next_subtask)
 
+        if task.get_log():
+            self._write_log(task.get_log() + "\n")
         self._chdir_out(orig_cwd, task.get_status())
 
     def _chdir_in(self, directory_in):
