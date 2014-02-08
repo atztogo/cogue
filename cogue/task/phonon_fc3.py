@@ -113,7 +113,8 @@ class PhononFC3Base(TaskElement):
     def done(self):
         return ("terminate" in self._status or 
                 "done" in self._status or
-                "next" in self._status)
+                "next" in self._status or
+                "imaginary_mode" in self._status )
 
     def next(self):
         if self._stage == 0:
@@ -139,7 +140,8 @@ class PhononFC3Base(TaskElement):
                 self._phonon.set_displacement_dataset(disp_dataset)
                 self._phonon.produce_force_constants()
                 if self._exist_imaginary_mode():
-                    self._status = "terminate"
+                    self._status = "imaginary_mode"
+                    self._write_yaml()
                     self._tasks = []
                     raise StopIteration
                 else:
