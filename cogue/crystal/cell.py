@@ -15,12 +15,12 @@ class Cell:
         if lattice is None:
             self._lattice = None
         else:
-            self._lattice = np.array(lattice, dtype='double')
+            self._lattice = np.array(lattice, dtype='double', order='C')
             
         if points is None:
             self._points = None
         else:
-            self._points = np.array(points, dtype='double')
+            self._points = np.array(points, dtype='double', order='C')
 
         if magmoms is None:
             self._magmoms = None
@@ -64,7 +64,7 @@ class Cell:
 
     def set_lattice(self, lattice):
         """ """
-        self._lattice = np.array(lattice, dtype='double')
+        self._lattice = np.array(lattice, dtype='double', order='C')
 
     def get_lattice(self):
         """ """
@@ -76,7 +76,7 @@ class Cell:
 
     def set_points(self, points):
         """ """
-        self._points = np.array(points, dtype='double')
+        self._points = np.array(points, dtype='double', order='C')
 
     def get_points(self):
         """ """
