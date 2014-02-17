@@ -2,7 +2,7 @@ from cogue.task import TaskElement
 from phonopy import Phonopy
 from phonopy.structure.atoms import Atoms
 from phonopy.file_IO import write_disp_yaml
-from phonopy.file_IO import write_FORCE_SETS_from_dataset
+from phonopy.file_IO import write_FORCE_SETS
 from cogue.interface.vasp_io import write_poscar
 from cogue.crystal.cell import Cell
 
@@ -139,8 +139,7 @@ class PhononBase(TaskElement):
                 for task in self._tasks:
                     forces.append(task.get_properties()['forces'][-1])
                 self._phonon.produce_force_constants(forces)
-                write_FORCE_SETS_from_dataset(
-                    self._phonon.get_displacement_dataset())
+                write_FORCE_SETS(self._phonon.get_displacement_dataset())
                 self._tasks = []
                 raise StopIteration
             elif "terminate" in self._status and self._traverse == "restart":

@@ -3,7 +3,7 @@ from cogue.task import TaskElement
 from phonopy import Phonopy
 from anharmonic.phonon3 import Phono3py
 from phonopy.structure.atoms import Atoms
-from phonopy.file_IO import write_FORCE_SETS_from_dataset
+from phonopy.file_IO import write_FORCE_SETS
 from phonopy.file_IO import write_disp_yaml
 from anharmonic.file_IO import write_disp_fc3_yaml
 from anharmonic.file_IO import write_FORCES_FC3
@@ -136,7 +136,7 @@ class PhononFC3Base(TaskElement):
                 disp_dataset = self._phonon_fc3.get_displacement_dataset()
                 for disp1, task in zip(disp_dataset['first_atoms'], self._tasks):
                     disp1['forces'] = task.get_properties()['forces'][-1]
-                write_FORCE_SETS_from_dataset(disp_dataset)
+                write_FORCE_SETS(disp_dataset)
                 self._phonon.set_displacement_dataset(disp_dataset)
                 self._phonon.produce_force_constants()
                 if self._exist_imaginary_mode():
