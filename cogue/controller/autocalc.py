@@ -7,13 +7,19 @@ def date():
     return datetime.datetime.today().strftime("%Y-%m-%d %H:%M:%S")
 
 class AutoCalc:
-    def __init__(self, name=None, verbose=False):
-        if name == None:
+    def __init__(self, name=None, log_name=None, verbose=False):
+        if name is None:
             self._name = "autocalc"
             self._taskset = TaskSet(name="autocalc")
         else:
             self._name = name
             self._taskset = TaskSet(directory=name)
+
+        if log_name is None:
+            self._log_name = self._name
+        else:
+            self._log_name = log_name
+
         self._queue = None
         self._tid_count = 0
         self._f_log = None
@@ -48,7 +54,7 @@ class AutoCalc:
 
     def _begin(self):
         if self._verbose:
-            self._f_log = open("%s.log" % self._name, 'w')
+            self._f_log = open("%s.log" % self._log_name, 'w')
         self._cwd = os.getcwd()
         self._deep_begin(self._taskset)
 
@@ -143,7 +149,7 @@ class AutoCalc:
 
     def _write_dot(self):
         if self._verbose:
-            f_dot = open("%s.dot" % self._name, 'w')
+            f_dot = open("%s.dot" % self._log_name, 'w')
             self._dot_count += 1
             f_dot.write("digraph %s {\n" %
                         self._name.replace('-', '_').replace('.', '_'))
@@ -191,4 +197,4 @@ class AutoCalc:
     
     def _write_qstatus(self):
         if self._verbose:
-            self._queue.write_qstatus(self._name)
+            self._queue.write_qstatus(self._log_name)

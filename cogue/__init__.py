@@ -20,7 +20,7 @@ def symmetry(cell, tolerance=1e-5):
     """ """
     return get_symmetry_dataset(cell, tolerance)
 
-def autocalc(name=None, verbose=False):
+def autocalc(name=None, log_name=None, verbose=False):
     """ """
-    return AutoCalc(name=name, verbose=verbose)
+    return AutoCalc(name=name, log_name=log_name, verbose=verbose)
 
