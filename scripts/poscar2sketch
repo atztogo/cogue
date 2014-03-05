@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
 def rotation_along_z():
-    import cogue.calculator.vasp as vasp
-    cell = vasp.read_poscar(sys.argv[1])
+    import cogue.interface.vasp_io as vasp_io
+    cell = vasp_io.read_poscar(sys.argv[1])
     sketch = SketchCell(cell)
     # picture box
     p1 = [-5,-10]
