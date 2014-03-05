@@ -2,7 +2,7 @@
 
 import sys
 import numpy as np
-import cogue.calculator.vasp as vasp
+import cogue.interface.vasp_io as vasp_io
 import cogue.crystal.symmetry as symmetry
 import cogue.interface.ui_utils as ui_utils
 from cogue.interface.cif import write_cif_P1
@@ -48,12 +48,12 @@ def write_to_file(cell, filename):
     if filename.split('.')[-1] == 'cif':
         write_cif_P1(cell, filename)
     else:
-        vasp.write_poscar(cell, filename)
+        vasp_io.write_poscar(cell, filename)
     
 
 options, args = ui_utils.get_options(get_parser())
 tolerance = options.symprec
-cell = vasp.read_poscar(args[0])
+cell = vasp_io.read_poscar(args[0])
 dataset = symmetry.get_symmetry_dataset(cell, tolerance)
 
 spg_type = dataset['international']
@@ -106,7 +106,7 @@ if options.is_bravais:
         write_to_file(brv_cell, options.output_filename)
     else:
         print "--------"
-        vasp.write_poscar(brv_cell)
+        vasp_io.write_poscar(brv_cell)
 elif options.is_primitive:
     prim_cell = symmetry.get_primitive_cell(cell, tolerance)
     if options.output_filename:
@@ -118,7 +118,7 @@ elif options.is_primitive:
         for v in tmat:
             print "%6.3f %6.3f %6.3f" % tuple(v)
         print "--------------------"
-        vasp.write_poscar(prim_cell)
+        vasp_io.write_poscar(prim_cell)
 
 if options.orbits is not None:
     site_sym = []
