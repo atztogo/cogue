@@ -1454,7 +1454,7 @@ class QuasiHarmonicPhonon(TaskVasp, QuasiHarmonicPhononBase):
             job = [j.copy("%s-%s" % (j.get_jobname(), directory))
                    for j in self._job[1:]]
         else:
-            job = self._job.copy("%s-%s" % (j.get_jobname(), directory))
+            job = self._job.copy("%s-%s" % (self._job.get_jobname(), directory))
 
 
         k_mesh = self._k_mesh
