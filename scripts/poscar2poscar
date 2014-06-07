@@ -6,4 +6,4 @@ import cogue.interface.ui_utils as ui_utils
 options, args = ui_utils.get_options()
 cells = [ui_utils.transform_cell(vasp_io.parse_poscar(filelines), options)
          for filelines in ui_utils.get_lines(args)]
-ui_utils.write_cells(vasp.write_poscar, cells, args, options.output_filename)
+ui_utils.write_cells(vasp_io.write_poscar, cells, args, options.output_filename)
