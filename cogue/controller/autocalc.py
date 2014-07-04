@@ -2,7 +2,7 @@ import os
 import time
 import datetime
 from cogue.task import TaskSet
-from cogue.qsystem import QueueEmpty
+from cogue.qsystem import EmptyQueue
 
 def date():
     return datetime.datetime.today().strftime("%Y-%m-%d %H:%M:%S")
@@ -21,7 +21,7 @@ class AutoCalc:
         else:
             self._log_name = log_name
 
-        self._queue = QueueEmpty()
+        self._queue = EmptyQueue()
         self._tid_count = 0
         self._f_log = None
         self._cwd = None

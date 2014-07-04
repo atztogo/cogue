@@ -1,3 +1,23 @@
+"""Store and control jobs
+
+1. A job is registered. Task-ID is used as the identifier.
+   --> Task-ID is pushed to self._tid_queue. [preparing]
+
+2. The job is submitted to queueing system if number of submitted
+   jobs are less then specified max number of jobs. [submitted]
+   --> Task-ID is removed from self._tid_queue.
+   --> Job-ID is mapped to the task-ID by self._tid2jobid.
+
+3. If the job-ID is not in the list of job-IDs in queueing system,
+   the job is recognized as finished. [done]
+   --> The key of task-ID in self._tid2jobid is removed.
+
+4. If the job-ID is in the list of job-IDs in queueing system and
+   the status of the job in queueing system is 'R':
+   the job is recognized as running. [running]
+
+"""
+
 __all__ = ['queue', 'job']
 
 import subprocess
@@ -38,42 +58,7 @@ def job(script=None,
                stdout=stdout,
                stderr=stderr)
 
-class Queue:
-    """Store and control jobs
-
-    1. A job is registered. Task-ID is used as the identifier.
-       --> Task-ID is pushed to self._tid_queue. [preparing]
-
-    2. The job is submitted to queueing system if number of submitted
-       jobs are less then specified max number of jobs. [submitted]
-       --> Task-ID is removed from self._tid_queue.
-       --> Job-ID is mapped to the task-ID by self._tid2jobid.
-
-    3. If the job-ID is not in the list of job-IDs in queueing system,
-       the job is recognized as finished. [done]
-       --> The key of task-ID in self._tid2jobid is removed.
-
-    4. If the job-ID is in the list of job-IDs in queueing system and
-       the status of the job in queueing system is 'R':
-       the job is recognized as running. [running]
-
-    """
-    def __init__(self,
-                 max_jobs=None,
-                 qsub_command="qsub"):
-
-        self._max_jobs = None
-        self._qsub_command = None
-        self._qstatus = None
-        self._tid_queue = []
-        self._tid2jobid = {}
-        self._shell = None
-        self._shell_type = None
-        
-        QueueBase.__init__(self,
-                           max_jobs=max_jobs,
-                           qsub_command=qsub_command)
-
+class Qstat:
     def qstat(self):
         """qstatout
 
@@ -97,22 +82,15 @@ class Queue:
                         self._qstatus[jobid] = 'Running'
                     elif s == 'qw':
                         self._qstatus[jobid] = 'Pending'
-
-    # def _upload_files(self):
-    #     pass
-
-    # def _download_files(self):
-    #     pass
         
-class RemoteQueue(Queue):
+class RemoteQueue(QueueBase,Qstat):
     def __init__(self,
                  ssh_shell,
                  temporary_dir,
                  max_jobs=None,
                  qsub_command="qsub"):
-        Queue.__init__(self,
-                       max_jobs=max_jobs,
-                       qsub_command=qsub_command)
+        QueueBase.__init__(self, max_jobs=max_jobs)
+        self._qsub_command = qsub_command
         self._shell = ssh_shell
         self._temporary_dir = temporary_dir
 
@@ -129,7 +107,8 @@ class RemoteQueue(Queue):
                 tar.add(name)
             tar.close()
             with open("cogue.tar", "rb") as local_file:
-                with self._shell.open("%s/%s" % (remote_dir, "cogue.tar"), "wb") as remote_file:
+                with self._shell.open("%s/%s" % (remote_dir, "cogue.tar"),
+                                      "wb") as remote_file:
                     shutil.copyfileobj(local_file, remote_file)
                     os.remove("cogue.tar")
                     self._shell.run(["tar", "xvf", "cogue.tar"], cwd=remote_dir)
@@ -140,7 +119,7 @@ class RemoteQueue(Queue):
                 qsub_out = self._shell.run(
                     shlex.split(self._qsub_command + " " + "job.sh"),
                     cwd=remote_dir).output
-                jobid = int(qsub_out.split()[2])
+                jobid = int(qsub_out.split()[2]) # GE specific
             self._tid2jobid[tid] = jobid
             self._tid_queue.pop(0)
             job.set_status("submitted", jobid)
@@ -148,7 +127,8 @@ class RemoteQueue(Queue):
         elif "done" in job.get_status():
             names = self._shell.run(["/bin/ls"], cwd=remote_dir).output.split()
             self._shell.run(["tar", "cvf", "cogue.tar"] + names, cwd=remote_dir)
-            with self._shell.open("%s/%s" % (remote_dir, "cogue.tar"), "rb") as remote_file:
+            with self._shell.open("%s/%s" % (remote_dir, "cogue.tar"),
+                                  "rb") as remote_file:
                 with open("cogue.tar", "wb") as local_file:
                     shutil.copyfileobj(remote_file, local_file)
                     tar = tarfile.open("cogue.tar")
@@ -157,13 +137,12 @@ class RemoteQueue(Queue):
                     os.remove("cogue.tar")
                     self._shell.run(["rm", "cogue.tar"], cwd=remote_dir)
 
-class LocalQueue(Queue):
+class LocalQueue(QueueBase,Qstat):
     def __init__(self,
                  max_jobs=None,
                  qsub_command="qsub"):
-        Queue.__init__(self,
-                       max_jobs=max_jobs,
-                       qsub_command=qsub_command)
+        QueueBase.__init__(self, max_jobs=max_jobs)
+        self._qsub_command = qsub_command
         self._shell = spur.LocalShell()
 
     def submit(self, task):
@@ -178,7 +157,7 @@ class LocalQueue(Queue):
                 qsub_out = self._shell.run(
                     shlex.split(self._qsub_command + " " + "job.sh"),
                     cwd=os.getcwd()).output
-                jobid = int(qsub_out.split()[2])
+                jobid = int(qsub_out.split()[2]) # GE specific
             self._tid2jobid[tid] = jobid
             self._tid_queue.pop(0)
             job.set_status("submitted", jobid)

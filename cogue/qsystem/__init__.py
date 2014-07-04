@@ -1,4 +1,4 @@
-class QueueEmpty:
+class EmptyQueue:
     def __init__(self):
         pass
 
@@ -17,15 +17,9 @@ class QueueEmpty:
     def write_qstatus(self, name):
         pass
 
-class QueueBase(QueueEmpty):
-    def __init__(self,
-                 max_jobs=None,
-                 qsub_command="qsub"):
-
-        QueueEmpty.__init__(self)
-        
+class QueueBase:
+    def __init__(self, max_jobs=None):
         self._max_jobs = max_jobs
-        self._qsub_command = qsub_command
         self._qstatus = None
         self._tid_queue = []
         self._tid2jobid = {}
@@ -48,6 +42,13 @@ class QueueBase(QueueEmpty):
                 f_qstat.write("%8d %8d %8s\n" %
                               (tid, jobid, self._qstatus[jobid]))
         f_qstat.close()
+
+    def submit(self):
+        """To be implemented in specific queue"""
+        pass
+        
+    def set_max_jobs(self, max_jobs):
+        self._max_jobs = max_jobs
 
     def _set_job_status(self, job, tid):
         if "preparing" in job.get_status():
