@@ -23,14 +23,17 @@ class OneShotCalculation(TaskElement):
         return self._cell
 
     def set_status(self):
-        self._status = self._job.get_status()
+        if self._traverse is False:
+            self._status = self._job.get_status()
+        else:
+            self._status = "done"
 
     def begin(self):
-        if not self._traverse:
-            if not self._job:
+        if self._traverse is False:
+            if self._job is None:
                 print "set_job has to be executed."
                 raise
-            self._prepare()
+            self._prepare() # When traverse != False, files are not created.
 
         self._status = "begin"
 

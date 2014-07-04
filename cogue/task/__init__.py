@@ -59,7 +59,7 @@ class TaskElement(TaskBase):
 
         TaskBase.__init__(self)
         self._job = None
-        self._traverse = False # Do not submit job
+        self._traverse = False # Do submit job
 
     def set_job(self, job):
         if (isinstance(self._job, list) or

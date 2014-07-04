@@ -6,6 +6,7 @@ import spur
 import os
 import shutil
 import tarfile
+from cogue.qsystem import QueueBase
 
 def queue(max_jobs=None,
           ssh_shell=None,
@@ -58,23 +59,20 @@ class Queue:
 
     """
     def __init__(self,
-                 max_jobs = None,
+                 max_jobs=None,
                  qsub_command="qsub"):
-        self._max_jobs = max_jobs
-        self._qsub_command = qsub_command
+
+        self._max_jobs = None
+        self._qsub_command = None
         self._qstatus = None
         self._tid_queue = []
         self._tid2jobid = {}
         self._shell = None
         self._shell_type = None
-
-    def register(self, task):
-        self._tid_queue.append(task.get_tid())
-        job = task.get_job()
-        job.set_status("preparing")
-
-    def get_qstatus(self):
-        return self._qstatus
+        
+        QueueBase.__init__(self,
+                           max_jobs=max_jobs,
+                           qsub_command=qsub_command)
 
     def qstat(self):
         """qstatout
@@ -100,48 +98,12 @@ class Queue:
                     elif s == 'qw':
                         self._qstatus[jobid] = 'Pending'
 
-    
-    def set_max_jobs(self, max_jobs):
-        self._max_jobs = max_jobs
+    # def _upload_files(self):
+    #     pass
 
-    def write_qstatus(self, name):
-        f_qstat = open("%s.qstat" % name, 'w')
-        f_qstat.write("%8s %8s %8s\n" % ("tid", "jobid", "status"))
-        for tid in self._tid_queue:
-            f_qstat.write("%8d %8s %8s\n" % (tid, 'None', 'Queued'))
-            
-        for tid, jobid in self._tid2jobid.iteritems():
-            if jobid in self._qstatus:
-                f_qstat.write("%8d %8d %8s\n" %
-                              (tid, jobid, self._qstatus[jobid]))
-        f_qstat.close()
-
-    def _set_job_status(self, job, tid):
-        if "preparing" in job.get_status():
-            if tid == self._tid_queue[0]:
-                will_submit = True
-                if self._max_jobs:
-                    if len(self._tid2jobid) > self._max_jobs:
-                        will_submit = False
-
-                if will_submit:
-                    job.set_status("ready")
-        else:
-            jobid = self._tid2jobid[tid]
-            if jobid in self._qstatus:
-                if self._qstatus[jobid] == 'Running':
-                    job.set_status("running", jobid)
-            else:
-                del self._tid2jobid[tid]
-                job.set_status("done")
-
-    def _upload_files(self):
-        pass
-
-    def _download_files(self):
-        pass
+    # def _download_files(self):
+    #     pass
         
-
 class RemoteQueue(Queue):
     def __init__(self,
                  ssh_shell,
