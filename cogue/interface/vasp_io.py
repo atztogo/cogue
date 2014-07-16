@@ -124,13 +124,26 @@ def write_potcar(names, filename="POTCAR"):
         return False
     
     w = open(filename, 'w')
-    
     for i, s in enumerate(names):
         if i == 0 or not s == names[i - 1]:
             for line in open("%s/%s" % (potcarpath, s)):
                 w.write(line)
-
     w.close()
+
+def get_enmax_from_potcar(names):
+    if 'COGUE_POTCAR_PATH' in os.environ:
+        potcarpath = os.environ['COGUE_POTCAR_PATH']
+    else:
+        print "COGUE_POTCAR_PATH is not set correctly."
+        return False
+    
+    enmax = []
+    for i, s in enumerate(names):
+        if i == 0 or not s == names[i - 1]:
+            for line in open("%s/%s" % (potcarpath, s)):
+                if 'ENMAX' in line:
+                    enmax.append(float(line[11:20]))
+    return enmax
 
 class Incar:
     def __init__(self,
