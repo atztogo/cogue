@@ -16,6 +16,7 @@ for filename in args.filenames:
         indices = np.argsort(eigvals)
         prev_occ = 0
         prev_eig = 0
+        band_gap = 0
         for i, (e, o) in enumerate(zip(eigvals[indices], occupancies[indices])):
             if i > 0:
                 if np.abs(np.abs(prev_occ - o) - 1) < 1e-6:
