@@ -11,10 +11,18 @@ args = parser.parse_args()
 for filename in args.filenames:
     vasprun = Vasprunxml(filename=filename)
     if vasprun.parse_eigenvalues():
-        eigvals = vasprun.get_eigenvalues()
-        if len(eigvals) == 1:
-            eigvals = eigvals[0].flatten()
-            occ = vasprun.get_occupancies()[0].flatten()
-            indices = np.argsort(eigvals)
-            for e, o in zip(eigvals[indices], occ[indices]):
-                print "%10.5f %7.5f" % (e, o)
+        eigvals = np.ravel(vasprun.get_eigenvalues())
+        occupancies = np.ravel(vasprun.get_occupancies())
+        indices = np.argsort(eigvals)
+        prev_occ = 0
+        prev_eig = 0
+        for i, (e, o) in enumerate(zip(eigvals[indices], occupancies[indices])):
+            if i > 0:
+                if np.abs(np.abs(prev_occ - o) - 1) < 1e-6:
+                    band_gap = e - prev_eig
+                    
+            print "%10.5f %7.5f" % (e, o)
+            prev_occ = o
+            prev_eig = e
+
+        print "# Band gap:", band_gap
