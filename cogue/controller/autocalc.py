@@ -36,6 +36,9 @@ class AutoCalc:
         taskset.append(task)
         self._taskset.append(taskset)
 
+    def get_tasks(self):
+        return [x.get_tasks()[0] for x in self._taskset.get_tasks()]
+
     def run(self, check_period=10):  # in second
         self._begin()
 
