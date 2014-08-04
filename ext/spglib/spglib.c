@@ -101,9 +101,9 @@ static int get_stabilized_reciprocal_mesh(int grid_address[][3],
 					  SPGCONST int rotations[][3][3],
 					  const int num_q,
 					  SPGCONST double qpoints[][3]);
-static int get_triplets_reciprocal_mesh_at_q(int weights[],
+static int get_triplets_reciprocal_mesh_at_q(int map_triplets[],
+					     int map_q[],
 					     int grid_address[][3],
-					     int third_q[],
 					     const int grid_point,
 					     const int mesh[3],
 					     const int is_time_reversal,
@@ -471,6 +471,12 @@ int spgat_refine_cell(double lattice[3][3],
 /*---------*/
 /* kpoints */
 /*---------*/
+int spg_get_grid_point(const int grid_address[3],
+		       const int mesh[3])
+{
+  return kpt_get_grid_point(grid_address, mesh);
+}
+
 int spg_get_ir_reciprocal_mesh(int grid_address[][3],
 			       int map[],
 			       const int mesh[3],
@@ -517,6 +523,52 @@ int spg_get_stabilized_reciprocal_mesh(int grid_address[][3],
 					qpoints);
 }
 
+void spg_get_grid_points_by_rotations(int rot_grid_points[],
+				      const int address_orig[3],
+				      const int num_rot,
+				      SPGCONST int rot_reciprocal[][3][3],
+				      const int mesh[3],
+				      const int is_shift[3])
+{
+  int i;
+  MatINT *rot;
+
+  rot = mat_alloc_MatINT(num_rot);
+  for (i = 0; i < num_rot; i++) {
+    mat_copy_matrix_i3(rot->mat[i], rot_reciprocal[i]);
+  }
+  kpt_get_grid_points_by_rotations(rot_grid_points,
+				   address_orig,
+				   rot,
+				   mesh,
+				   is_shift);
+  mat_free_MatINT(rot);
+}
+
+void spg_get_BZ_grid_points_by_rotations(int rot_grid_points[],
+					 const int address_orig[3],
+					 const int num_rot,
+					 SPGCONST int rot_reciprocal[][3][3],
+					 const int mesh[3],
+					 const int is_shift[3],
+					 const int bz_map[])
+{
+  int i;
+  MatINT *rot;
+
+  rot = mat_alloc_MatINT(num_rot);
+  for (i = 0; i < num_rot; i++) {
+    mat_copy_matrix_i3(rot->mat[i], rot_reciprocal[i]);
+  }
+  kpt_get_BZ_grid_points_by_rotations(rot_grid_points,
+				      address_orig,
+				      rot,
+				      mesh,
+				      is_shift,
+				      bz_map);
+  mat_free_MatINT(rot);
+}
+
 int spg_relocate_BZ_grid_address(int bz_grid_address[][3],
 				 int bz_map[],
 				 SPGCONST int grid_address[][3],
@@ -532,18 +584,18 @@ int spg_relocate_BZ_grid_address(int bz_grid_address[][3],
 				      is_shift);
 }
 
-int spg_get_triplets_reciprocal_mesh_at_q(int weights[],
+int spg_get_triplets_reciprocal_mesh_at_q(int map_triplets[],
+					  int map_q[],
 					  int grid_address[][3],
-					  int third_q[],
 					  const int grid_point,
 					  const int mesh[3],
 					  const int is_time_reversal,
 					  const int num_rot,
 					  SPGCONST int rotations[][3][3])
 {
-  return get_triplets_reciprocal_mesh_at_q(weights,
+  return get_triplets_reciprocal_mesh_at_q(map_triplets,
+					   map_q,
 					   grid_address,
-					   third_q,
 					   grid_point,
 					   mesh,
 					   is_time_reversal,
@@ -555,15 +607,16 @@ int spg_get_BZ_triplets_at_q(int triplets[][3],
 			     const int grid_point,
 			     SPGCONST int bz_grid_address[][3],
 			     const int bz_map[],
-			     const int triplet_weights[],
+			     const int map_triplets[],
+			     const int num_map_triplets,
 			     const int mesh[3])
-
 {
   return kpt_get_BZ_triplets_at_q(triplets,
 				  grid_point,
 				  bz_grid_address,
 				  bz_map,
-				  triplet_weights,
+				  map_triplets,
+				  num_map_triplets,
 				  mesh);
 }
 
@@ -592,6 +645,13 @@ spg_get_tetrahedra_relative_grid_address(int relative_grid_address[24][4][3],
 					 SPGCONST double rec_lattice[3][3])
 {
   thm_get_relative_grid_address(relative_grid_address, rec_lattice);
+}
+
+void
+spg_get_all_tetrahedra_relative_grid_address
+(int relative_grid_address[4][24][4][3])
+{
+  thm_get_all_relative_grid_address(relative_grid_address);
 }
 
 double
@@ -633,12 +693,12 @@ static SpglibDataset * get_dataset(SPGCONST double lattice[3][3],
 				   const int num_atom,
 				   const double symprec)
 {
-  int i, j;
-  int *mapping_table, *wyckoffs, *equiv_atoms, *equiv_atoms_prim;
+  int i;
+  int *mapping_table;
   double tolerance;
   Spacegroup spacegroup;
   SpglibDataset *dataset;
-  Cell *cell, *primitive;
+  Cell *cell, *primitive, *bravais;
   double inv_mat[3][3];
   Symmetry *symmetry;
 
@@ -648,14 +708,15 @@ static SpglibDataset * get_dataset(SPGCONST double lattice[3][3],
   cel_set_cell(cell, lattice, position, types);
 
   mapping_table = (int*) malloc(sizeof(int) * cell->size);
-  primitive = prm_get_primitive_with_mapping_table(mapping_table,
-						   cell,
-						   symprec);
+  primitive = prm_get_primitive_and_mapping_table(mapping_table,
+						  cell,
+						  symprec);
   tolerance = prm_get_current_tolerance();
   spacegroup = spa_get_spacegroup_with_primitive(primitive, tolerance);
 
   if (spacegroup.number > 0) {
     /* Spacegroup type, transformation matrix, origin shift */
+    dataset->n_atoms = cell->size;
     dataset->spacegroup_number = spacegroup.number;
     dataset->hall_number = spacegroup.hall_number;
     strcpy(dataset->international_symbol, spacegroup.international_short);
@@ -666,71 +727,42 @@ static SpglibDataset * get_dataset(SPGCONST double lattice[3][3],
 			   spacegroup.bravais_lattice);
     mat_copy_vector_d3(dataset->origin_shift, spacegroup.origin_shift);
 
-    /* Wyckoff positions */
-    wyckoffs = (int*) malloc(sizeof(int) * primitive->size);
-    equiv_atoms_prim = (int*) malloc(sizeof(int) * primitive->size);
-    for (i = 0; i < primitive->size; i++) {
-      wyckoffs[i] = -1;
-      equiv_atoms_prim[i] = -1;
-    }
-    ref_get_Wyckoff_positions(wyckoffs, 
-			      equiv_atoms_prim,
-			      primitive,
-			      &spacegroup,
-			      tolerance);
-    dataset->n_atoms = cell->size;
-    dataset->wyckoffs = (int*) malloc(sizeof(int) * cell->size); 
-    for (i = 0; i < cell->size; i++) {
-      dataset->wyckoffs[i] = wyckoffs[mapping_table[i]];
-    }
-    
-    free(wyckoffs);
-    wyckoffs = NULL;
-
-    /* Equivalent atoms */
-    dataset->equivalent_atoms = (int*) malloc(sizeof(int) * cell->size);
-    equiv_atoms = (int*) malloc(sizeof(int) * primitive->size);
-    for (i = 0; i < primitive->size; i++) {
-      for (j = 0; j < cell->size; j++) {
-	if (mapping_table[j] == equiv_atoms_prim[i]) {
-	  equiv_atoms[i] = j;
-	  break;
-	}
-      }
-    }
-    for (i = 0; i < cell->size; i++) {
-      dataset->equivalent_atoms[i] = equiv_atoms[mapping_table[i]];
-    }
-    free(equiv_atoms);
-    equiv_atoms = NULL;
-
-    free(equiv_atoms_prim);
-    equiv_atoms_prim = NULL;
-
     /* Symmetry operations */
     symmetry = ref_get_refined_symmetry_operations(cell,
 						   primitive,
 						   &spacegroup,
 						   tolerance);
-    dataset->rotations = (int (*)[3][3])
-      malloc(sizeof(int[3][3]) * symmetry->size);
-    dataset->translations = (double (*)[3])
-      malloc(sizeof(double[3]) * symmetry->size);
+    dataset->rotations =
+      (int (*)[3][3])malloc(sizeof(int[3][3]) * symmetry->size);
+    dataset->translations =
+      (double (*)[3])malloc(sizeof(double[3]) * symmetry->size);
     dataset->n_operations = symmetry->size;
     for (i = 0; i < symmetry->size; i++) {
       mat_copy_matrix_i3(dataset->rotations[i], symmetry->rot[i]);
       mat_copy_vector_d3(dataset->translations[i], symmetry->trans[i]);
     }
-    sym_free_symmetry(symmetry);
 
+    /* Wyckoff positions */
+    dataset->wyckoffs = (int*) malloc(sizeof(int) * cell->size); 
+    dataset->equivalent_atoms = (int*) malloc(sizeof(int) * cell->size);
+    bravais = ref_get_Wyckoff_positions(dataset->wyckoffs, 
+					dataset->equivalent_atoms,
+					primitive,
+					cell,
+					&spacegroup,
+					symmetry,
+					mapping_table,
+					tolerance);
+    cel_free_cell(bravais);
+    sym_free_symmetry(symmetry);
   } else {
     dataset->spacegroup_number = 0;
   }
 
   free(mapping_table);
   mapping_table = NULL;
-
   cel_free_cell(primitive);
+  cel_free_cell(cell);
 
   if (dataset->spacegroup_number == 0) {
     strcpy(dataset->international_symbol, "");
@@ -746,7 +778,6 @@ static SpglibDataset * get_dataset(SPGCONST double lattice[3][3],
     dataset->translations = NULL;
   }
   
-  cel_free_cell(cell);
   return dataset;
 }
 
@@ -1074,9 +1105,9 @@ static int get_stabilized_reciprocal_mesh(int grid_address[][3],
   return num_ir;
 }
 
-static int get_triplets_reciprocal_mesh_at_q(int weights[],
+static int get_triplets_reciprocal_mesh_at_q(int map_triplets[],
+					     int map_q[],
 					     int grid_address[][3],
-					     int third_q[],
 					     const int grid_point,
 					     const int mesh[3],
 					     const int is_time_reversal,
@@ -1091,9 +1122,9 @@ static int get_triplets_reciprocal_mesh_at_q(int weights[],
     mat_copy_matrix_i3(rot_real->mat[i], rotations[i]);
   }
 
-  num_ir = kpt_get_ir_triplets_at_q(weights,
+  num_ir = kpt_get_ir_triplets_at_q(map_triplets,
+				    map_q,
 				    grid_address,
-				    third_q,
 				    grid_point,
 				    mesh,
 				    is_time_reversal,

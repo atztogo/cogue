@@ -252,6 +252,22 @@ int spgat_refine_cell(double lattice[3][3],
 		      const double angle_tolerance);
 
 
+/*---------*/
+/* kpoints */
+/*---------*/
+
+/* Translate grid address to grid point index. */
+/* A q-point in fractional coordinates is given as */
+/* ((address * 2 + shift) / (mesh * 2)). */
+/* Each element of shift[] is 0 or 1. */
+/* Grid address is given in terms of mesh, 0 <= address[i] < mesh[i]. */
+/* If not, address[i] (mod mesh[i]) is calculated and used. */
+/* [0, 0, 0] without mesh shift gives Gamma point. */
+/* [mesh[0] / 2, mesh[1] / 2, mesh[2] / 2] without mesh shift and */
+/* with even mesh numbers gives boundary of reciprocal primitive lattice. */
+int spg_get_grid_point(const int grid_address[3],
+		       const int mesh[3]);
+
 /* Irreducible reciprocal grid points are searched from uniform */
 /* mesh grid points specified by ``mesh`` and ``is_shift``. */
 /* ``mesh`` stores three integers. Reciprocal primitive vectors */
@@ -297,6 +313,16 @@ int spg_get_stabilized_reciprocal_mesh(int grid_address[][3],
 				       const int num_q,
 				       SPGCONST double qpoints[][3]);
 
+/* Rotation operations in reciprocal space ``rot_reciprocal`` are applied */
+/* to a grid address ``address_orig`` and resulting grid points are stored in */
+/* ``rot_grid_points``. */
+void spg_get_grid_points_by_rotations(int rot_grid_points[],
+				      const int address_orig[3],
+				      const int num_rot,
+				      SPGCONST int rot_reciprocal[][3][3],
+				      const int mesh[3],
+				      const int is_shift[3]);
+
 /* Grid addresses are relocated inside Brillouin zone. */
 /* Number of ir-grid-points inside Brillouin zone is returned. */
 /* It is assumed that the following arrays have the shapes of */
@@ -328,13 +354,13 @@ int spg_relocate_BZ_grid_address(int bz_grid_address[][3],
 
 /* Irreducible triplets of k-points are searched under conservation of */
 /* :math:``\mathbf{k}_1 + \mathbf{k}_2 + \mathbf{k}_3 = \mathbf{G}``. */
-/* Memory spaces of grid_address[prod(mesh)][3], weights[prod(mesh)] */
-/* and third_q[prod(mesh)] are required. rotations are point-group- */
+/* Memory spaces of grid_address[prod(mesh)][3], map_triplets[prod(mesh)] */
+/* and map_q[prod(mesh)] are required. rotations are point-group- */
 /* operations in real space for which duplicate operations are allowed */
 /* in the input. */
-int spg_get_triplets_reciprocal_mesh_at_q(int weights[],
+int spg_get_triplets_reciprocal_mesh_at_q(int map_triplets[],
+					  int map_q[],
 					  int grid_address[][3],
-					  int third_q[],
 					  const int grid_point,
 					  const int mesh[3],
 					  const int is_time_reversal,
@@ -351,7 +377,8 @@ int spg_get_BZ_triplets_at_q(int triplets[][3],
 			     const int grid_point,
 			     SPGCONST int bz_grid_address[][3],
 			     const int bz_map[],
-			     const int triplet_weights[],
+			     const int map_triplets[],
+			     const int num_map_triplets,
 			     const int mesh[3]);
 
 void spg_get_neighboring_grid_points(int relative_grid_points[],
@@ -362,9 +389,15 @@ void spg_get_neighboring_grid_points(int relative_grid_points[],
 				     SPGCONST int bz_grid_address[][3],
 				     const int bz_map[]);
 
+/*--------------------*/
+/* tetrahedron method */
+/*--------------------*/
 void
 spg_get_tetrahedra_relative_grid_address(int relative_grid_address[24][4][3],
 					 SPGCONST double rec_lattice[3][3]);
+void
+spg_get_all_tetrahedra_relative_grid_address
+(int relative_grid_address[4][24][4][3]);
 double
 spg_get_tetrahedra_integration_weight(const double omega,
 				      SPGCONST double tetrahedra_omegas[24][4],
