@@ -39,7 +39,7 @@ PyMODINIT_FUNC init_spglib(void)
 
 static PyObject * get_dataset(PyObject *self, PyObject *args)
 {
-  int i, j, k, num_atom;
+  int i, j, k;
   double symprec;
   SpglibDataset *dataset;
   PyArrayObject* lattice_vectors;
@@ -47,11 +47,8 @@ static PyObject * get_dataset(PyObject *self, PyObject *args)
   PyArrayObject* atom_types;
   PyObject* array, *vec, *mat, *rot, *trans, *wyckoffs, *equiv_atoms;
   
-  double *p_lattice;
-  double *p_positions;
   double lattice[3][3];
   double (*positions)[3];
-  int *types_int;
   int *types;
 
   if (!PyArg_ParseTuple(args, "OOOd",
@@ -62,15 +59,16 @@ static PyObject * get_dataset(PyObject *self, PyObject *args)
     return NULL;
   }
 
-  p_lattice = (double(*))lattice_vectors->data;
-  p_positions = (double(*))atomic_positions->data;
-  num_atom = atom_types->dimensions[0];
+  const double *p_lattice = (double(*))lattice_vectors->data;
+  const double *p_positions = (double(*))atomic_positions->data;
+  const int num_atom = atom_types->dimensions[0];
+  const int types_int = (int*)atom_types->data;
   positions = (double(*)[3]) malloc(sizeof(double[3]) * num_atom);
-  types_int = (int*)atom_types->data;
   types = (int*) malloc(sizeof(int) * num_atom);
   set_spglib_cell(lattice, positions, types, num_atom,
 		  p_lattice, p_positions, types_int);
   dataset = spg_get_dataset(lattice, positions, types, num_atom, symprec);
+  
   free(types);
   free(positions);
 

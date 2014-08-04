@@ -30,9 +30,10 @@ def get_symmetry_dataset(cell, tolerance=1e-5):
     wyckoffs: Wyckoff letters
 
     """
-    points = cell.get_points()
-    lattice = cell.get_lattice()
-    numbers = cell.get_numbers()
+    points = np.array(cell.get_points(), dtype='double', order='C')
+    lattice = np.array(cell.get_lattice(), dtype='double', order='C')
+    numbers = np.array(cell.get_numbers(), dtype='intc')
+    
     keys = ('number',
             'international',
             'hall_number',
@@ -63,9 +64,9 @@ def get_symmetry_dataset(cell, tolerance=1e-5):
     return dataset
 
 def get_crystallographic_cell(cell, tolerance=1e-5):
-    points = cell.get_points()
-    lattice = cell.get_lattice()
-    numbers = cell.get_numbers()
+    points = np.array(cell.get_points(), dtype='double', order='C')
+    lattice = np.array(cell.get_lattice(), dtype='double', order='C')
+    numbers = np.array(cell.get_numbers(), dtype='intc')
     brv_lattice, brv_points, brv_numbers = spg.get_crystallographic_cell(
         lattice, points, numbers, tolerance)
     return Cell(lattice=brv_lattice,
@@ -73,9 +74,9 @@ def get_crystallographic_cell(cell, tolerance=1e-5):
                 numbers=brv_numbers)
 
 def get_primitive_cell(cell, tolerance=1e-5):
-    points = cell.get_points()
-    lattice = cell.get_lattice()
-    numbers = cell.get_numbers()
+    points = np.array(cell.get_points(), dtype='double', order='C')
+    lattice = np.array(cell.get_lattice(), dtype='double', order='C')
+    numbers = np.array(cell.get_numbers(), dtype='intc')
     (prim_lattice,
      prim_points,
      prim_numbers) = spg.get_primitive_cell(lattice, points, numbers, tolerance)
