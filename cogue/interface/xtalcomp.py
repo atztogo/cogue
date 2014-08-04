@@ -6,14 +6,16 @@ def compare(cell1,
             tolerance=0.01,
             angle_tolerance=0.1):
 
-    result = xcmp.compare(cell1.get_lattice().T.copy(),
-                          cell1.get_numbers(),
-                          cell1.get_points().T.copy(),
-                          cell2.get_lattice().T.copy(),
-                          cell2.get_numbers(),
-                          cell2.get_points().T.copy(),
-                          tolerance,
-                          angle_tolerance)
+    result = xcmp.compare(
+        np.array(cell1.get_lattice().T, dtype='double', order='C'),
+        cell1.get_numbers(),
+        np.array(cell1.get_points().T, dtype='double', order='C'),
+        np.array(cell2.get_lattice().T, dtype='double', order='C'),
+        cell2.get_numbers(),
+        np.array(cell2.get_points().T, dtype='double', order='C'),
+        tolerance,
+        angle_tolerance)
+    
     if result == 0:
         return False
     else:
