@@ -5,6 +5,15 @@ from cogue.crystal.cell import Cell
 from cogue.interface.xtalcomp import compare as xtal_compare
 import numpy as np
 
+# from pymatgen.core.structure import Structure
+# mgo_latt = [[4.212, 0, 0], [0, 4.212, 0], [0, 0, 4.212]]
+# mgo_specie = ["Mg"] * 4 + ["O"] * 4
+# mgo_frac_cord = [[0,0,0], [0.5,0.5,0], [0.5,0,0.5], [0,0.5,0.5],
+#                  [0.5,0,0], [0,0.5,0], [0,0,0.5], [0.5,0.5,0.5]]
+# self._mgo_uc = Structure(mgo_latt, mgo_specie, mgo_frac_cord, True,
+#                          True)
+
+
 class PhononModulation:
     def __init__(self,
                  phonon,
@@ -106,7 +115,7 @@ class PhononModulation:
         return modulation
         
     def _add_modulations(self, phase_set):
-        modulation = np.zeros(self._vectors[0].shape, dtype=complex)
+        modulation = np.zeros(self._vectors[0].shape, dtype='complex128')
         for c, v in zip(phase_set, self._vectors):
             modulation += c * v
         return modulation
@@ -296,7 +305,7 @@ class PhononModulationOld:
         self._arguments = arguments
     
     def _get_modulation(self, point):
-        modulation = np.zeros(self._vectors[0].shape, dtype=float)
+        modulation = np.zeros(self._vectors[0].shape, dtype='double')
         for c, v in zip(point, self._vectors):
             modulation += c * v
         return modulation

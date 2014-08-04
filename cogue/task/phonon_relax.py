@@ -512,9 +512,9 @@ def get_unstable_modulations(phonon,
                              degeneracy_tolerance=DEGENERACY_TOLERANCE,
                              symmetry_tolerance=0.1,
                              max_displacement=0.2,
-                             cutoff_eigenvalue=None,
+                             cutoff_eigenvalue=0.0,
                              ndiv=180,
-                             excluded_qpoints=None):
+                             excluded_qpoints=[]):
     qpoints, weigths, frequencies, eigvecs = phonon.get_mesh()
     eigenvalues = frequencies ** 2 * np.sign(frequencies)
     imag_modes = []
@@ -580,12 +580,12 @@ def get_unstable_modulations(phonon,
 
 def get_degeneracy_sets(eigs, indices, degeneracy_tolerance):
     degeneracy_sets = []
-    for j in indices:
+    for i in indices:
         deg_set = []
-        for k in indices:
-            if abs(eigs[j] - eigs[k]) < degeneracy_tolerance:
-                deg_set.append(k)
-        if j == deg_set[0]:
+        for j in indices:
+            if abs(eigs[i] - eigs[j]) < degeneracy_tolerance:
+                deg_set.append(j)
+        if i == deg_set[0]:
             degeneracy_sets.append(deg_set)
 
     return degeneracy_sets
