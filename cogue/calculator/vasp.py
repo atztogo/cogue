@@ -821,18 +821,27 @@ class StructureOptimizationElement(TaskVasp,
             stress = vxml.get_stress()
             energies = vxml.get_energies()
 
-            if is_success and len(lattice) > 0:
-                self._stress = stress[-1] / 10
-                self._forces = forces[-1]
-                self._energy = energies[-1,1]
-                self._judge(lattice[-1], points[-1])
-            elif (not is_success) and len(lattice) > 2:
+            max_iter = len(lattice)
+            if len(points) < max_iter:
+                max_iter = len(points)
+            if len(forces) < max_iter:
+                max_iter = len(forces)
+            if len(stress) < max_iter:
+                max_iter = len(stress)
+            if len(energies) < max_iter:
+                max_iter = len(energies)
+
+            if is_success and max_iter > 0:
+                self._stress = stress[max_iter - 1] / 10
+                self._forces = forces[max_iter - 1]
+                self._energy = energies[max_iter - 1, 1]
+                self._judge(lattice[max_iter - 1], points[max_iter - 1])
+            elif (not is_success) and max_iter > 2:
                 self._log += "vasprun.xml is not cleanly closed.\n"
-                self._stress = stress[-3] / 10
-                self._forces = forces[-3]
-                if len(energies) > 3:
-                    self._energy = energies[-3,1]
-                self._judge(lattice[-3], points[-3])
+                self._stress = stress[max_iter - 3] / 10
+                self._forces = forces[max_iter - 3]
+                self._energy = energies[max_iter - 3, 1]
+                self._judge(lattice[max_iter - 3], points[max_iter - 3])
             else:
                 self._log += "Failed to parse vasprun.xml.\n"
                 self._current_cell = None
