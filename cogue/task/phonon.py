@@ -88,19 +88,28 @@ class PhononBase(TaskElement):
         return self._space_group
         
     def set_status(self):
-        done = True
-        terminate = False
-        for task in self._tasks:
-            done &= task.done()
-            if task.get_status() == "terminate":
-                terminate = True
-        if self._status == "low_symmetry":
-            pass
-        elif done:
-            if terminate:
-                self._status = "terminate"
-            else:
-                self._status = "next"
+        if self._stage == 0:
+            task = self._tasks[0]
+            if task.done():
+                self._space_group = task.get_space_group()
+                status = self._tasks[0].get_status()
+                if status == "done":
+                    if not self._evaluate_stop_condition():
+                        self._status = "next"
+                else:
+                    self._status = status
+        else:
+            done = True
+            terminate = True
+            for task in self._tasks:
+                done &= task.done()
+                terminate &= (task.get_status() == "terminate")
+                
+            if done:
+                if terminate:
+                    self._status = "terminate"
+                else:
+                    self._status = "next"
 
         self._write_yaml()
 
@@ -118,38 +127,28 @@ class PhononBase(TaskElement):
             self._set_stage0()
 
     def done(self):
-        return ("terminate" in self._status or 
-                "done" in self._status or
-                "low_symmetry" in self._status or
-                "next" in self._status)
+        return (self._status == "terminate" or
+                self._status == "done" or
+                self._status == "max_iteration" or
+                self._status == "low_symmetry" or
+                self._status == "next")
 
     def next(self):
         if self._stage == 0:
-            if "next" in self._status:
+            if self._status == "next":
                 self._energy = self._tasks[0].get_energy()
-                self._space_group = self._tasks[0].get_space_group()
                 num_atom = len(self._tasks[0].get_cell().get_symbols())
                 self._comment = self._space_group['international_standard']
                 self._comment += "\\n%f/%d" % (self._energy, num_atom)
-
-                if self._stop_condition:
-                    if "symmetry_operations" in self._stop_condition:
-                        num_ops = len(self._space_group['rotations'])
-                        if (num_ops <
-                            self._stop_condition['symmetry_operations']):
-                            self._status = "low_symmetry"
-                            raise StopIteration
-
                 self._set_stage1()
                 return self._tasks
-            elif "terminate" in self._status and self._traverse == "restart":
+            elif (self._status == "terminate" and self._traverse == "restart"):
                 self._traverse = False
                 self._set_stage0()
                 return self._tasks
-            else:
-                raise StopIteration
+                
         else: # task 1..n: displaced supercells
-            if "next" in self._status:
+            if self._status == "next":
                 self._status = "done"
                 forces = []
                 for task in self._tasks:
@@ -157,8 +156,7 @@ class PhononBase(TaskElement):
                 self._phonon.produce_force_constants(forces)
                 write_FORCE_SETS(self._phonon.get_displacement_dataset())
                 self._tasks = []
-                raise StopIteration
-            elif "terminate" in self._status and self._traverse == "restart":
+            elif self._status == "terminate" and self._traverse == "restart":
                 self._traverse = False
                 disp_terminated = []
                 for i, task in enumerate(self._tasks):
@@ -171,8 +169,8 @@ class PhononBase(TaskElement):
                     self._phonon_tasks[i + 1] = tasks[i]
                 self._status = "displacements"
                 return self._tasks
-            else:
-                raise StopIteration
+
+        raise StopIteration
 
     def _set_stage0(self):
         self._status = "equilibrium"
@@ -187,6 +185,17 @@ class PhononBase(TaskElement):
         self._tasks = self._get_displacement_tasks()
         self._phonon_tasks += self._tasks
 
+    def _evaluate_stop_condition(self):
+        if self._stop_condition:
+            if "symmetry_operations" in self._stop_condition:
+                num_ops = len(self._space_group['rotations'])
+                if (num_ops <
+                    self._stop_condition['symmetry_operations']):
+                    self._status = "low_symmetry"
+                    return True
+                    
+        return False
+        
     def _set_phonon(self):
         cell = self.get_cell()
         phonopy_cell = cell2atoms(cell)

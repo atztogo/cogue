@@ -94,31 +94,25 @@ class PhononRelaxBase(TaskElement):
         self._energy = None
 
     def set_status(self):
-        done = True
-        terminate = False
-        confluence = None
-        stop_status = None
-
         if self._stage == 0:
-            status = self._tasks[0].get_status()
-            if ("confluence" in status or
-                status == "low_symmetry" or
-                status == "max_iteration"):
-                stop_status = status
-
-        if stop_status is None:
+            task = self._tasks[0]
+            if task.done():
+                status = task.get_status()
+                if status == "done":
+                    self._status = "next"
+                else:                    
+                    self._status = status
+        else:
+            done = True
+            terminate = True
             for task in self._tasks:
                 done &= task.done()
-                if task.get_status() == "terminate":
-                    terminate = True
-
-        if done:
-            if terminate:
-                self._status = "terminate"
-            elif stop_status is not None:
-                self._status = stop_status
-            else:
-                self._status = "next"
+                terminate &= (task.get_status() == "terminate")
+            if done:
+                if terminate:
+                    self._status = "terminate"
+                else:
+                    self._status = "next"
 
         self._write_yaml()
 
@@ -323,9 +317,15 @@ class PhononRelaxElementBase(TaskElement):
     def set_status(self):
         if self._stage == 0:
             task = self._tasks[0]
-            self._status = task.get_status()
-            if self._status == "done":
-                self._status = "next"
+            if task.done():
+                status = task.get_status()
+                if status == "done":
+                    self._status = "next"
+                else:
+                    self._status = status
+
+                spg_dataset = task.get_space_group()
+                self._space_group_type = spg_dataset['international_standard']
         else:
             all_done = True
             for task in self._tasks:
@@ -336,12 +336,6 @@ class PhononRelaxElementBase(TaskElement):
                     break
             if all_done:
                 self._status = "next"
-
-        if (self._status == "terminate" or
-            self._status == "low_symmetry" or
-            self._status == "max_iteration"):
-            spg_dataset = task.get_space_group()
-            self._space_group_type = spg_dataset['international_standard']
 
         if self._space_group_type:
             self._comment = self._space_group_type
@@ -354,9 +348,6 @@ class PhononRelaxElementBase(TaskElement):
             raise
 
         self._overwrite_settings()
-
-        self._status = "stage 0"
-        self._stage = 0
         self._set_stage0()
 
     def done(self):
@@ -369,25 +360,13 @@ class PhononRelaxElementBase(TaskElement):
 
     def next(self):
         if self._stage == 0:
-            if (self._status == "terminate" or
-                self._status == "low_symmetry" or
-                self._status == "max_iteration"):
-                pass
-            elif self._status != "next":
-                print "Status is ", self._status, self._tid, self._name
-                print "It is something wrong happening in PhononRelaxElementBase."
-            else:
+            if self._status == "next":
                 cell = self._tasks[0].get_cell()
                 tid = self._find_equivalent_crystal_structure(cell)
                 if tid > 0: # Equivalent structure found
                     self._status = "confluence with [%d]" % tid
-                    symmetry = get_symmetry_dataset(
-                        cell,
-                        tolerance=self._symmetry_tolerance)
-                    self._space_group_type = symmetry['international_standard']
                 elif (self._traverse ==  "restart" and 
                       not os.path.exists("phonon-1")):
-                    self._traverse = False
                     # This condition means the structure optimization terminated 
                     # by that equivalent crystal strucutre was found. However
                     # in restart mode, the order to parse directory tree can
@@ -397,6 +376,7 @@ class PhononRelaxElementBase(TaskElement):
                     # crystal structure somewhere else. In this case, this
                     # 'next' does nothing (restarting stage0) and waits for
                     # until it will be found.
+                    self._traverse = False
                     self.begin()
                     return self._tasks
                 else: # No equivalent structure found, move to phonon calculation
@@ -405,6 +385,13 @@ class PhononRelaxElementBase(TaskElement):
                     self._stage = 1
                     self._status = "stage 1"
                     return self._tasks
+            elif (self._status == "terminate" or
+                  self._status == "max_iteration" or
+                  self._status == "low_symmetry"):
+                pass
+            else:
+                print "Status is ", self._status, self._tid, self._name
+                print "It is something wrong happening in PhononRelaxElementBase."
         else:
             if self._status == "next":
                 self._analyze_phonon()
@@ -424,7 +411,8 @@ class PhononRelaxElementBase(TaskElement):
         return 0
 
     def _set_stage0(self):
-        self._tasks = []
+        self._status = "stage 0"
+        self._stage = 0
         task = self._get_equilibrium_task(
             cell=self._cell,
             impose_symmetry=True,

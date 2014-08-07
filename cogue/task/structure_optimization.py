@@ -132,7 +132,7 @@ class StructureOptimizationBase(TaskElement):
             if not energy == None:
                 self._energy = energy
 
-        if "terminate" in self._status and self._traverse == "restart":
+        if self._status == "terminate" and self._traverse == "restart":
             self._traverse = False
             if self._stage > 2:
                 self._stage -= 2
