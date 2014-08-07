@@ -31,8 +31,8 @@ class QuasiHarmonicPhononBase(TaskElement):
                  max_increase=None,
                  max_iteration=None,
                  min_iteration=None,
-                 traverse=False,
-                 is_cell_relaxed=False):
+                 is_cell_relaxed=False,
+                 traverse=False):
 
         TaskElement.__init__(self)
 
@@ -107,9 +107,6 @@ class QuasiHarmonicPhononBase(TaskElement):
             self._qh_tasks = [self._get_equilibrium_task()]
             self._tasks = [self._qh_tasks[0]]
 
-    def end(self):
-        self._write_yaml()
-
     def done(self):
         return (self._status == "done" or
                 self._status == "terminate" or
@@ -119,15 +116,14 @@ class QuasiHarmonicPhononBase(TaskElement):
         if self._stage == 0:
             if self._status == "next":
                 self._prepare_next(self._qh_tasks[0].get_cell())
-            else:
-                raise StopIteration
+                return self._tasks
         else:
             if self._status == "next":
                 self._calculate_quasiharmonic_phonon()
                 self._status = "done"
-            raise StopIteration
-
-        return self._tasks
+                
+        self._write_yaml()
+        raise StopIteration
 
     def _calculate_quasiharmonic_phonon(self):
         energies = []
@@ -143,9 +139,10 @@ class QuasiHarmonicPhononBase(TaskElement):
             if self._sampling_mesh is not None:
                 phonon = task.get_phonon()
                 phonon.set_mesh(self._sampling_mesh)
-                phonon.set_thermal_properties(t_step=self._t_step,
-                                              t_max=self._t_max + self._t_step * 2.5,
-                                              t_min=self._t_min)
+                phonon.set_thermal_properties(
+                    t_step=self._t_step,
+                    t_max=self._t_max + self._t_step * 2.5,
+                    t_min=self._t_min)
                 (temperatures,
                  free_energies,
                  entropies,

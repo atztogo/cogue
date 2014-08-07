@@ -139,9 +139,6 @@ class PhononRelaxBase(TaskElement):
                                            tolerance=self._symmetry_tolerance)
         self._comment = space_group['international_standard']
 
-    def end(self):
-        self._write_yaml()
-
     def done(self):
         return (self._status == "terminate" or
                 "confluence" in self._status or 
@@ -168,22 +165,21 @@ class PhononRelaxBase(TaskElement):
                 else: # No imaginary mode
                     self._status = "done"
                     self._tasks = []
-                    raise StopIteration
             elif self._status == "terminate":
-                raise StopIteration
+                pass
             elif ("confluence" in self._status or
                   self._status == "low_symmetry" or
                   self._status == "max_iteration"):
                 self._comment += " --> %s" % task.get_space_group_type()
                 self._tasks = []
-                raise StopIteration
             else:
                 print "It is something wrong happening in PhononRelaxBase."
-                raise StopIteration
         else:
             if self._status == "next":
                 self._status = "done"
-            raise StopIteration
+                
+        self._write_yaml()
+        raise StopIteration
 
     def _set_offsprings(self, imag_modes):
         self._tasks = []
@@ -363,10 +359,6 @@ class PhononRelaxElementBase(TaskElement):
         self._stage = 0
         self._set_stage0()
 
-    def end(self):
-        self._comment = self._space_group_type
-        self._write_yaml()
-
     def done(self):
         return (self._status == "terminate" or
                 "confluence" in self._status or 
@@ -380,48 +372,47 @@ class PhononRelaxElementBase(TaskElement):
             if (self._status == "terminate" or
                 self._status == "low_symmetry" or
                 self._status == "max_iteration"):
-                raise StopIteration
-
-            if self._status != "next":
+                pass
+            elif self._status != "next":
                 print "Status is ", self._status, self._tid, self._name
                 print "It is something wrong happening in PhononRelaxElementBase."
-                raise StopIteration
-                
-            cell = self._tasks[0].get_cell()
-            tid = self._find_equivalent_crystal_structure(cell)
-            if tid > 0: # Equivalent structure found
-                self._status = "confluence with [%d]" % tid
-                symmetry = get_symmetry_dataset(
-                    cell,
-                    tolerance=self._symmetry_tolerance)
-                self._space_group_type = symmetry['international_standard']
-                raise StopIteration
-            elif (self._traverse ==  "restart" and 
-                  not os.path.exists("phonon-1")):
-                self._traverse = False
-                # This condition means the structure optimization terminated 
-                # by that equivalent crystal strucutre was found. However
-                # in restart mode, the order to parse directory tree can
-                # be different from that in run time. So inequivalent
-                # crystal structure can be found different point.
-                # This condition indicates there should be an equivalent
-                # crystal structure somewhere else. In this case, this
-                # 'next' does nothing (restarting stage0) and waits for
-                # until it will be found.
-                self.begin()
-                return self._tasks
-            else: # No equivalent structure found, move to phonon calculation
-                self._ancestral_cells[self._tid_parent] = cell
-                self._set_stage1(cell)
-                self._stage = 1
-                self._status = "stage 1"
-                return self._tasks
+            else:
+                cell = self._tasks[0].get_cell()
+                tid = self._find_equivalent_crystal_structure(cell)
+                if tid > 0: # Equivalent structure found
+                    self._status = "confluence with [%d]" % tid
+                    symmetry = get_symmetry_dataset(
+                        cell,
+                        tolerance=self._symmetry_tolerance)
+                    self._space_group_type = symmetry['international_standard']
+                elif (self._traverse ==  "restart" and 
+                      not os.path.exists("phonon-1")):
+                    self._traverse = False
+                    # This condition means the structure optimization terminated 
+                    # by that equivalent crystal strucutre was found. However
+                    # in restart mode, the order to parse directory tree can
+                    # be different from that in run time. So inequivalent
+                    # crystal structure can be found different point.
+                    # This condition indicates there should be an equivalent
+                    # crystal structure somewhere else. In this case, this
+                    # 'next' does nothing (restarting stage0) and waits for
+                    # until it will be found.
+                    self.begin()
+                    return self._tasks
+                else: # No equivalent structure found, move to phonon calculation
+                    self._ancestral_cells[self._tid_parent] = cell
+                    self._set_stage1(cell)
+                    self._stage = 1
+                    self._status = "stage 1"
+                    return self._tasks
         else:
             if self._status == "next":
                 self._analyze_phonon()
                 self._status = "done"
 
-            raise StopIteration
+        self._comment = self._space_group_type
+        self._write_yaml()
+        raise StopIteration
 
     def _find_equivalent_crystal_structure(self, cell):
         for tid in self._ancestral_cells:

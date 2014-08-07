@@ -138,8 +138,8 @@ def bulk_modulus(directory="bulk_modulus",
                  max_increase=1.5,
                  max_iteration=4,
                  min_iteration=1,
-                 traverse=False,
                  is_cell_relaxed=False,
+                 traverse=False,
                  cell=None,
                  pseudo_potential_map=None,
                  k_mesh=None,
@@ -157,8 +157,8 @@ def bulk_modulus(directory="bulk_modulus",
                      max_increase=max_increase,
                      max_iteration=max_iteration,
                      min_iteration=min_iteration,
-                     traverse=traverse,
-                     is_cell_relaxed=is_cell_relaxed)
+                     is_cell_relaxed=is_cell_relaxed,
+                     traverse=traverse)
 
     bk.set_configurations(cell=cell,
                           pseudo_potential_map=pseudo_potential_map,
@@ -285,8 +285,8 @@ def elastic_constants(directory="elastic_constants",
                       max_increase=1.5,
                       max_iteration=4,
                       min_iteration=1,
-                      traverse=False,
                       is_cell_relaxed=False,
+                      traverse=False,
                       cell=None,
                       pseudo_potential_map=None,
                       k_mesh=None,
@@ -304,8 +304,8 @@ def elastic_constants(directory="elastic_constants",
                           max_increase=max_increase,
                           max_iteration=max_iteration,
                           min_iteration=min_iteration,
-                          traverse=traverse,
-                          is_cell_relaxed=is_cell_relaxed)
+                          is_cell_relaxed=is_cell_relaxed,
+                          traverse=traverse)
 
     ec.set_configurations(cell=cell,
                           pseudo_potential_map=pseudo_potential_map,
@@ -336,8 +336,8 @@ def mode_gruneisen(directory="mode_gruneisen",
                    max_increase=1.5,
                    max_iteration=3,
                    min_iteration=1,
-                   traverse=False,
                    is_cell_relaxed=False,
+                   traverse=False,
                    cell=None,
                    pseudo_potential_map=None,
                    k_mesh=None,
@@ -361,8 +361,8 @@ def mode_gruneisen(directory="mode_gruneisen",
                        max_increase=max_increase,
                        max_iteration=max_iteration,
                        min_iteration=min_iteration,
-                       traverse=traverse,
-                       is_cell_relaxed=is_cell_relaxed)
+                       is_cell_relaxed=is_cell_relaxed,
+                       traverse=traverse)
 
     mg.set_configurations(cell=cell,
                           pseudo_potential_map=pseudo_potential_map,
@@ -393,8 +393,8 @@ def quasiharmonic_phonon(directory="quasiharmonic_phonon",
                          max_increase=1.5,
                          max_iteration=3,
                          min_iteration=1,
-                         traverse=False,
                          is_cell_relaxed=False,
+                         traverse=False,
                          cell=None,
                          pseudo_potential_map=None,
                          k_mesh=None,
@@ -420,8 +420,8 @@ def quasiharmonic_phonon(directory="quasiharmonic_phonon",
                              max_increase=max_increase,
                              max_iteration=max_iteration,
                              min_iteration=min_iteration,
-                             traverse=traverse,
-                             is_cell_relaxed=is_cell_relaxed)
+                             is_cell_relaxed=is_cell_relaxed,
+                             traverse=traverse)
 
     qh.set_configurations(cell=cell,
                           pseudo_potential_map=pseudo_potential_map,
@@ -974,8 +974,8 @@ class BulkModulus(TaskVasp, BulkModulusBase):
                  max_increase=1.5,
                  max_iteration=3,
                  min_iteration=1,
-                 traverse=False,
-                 is_cell_relaxed=False):
+                 is_cell_relaxed=False,
+                 traverse=False):
 
         BulkModulusBase.__init__(
             self,
@@ -988,8 +988,8 @@ class BulkModulus(TaskVasp, BulkModulusBase):
             max_increase=max_increase,
             max_iteration=max_iteration,
             min_iteration=min_iteration,
-            traverse=traverse,
-            is_cell_relaxed=is_cell_relaxed)
+            is_cell_relaxed=is_cell_relaxed,
+            traverse=traverse)
 
     def _get_plus_minus_tasks(self, cell):
         lattice = cell.get_lattice()
@@ -1147,8 +1147,8 @@ class PhononFC3(TaskVasp, TaskVaspPhonon, PhononFC3Base):
                  max_increase=1.5,
                  max_iteration=3,
                  min_iteration=1,
-                 traverse=False,
-                 is_cell_relaxed=False):
+                 is_cell_relaxed=False,
+                 traverse=False):
 
         PhononFC3Base.__init__(
             self,
@@ -1165,8 +1165,8 @@ class PhononFC3(TaskVasp, TaskVaspPhonon, PhononFC3Base):
             max_increase=max_increase,
             max_iteration=max_iteration,
             min_iteration=min_iteration,
-            traverse=traverse,
-            is_cell_relaxed=is_cell_relaxed)
+            is_cell_relaxed=is_cell_relaxed,
+            traverse=traverse)
 
     def _get_displacement_tasks(self, start=0, stop=None):
         return self._get_vasp_displacement_tasks(
@@ -1182,9 +1182,10 @@ class ElasticConstants(TaskVasp, ElasticConstantsBase):
                  pressure_target=0,
                  stress_tolerance=10,
                  max_increase=1.5,
-                 max_iteration=3,
-                 traverse=False,
-                 is_cell_relaxed=False):
+                 max_iteration=4,
+                 min_iteration=1,
+                 is_cell_relaxed=False,
+                 traverse=False):
         
         ElasticConstantsBase.__init__(
             self,
@@ -1196,8 +1197,9 @@ class ElasticConstants(TaskVasp, ElasticConstantsBase):
             stress_tolerance=stress_tolerance,
             max_increase=max_increase,
             max_iteration=max_iteration,
-            traverse=traverse,
-            is_cell_relaxed=is_cell_relaxed)
+            min_iteration=min_iteration,
+            is_cell_relaxed=is_cell_relaxed,
+            traverse=traverse)
     
     def _get_ec_task(self, cell):
         job, incar, k_mesh, k_shift, k_gamma, k_length = \
@@ -1279,8 +1281,8 @@ class ModeGruneisen(TaskVasp, ModeGruneisenBase):
                  max_increase=1.5,
                  max_iteration=3,
                  min_iteration=1,
-                 traverse=False,
-                 is_cell_relaxed=False):
+                 is_cell_relaxed=False,
+                 traverse=False):
 
         ModeGruneisenBase.__init__(
             self,
@@ -1299,8 +1301,8 @@ class ModeGruneisen(TaskVasp, ModeGruneisenBase):
             max_increase=max_increase,
             max_iteration=max_iteration,
             min_iteration=min_iteration,
-            traverse=traverse,
-            is_cell_relaxed=is_cell_relaxed)
+            is_cell_relaxed=is_cell_relaxed,
+            traverse=traverse)
 
     def _get_phonon_tasks(self, cell):
         lattice = np.dot(self._strain, cell.get_lattice())
@@ -1344,8 +1346,8 @@ class ModeGruneisen(TaskVasp, ModeGruneisenBase):
                       max_increase=self._max_increase,
                       max_iteration=1,
                       min_iteration=1,
-                      is_cell_relaxed=is_cell_relaxed,
-                      traverse=self._traverse)
+                      traverse=self._traverse,
+                      is_cell_relaxed=is_cell_relaxed)
 
         if isinstance(self._job, list):
             job = [j.copy("%s-%s" % (j.get_jobname(), directory))
@@ -1416,8 +1418,8 @@ class QuasiHarmonicPhonon(TaskVasp, QuasiHarmonicPhononBase):
                  max_increase=1.5,
                  max_iteration=3,
                  min_iteration=1,
-                 traverse=False,
-                 is_cell_relaxed=False):
+                 is_cell_relaxed=False,
+                 traverse=False):
 
         QuasiHarmonicPhononBase.__init__(
             self,
@@ -1438,8 +1440,8 @@ class QuasiHarmonicPhonon(TaskVasp, QuasiHarmonicPhononBase):
             max_increase=max_increase,
             max_iteration=max_iteration,
             min_iteration=min_iteration,
-            traverse=traverse,
-            is_cell_relaxed=is_cell_relaxed)
+            is_cell_relaxed=is_cell_relaxed,
+            traverse=traverse)
 
     def _get_phonon_tasks(self, cell):
         lattice_orig = cell.get_lattice()

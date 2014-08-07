@@ -107,9 +107,6 @@ class StructureOptimizationBase(TaskElement):
         self._tasks = [task]
         self._write_yaml()
 
-    def end(self):
-        pass
-
     def done(self):
         return (self._status == "next" or
                 self._status == "done" or

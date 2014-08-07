@@ -23,9 +23,6 @@ class TaskBase:
     def next(self):
         raise StopIteration
 
-    def end(self):
-        pass
-
     def get_name(self):
         return self._name
 

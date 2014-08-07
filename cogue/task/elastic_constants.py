@@ -19,8 +19,9 @@ class ElasticConstantsBase(TaskElement):
                  stress_tolerance=None,
                  max_increase=None,
                  max_iteration=None,
-                 traverse=False,
-                 is_cell_relaxed=False):
+                 min_iteration=None,
+                 is_cell_relaxed=False,
+                 traverse=False):
 
         TaskElement.__init__(self)
 
@@ -36,6 +37,7 @@ class ElasticConstantsBase(TaskElement):
         self._force_tolerance = force_tolerance
         self._max_increase = max_increase
         self._max_iteration = max_iteration
+        self._min_iteration = min_iteration
         self._traverse = traverse
         self._is_cell_relaxed = is_cell_relaxed
 
@@ -75,9 +77,6 @@ class ElasticConstantsBase(TaskElement):
             self._ec_tasks = [self._get_equilibrium_task()]
             self._tasks = [self._ec_tasks[0]]
 
-    def end(self):
-        self._write_yaml()
-
     def done(self):
         return (self._status == "done" or
                 self._status == "terminate" or
@@ -87,16 +86,15 @@ class ElasticConstantsBase(TaskElement):
         if self._stage == 0:
             if self._status == "next":
                 self._prepare_next(self._ec_tasks[0].get_cell())
-            else:
-                raise StopIteration
+                return self._tasks
         else:
             if self._status == "next":
                 self._elastic_constants = \
                     self._ec_tasks[1].get_elastic_constants()
                 self._status = "done"
-            raise StopIteration
 
-        return self._tasks
+        self._write_yaml()
+        raise StopIteration
 
     def _prepare_next(self, cell):
         self._stage = 1

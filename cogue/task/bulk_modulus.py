@@ -20,8 +20,8 @@ class BulkModulusBase(TaskElement):
                  max_increase=None,
                  max_iteration=None,
                  min_iteration=None,
-                 traverse=False,
-                 is_cell_relaxed=False):
+                 is_cell_relaxed=False,
+                 traverse=False):
 
         TaskElement.__init__(self)
 
@@ -77,9 +77,6 @@ class BulkModulusBase(TaskElement):
             self._bm_tasks = [self._get_equilibrium_task()]
             self._tasks = [self._bm_tasks[0]]
 
-    def end(self):
-        self._write_yaml()
-
     def done(self):
         return (self._status == "done" or
                 self._status == "terminate" or
@@ -89,8 +86,7 @@ class BulkModulusBase(TaskElement):
         if self._stage == 0:
             if self._status == "next":
                 self._prepare_next(self._bm_tasks[0].get_cell())
-            else:
-                raise StopIteration
+                return self._tasks
         else:
             if self._status == "next":
                 stress_p = self._bm_tasks[1].get_stress()
@@ -102,9 +98,8 @@ class BulkModulusBase(TaskElement):
                     self._calculate_bulk_modulus()
                     self._status = "done"
 
-            raise StopIteration
-
-        return self._tasks
+        self._write_yaml()
+        raise StopIteration
 
     def _calculate_bulk_modulus(self):
         if self._is_cell_relaxed:

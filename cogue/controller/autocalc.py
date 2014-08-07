@@ -95,19 +95,16 @@ class AutoCalc:
             for subtask in subtasks:
                 if not subtask.done():
                     self._deep_run(subtask)
-
         else: # Execution task
             self._queue.submit(task)
             
         task.set_status()
         if task.done():
             try:
-                next_subtasks = task.next()
-            except StopIteration:
-                task.end()
-            else:
-                for next_subtask in next_subtasks:
+                for next_subtask in task.next():
                     self._deep_begin(next_subtask)
+            except StopIteration:
+                pass
 
         if task.get_log():
             self._write_log(task.get_log() + "\n")

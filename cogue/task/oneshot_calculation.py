@@ -19,6 +19,11 @@ class OneShotCalculation(TaskElement):
 
         self._cell = None
 
+    def next(self):
+        self._collect()
+        self._write_yaml()
+        raise StopIteration
+
     def get_cell(self):
         return self._cell
 
@@ -37,13 +42,9 @@ class OneShotCalculation(TaskElement):
 
         self._status = "begin"
 
-    def end(self):
-        self._collect()
-        self._write_yaml()
-
     def done(self):
-        return ("terminate" in self._status or 
-                "done" in self._status)
+        return (self._status == "terminate" or
+                self._status == "done")
 
 
 
@@ -152,9 +153,9 @@ class StructureOptimizationElementBase(OneShotCalculation):
         return self._energy
 
     def done(self):
-        return ("terminate" in self._status or
-                "done" in self._status or
-                "next" in self._status)
+        return (self._status == "terminate" or
+                self._status == "done" or
+                self._status == "next")
 
     def _write_yaml(self):
         w = open("%s.yaml" % self._directory, 'w')

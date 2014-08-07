@@ -28,8 +28,8 @@ class ModeGruneisenBase(TaskElement):
                  max_increase=None,
                  max_iteration=None,
                  min_iteration=None,
-                 traverse=False,
-                 is_cell_relaxed=False):
+                 is_cell_relaxed=False,
+                 traverse=False):
 
         TaskElement.__init__(self)
 
@@ -102,9 +102,6 @@ class ModeGruneisenBase(TaskElement):
             self._mg_tasks = [self._get_equilibrium_task()]
             self._tasks = [self._mg_tasks[0]]
 
-    def end(self):
-        self._write_yaml()
-
     def done(self):
         return (self._status == "done" or
                 self._status == "terminate" or
@@ -114,15 +111,14 @@ class ModeGruneisenBase(TaskElement):
         if self._stage == 0:
             if self._status == "next":
                 self._prepare_next(self._mg_tasks[0].get_cell())
-            else:
-                raise StopIteration
+                return self._tasks
         else:
             if self._status == "next":
                 self._calculate_mode_gruneisen()
                 self._status = "done"
-            raise StopIteration
 
-        return self._tasks
+        self._write_yaml()
+        raise StopIteration
 
     def _calculate_mode_gruneisen(self):
         self._mode_gruneisen = None

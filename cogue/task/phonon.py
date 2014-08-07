@@ -117,9 +117,6 @@ class PhononBase(TaskElement):
         else:
             self._set_stage0()
 
-    def end(self):
-        pass
-
     def done(self):
         return ("terminate" in self._status or 
                 "done" in self._status or
