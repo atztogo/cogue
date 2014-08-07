@@ -215,11 +215,15 @@ class Job:
     def get_status(self):
         return self._status
     
-    def copy(self, jobname):
+    def copy(self, jobname=None):
+        if jobname is None:
+            jobname_new = self._jobname 
+        else:
+            jobname_new = jobname
         return Job(script=self._script,
                    shell=self._shell,
                    cwd=self._cwd,
-                   jobname=jobname,
+                   jobname=jobname_new,
                    q=self._q,
                    l=self._l,
                    pe=self._pe,
