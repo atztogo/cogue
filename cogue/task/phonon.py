@@ -36,8 +36,9 @@ class PhononBase(TaskElement):
                  max_increase=None,
                  max_iteration=None,
                  min_iteration=None,
-                 traverse=False,
-                 is_cell_relaxed=False):
+                 is_cell_relaxed=False,
+                 stop_condition=None,
+                 traverse=False):
 
         TaskElement.__init__(self)
 
@@ -57,13 +58,15 @@ class PhononBase(TaskElement):
         self._max_increase = max_increase
         self._max_iteration = max_iteration
         self._min_iteration = min_iteration
-        self._traverse = traverse
         self._is_cell_relaxed = is_cell_relaxed
+        self._stop_condition = stop_condition
+        self._traverse = traverse
 
         self._stage = 0
         self._tasks = []
 
         self._energy = None
+        self._space_group = None
         self._cell = None
         self._phonon = None # Phonopy object
         self._phonon_tasks = None # Phonopy object
@@ -81,6 +84,9 @@ class PhononBase(TaskElement):
         """Return energies at geometry optimization steps"""
         return self._energy
 
+    def get_space_group(self):
+        return self._space_group
+        
     def set_status(self):
         done = True
         terminate = False
@@ -88,7 +94,9 @@ class PhononBase(TaskElement):
             done &= task.done()
             if task.get_status() == "terminate":
                 terminate = True
-        if done:
+        if self._status == "low_symmetry":
+            pass
+        elif done:
             if terminate:
                 self._status = "terminate"
             else:
@@ -115,15 +123,26 @@ class PhononBase(TaskElement):
     def done(self):
         return ("terminate" in self._status or 
                 "done" in self._status or
+                "low_symmetry" in self._status or
                 "next" in self._status)
 
     def next(self):
         if self._stage == 0:
             if "next" in self._status:
                 self._energy = self._tasks[0].get_energy()
-                self._comment = "%s\\n%f" % (
-                    self._tasks[0].get_space_group()['international_standard'],
-                    self._energy)
+                self._space_group = self._tasks[0].get_space_group()
+                num_atom = len(self._tasks[0].get_cell().get_symbols())
+                self._comment = self._space_group['international_standard']
+                self._comment += "\\n%f/%d" % (self._energy, num_atom)
+
+                if self._stop_condition:
+                    if "symmetry_operations" in self._stop_condition:
+                        num_ops = len(self._space_group['rotations'])
+                        if (num_ops <
+                            self._stop_condition['symmetry_operations']):
+                            self._status = "low_symmetry"
+                            raise StopIteration
+
                 self._set_stage1()
                 return self._tasks
             elif "terminate" in self._status and self._traverse == "restart":

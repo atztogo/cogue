@@ -111,10 +111,10 @@ class StructureOptimizationBase(TaskElement):
         pass
 
     def done(self):
-        return ("next" in self._status or 
-                "done" in self._status or
-                "terminate" in self._status or
-                "max_iteration" in self._status)
+        return (self._status == "next" or
+                self._status == "done" or
+                self._status == "terminate" or
+                self._status == "max_iteration")
 
     def next(self):
         if self._status == "terminate":

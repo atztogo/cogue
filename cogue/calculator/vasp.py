@@ -185,8 +185,9 @@ def phonon(directory="phonon",
            max_increase=1.5,
            max_iteration=4,
            min_iteration=1,
-           traverse=False,
            is_cell_relaxed=False,
+           stop_condition=None,
+           traverse=False,
            cell=None,
            pseudo_potential_map=None,
            k_mesh=None,
@@ -207,8 +208,9 @@ def phonon(directory="phonon",
                 max_increase=max_increase,
                 max_iteration=max_iteration,
                 min_iteration=min_iteration,
-                traverse=traverse,
-                is_cell_relaxed=is_cell_relaxed)
+                is_cell_relaxed=is_cell_relaxed,
+                stop_condition=stop_condition,
+                traverse=traverse)
 
     ph.set_configurations(cell=cell,
                           pseudo_potential_map=pseudo_potential_map,
@@ -447,6 +449,7 @@ def phonon_relax_element(directory="phonon_relax_element",
                          cutoff_eigenvalue=-0.02,
                          max_displacement=None,
                          num_sampling_points=60,
+                         stop_condition=None,
                          traverse=False,
                          cell=None,
                          pseudo_potential_map=None,
@@ -470,6 +473,7 @@ def phonon_relax_element(directory="phonon_relax_element",
                               cutoff_eigenvalue=cutoff_eigenvalue,
                               max_displacement=max_displacement,
                               num_sampling_points=num_sampling_points,
+                              stop_condition=stop_condition,
                               traverse=traverse)
 
     phre.set_configurations(cell=cell,
@@ -500,6 +504,7 @@ def phonon_relax(directory="phonon_relax",
                  cutoff_eigenvalue=-0.02,
                  max_displacement=None,
                  num_sampling_points=60,
+                 stop_condition=None,
                  traverse=False,
                  cell=None,
                  pseudo_potential_map=None,
@@ -525,6 +530,7 @@ def phonon_relax(directory="phonon_relax",
                       cutoff_eigenvalue=cutoff_eigenvalue,
                       max_displacement=max_displacement,
                       num_sampling_points=num_sampling_points,
+                      stop_condition=stop_condition,
                       traverse=traverse)
 
     phr.set_configurations(cell=cell,
@@ -1100,8 +1106,9 @@ class Phonon(TaskVasp, TaskVaspPhonon, PhononBase):
                  max_increase=1.5,
                  max_iteration=3,
                  min_iteration=1,
-                 traverse=False,
-                 is_cell_relaxed=False):
+                 is_cell_relaxed=False,
+                 stop_condition=None,
+                 traverse=False):
 
         PhononBase.__init__(
             self,
@@ -1117,8 +1124,9 @@ class Phonon(TaskVasp, TaskVaspPhonon, PhononBase):
             max_increase=max_increase,
             max_iteration=max_iteration,
             min_iteration=min_iteration,
-            traverse=traverse,
-            is_cell_relaxed=is_cell_relaxed)
+            is_cell_relaxed=is_cell_relaxed,
+            stop_condition=stop_condition,
+            traverse=traverse)
 
     def _get_displacement_tasks(self, start=0, stop=None):
         return self._get_vasp_displacement_tasks(
@@ -1530,6 +1538,7 @@ class PhononRelax(TaskVasp, PhononRelaxBase):
                  cutoff_eigenvalue=-0.02,
                  max_displacement=None,
                  num_sampling_points=60,
+                 stop_condition=None,
                  traverse=False):
 
         PhononRelaxBase.__init__(
@@ -1551,6 +1560,7 @@ class PhononRelax(TaskVasp, PhononRelaxBase):
             cutoff_eigenvalue=cutoff_eigenvalue,
             max_displacement=max_displacement,
             num_sampling_points=num_sampling_points,
+            stop_condition=stop_condition,
             traverse=traverse)
 
     def _get_phonon_relax_element_task(self, cell):
@@ -1569,6 +1579,7 @@ class PhononRelax(TaskVasp, PhononRelaxBase):
                                   cutoff_eigenvalue=self._cutoff_eigenvalue,
                                   max_displacement=self._max_displacement,
                                   num_sampling_points=self._num_sampling_points,
+                                  stop_condition=self._stop_condition,
                                   traverse=self._traverse)
 
         task.set_configurations(
@@ -1600,6 +1611,7 @@ class PhononRelax(TaskVasp, PhononRelaxBase):
                            cutoff_eigenvalue=self._cutoff_eigenvalue,
                            max_displacement=self._max_displacement,
                            num_sampling_points=self._num_sampling_points,
+                           stop_condition=self._stop_condition,
                            traverse=self._traverse)
 
         task.set_configurations(
@@ -1633,6 +1645,7 @@ class PhononRelaxElement(TaskVasp, PhononRelaxElementBase):
                  cutoff_eigenvalue=-0.02,
                  max_displacement=None,
                  num_sampling_points=60,
+                 stop_condition=None,
                  traverse=False):
 
         PhononRelaxElementBase.__init__(
@@ -1653,6 +1666,7 @@ class PhononRelaxElement(TaskVasp, PhononRelaxElementBase):
             cutoff_eigenvalue=cutoff_eigenvalue,
             max_displacement=max_displacement,
             num_sampling_points=num_sampling_points,
+            stop_condition=stop_condition,
             traverse=traverse)
 
     def _get_phonon_task(self, cell, supercell_matrix, directory):
@@ -1667,6 +1681,7 @@ class PhononRelaxElement(TaskVasp, PhononRelaxElementBase):
                       max_iteration=1,
                       min_iteration=1,
                       is_cell_relaxed=False,
+                      stop_condition=self._stop_condition,
                       traverse=self._traverse)
 
         task.set_configurations(

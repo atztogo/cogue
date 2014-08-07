@@ -55,6 +55,7 @@ class PhononRelaxBase(TaskElement):
                  cutoff_eigenvalue=None,
                  max_displacement=None,
                  num_sampling_points=None,
+                 stop_condition=None,
                  traverse=False):
 
         TaskElement.__init__(self)
@@ -83,6 +84,7 @@ class PhononRelaxBase(TaskElement):
         else:
             self._max_displacement = symmetry_tolerance * MAX_DISPLACEMENT_RATIO
         self._num_sampling_points = num_sampling_points
+        self._stop_condition = stop_condition
         self._traverse = traverse
 
         self._phr_tasks = []
@@ -95,11 +97,16 @@ class PhononRelaxBase(TaskElement):
         done = True
         terminate = False
         confluence = None
+        stop_status = None
 
-        if self._stage == 0 and "confluence" in self._tasks[0].get_status():
-            confluence = self._tasks[0].get_status()
+        if self._stage == 0:
+            status = self._tasks[0].get_status()
+            if ("confluence" in status or
+                status == "low_symmetry" or
+                status == "max_iteration"):
+                stop_status = status
 
-        if not confluence:
+        if stop_status is None:
             for task in self._tasks:
                 done &= task.done()
                 if task.get_status() == "terminate":
@@ -108,8 +115,8 @@ class PhononRelaxBase(TaskElement):
         if done:
             if terminate:
                 self._status = "terminate"
-            elif confluence:
-                self._status = confluence
+            elif stop_status is not None:
+                self._status = stop_status
             else:
                 self._status = "next"
 
@@ -136,10 +143,12 @@ class PhononRelaxBase(TaskElement):
         self._write_yaml()
 
     def done(self):
-        return ("terminate" in self._status or
-                "confluence" in self._status or
-                "next" in self._status or
-                "done" in self._status)
+        return (self._status == "terminate" or
+                "confluence" in self._status or 
+                self._status == "low_symmetry" or
+                self._status == "max_iteration" or
+                self._status == "done" or
+                self._status == "next")
 
     def next(self):
         if self._stage == 0:
@@ -162,12 +171,14 @@ class PhononRelaxBase(TaskElement):
                     raise StopIteration
             elif self._status == "terminate":
                 raise StopIteration
-            elif "confluence" in self._status:
+            elif ("confluence" in self._status or
+                  self._status == "low_symmetry" or
+                  self._status == "max_iteration"):
                 self._comment += " --> %s" % task.get_space_group_type()
                 self._tasks = []
                 raise StopIteration
             else:
-                print "It is something wrong in phonon_relax.py."
+                print "It is something wrong happening in PhononRelaxBase."
                 raise StopIteration
         else:
             if self._status == "next":
@@ -255,6 +266,7 @@ class PhononRelaxElementBase(TaskElement):
                  cutoff_eigenvalue=None,
                  max_displacement=None,
                  num_sampling_points=None,
+                 stop_condition=None,
                  traverse=False):
 
         TaskElement.__init__(self)
@@ -279,6 +291,7 @@ class PhononRelaxElementBase(TaskElement):
         self._cutoff_eigenvalue = cutoff_eigenvalue
         self._max_displacement = max_displacement
         self._num_sampling_points = num_sampling_points
+        self._stop_condition = stop_condition
         self._traverse = traverse
 
         self._tasks = []
@@ -312,16 +325,27 @@ class PhononRelaxElementBase(TaskElement):
             return self._phre_tasks[1].get_cell()
 
     def set_status(self):
-        all_done = True
-        for task in self._tasks:
-            status = task.get_status()
-            all_done &= (status == "done" or status == "max_iteration")
-            if status == "terminate":
-                self._status = "terminate"
-                break
-            
-        if all_done:
-            self._status = "next"
+        if self._stage == 0:
+            task = self._tasks[0]
+            self._status = task.get_status()
+            if self._status == "done":
+                self._status = "next"
+        else:
+            all_done = True
+            for task in self._tasks:
+                status = task.get_status()
+                all_done &= (status == "done")
+                if (status == "terminate" or status == "low_symmetry"):
+                    self._status = status
+                    break
+            if all_done:
+                self._status = "next"
+
+        if (self._status == "terminate" or
+            self._status == "low_symmetry" or
+            self._status == "max_iteration"):
+            spg_dataset = task.get_space_group()
+            self._space_group_type = spg_dataset['international_standard']
 
         if self._space_group_type:
             self._comment = self._space_group_type
@@ -344,16 +368,25 @@ class PhononRelaxElementBase(TaskElement):
         self._write_yaml()
 
     def done(self):
-        return ("terminate" in self._status or
+        return (self._status == "terminate" or
                 "confluence" in self._status or 
-                "done" in self._status or
-                "next" in self._status)
+                self._status == "low_symmetry" or
+                self._status == "max_iteration" or
+                self._status == "done" or
+                self._status == "next")
 
     def next(self):
         if self._stage == 0:
-            if self._status == "terminate":
+            if (self._status == "terminate" or
+                self._status == "low_symmetry" or
+                self._status == "max_iteration"):
                 raise StopIteration
 
+            if self._status != "next":
+                print "Status is ", self._status, self._tid, self._name
+                print "It is something wrong happening in PhononRelaxElementBase."
+                raise StopIteration
+                
             cell = self._tasks[0].get_cell()
             tid = self._find_equivalent_crystal_structure(cell)
             if tid > 0: # Equivalent structure found
@@ -365,6 +398,7 @@ class PhononRelaxElementBase(TaskElement):
                 raise StopIteration
             elif (self._traverse ==  "restart" and 
                   not os.path.exists("phonon-1")):
+                self._traverse = False
                 # This condition means the structure optimization terminated 
                 # by that equivalent crystal strucutre was found. However
                 # in restart mode, the order to parse directory tree can
@@ -449,6 +483,7 @@ class PhononRelaxElementBase(TaskElement):
                 imaginary_modes = []
                 qpoints_done = [imag_mode[1]
                                 for imag_mode in self._imaginary_modes]
+                print "Modulation structure search, start"
                 self._imaginary_modes += get_unstable_modulations(
                     phonon,
                     dimension,
@@ -457,6 +492,7 @@ class PhononRelaxElementBase(TaskElement):
                     cutoff_eigenvalue=self._cutoff_eigenvalue,
                     ndiv=self._num_sampling_points,
                     excluded_qpoints=qpoints_done)
+                print "Modulation structure search, done"
 
         sym_dataset = get_symmetry_dataset(
             self._tasks[0].get_cell())
