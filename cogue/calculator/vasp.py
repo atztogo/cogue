@@ -752,6 +752,7 @@ class ElectronicStructure(TaskVasp, ElectronicStructureBase):
         self._log: Terminate log is stored.
 
         """
+        self._log = ""
         if not os.path.exists("vasprun.xml"):
             self._log += "vasprun.xml not exists.\n"
             self._status = "terminate"
@@ -877,8 +878,9 @@ class StructureOptimizationElement(TaskVasp,
         else:
             self._current_cell = cell
 
-        if np.linalg.det(lattice_last) > \
-                self._max_increase * np.linalg.det(lattice_init):
+        vol_last = np.linalg.det(lattice_last)
+        vol_init = np.linalg.det(lattice_init)
+        if vol_last > self._max_increase * vol_init:
             self._log += "Too large volume expansion.\n"
         else:
             if self._lattice_tolerance is not None:
@@ -1249,6 +1251,7 @@ class ElasticConstantsElement(TaskVasp, ElasticConstantsElementBase):
         self._log: Terminate log is stored.
 
         """
+        self._log = ""
         if not os.path.exists("OUTCAR"):
             self._log += "OUTCAR not exists.\n"
             self._status = "terminate"

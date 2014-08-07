@@ -106,8 +106,12 @@ class AutoCalc:
             except StopIteration:
                 pass
 
-        if task.get_log():
-            self._write_log(task.get_log() + "\n")
+        log = task.get_log()
+        if log:
+            self._write_log(log)
+            with open("task.log", 'w') as w:
+                w.write(log)
+
         self._chdir_out(orig_cwd, task.get_status())
 
     def _chdir_in(self, directory_in):
