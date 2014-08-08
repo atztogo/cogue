@@ -130,7 +130,10 @@ class BulkModulusBase(TaskElement):
                 w.write("stress_tolerance: %f\n" % self._stress_tolerance)
                 w.write("pressure_target: %f\n" % self._pressure_target)
             w.write("force_tolerance: %f\n" % self._force_tolerance)
-            w.write("max_increase: %f\n" % self._max_increase)
+            if self._max_increase is None:
+                w.write("max_increase: unset\n")
+            else:
+                w.write("max_increase: %f\n" % self._max_increase)
             w.write("max_iteration: %d\n" % self._max_iteration)
             w.write("min_iteration: %d\n" % self._min_iteration)
             w.write("iteration: %d\n" % self._bm_tasks[0].get_stage())

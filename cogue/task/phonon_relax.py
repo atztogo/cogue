@@ -210,7 +210,10 @@ class PhononRelaxBase(TaskElement):
             w.write("stress_tolerance: %f\n" % self._stress_tolerance)
             w.write("pressure_target: %f\n" % self._pressure_target)
         w.write("force_tolerance: %f\n" % self._force_tolerance)
-        w.write("max_increase: %f\n" % self._max_increase)
+        if self._max_increase is None:
+            w.write("max_increase: unset\n")
+        else:
+            w.write("max_increase: %f\n" % self._max_increase)
         w.write("max_iteration: %d\n" % self._max_iteration)
         w.write("min_iteration: %d\n" % self._min_iteration)
         w.write("symmetry_tolerance: %d\n" % self._symmetry_tolerance)
@@ -331,7 +334,9 @@ class PhononRelaxElementBase(TaskElement):
             for task in self._tasks:
                 status = task.get_status()
                 all_done &= (status == "done")
-                if (status == "terminate" or status == "low_symmetry"):
+                if (status == "terminate" or
+                    status == "low_symmetry" or
+                    status == "max_iteration"):
                     self._status = status
                     break
             if all_done:
@@ -485,7 +490,10 @@ class PhononRelaxElementBase(TaskElement):
             w.write("stress_tolerance: %f\n" % self._stress_tolerance)
             w.write("pressure_target: %f\n" % self._pressure_target)
         w.write("force_tolerance: %f\n" % self._force_tolerance)
-        w.write("max_increase: %f\n" % self._max_increase)
+        if self._max_increase is None:
+            w.write("max_increase: unset\n")
+        else:
+            w.write("max_increase: %f\n" % self._max_increase)
         w.write("max_iteration: %d\n" % self._max_iteration)
         w.write("min_iteration: %d\n" % self._min_iteration)
         w.write("symmetry_tolerance: %f\n" % self._symmetry_tolerance)

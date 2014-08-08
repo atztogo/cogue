@@ -88,7 +88,7 @@ def structure_optimization(directory="structure_optimization",
                            force_tolerance=1e-3,
                            pressure_target=0,
                            stress_tolerance=0.1, # GPa=kbar / 10
-                           max_increase=1.5,
+                           max_increase=None,
                            max_iteration=5,
                            min_iteration=1,
                            find_symmetry=True,
@@ -135,7 +135,7 @@ def bulk_modulus(directory="bulk_modulus",
                  force_tolerance=1e-3,
                  pressure_target=0,
                  stress_tolerance=10,
-                 max_increase=1.5,
+                 max_increase=None,
                  max_iteration=4,
                  min_iteration=1,
                  is_cell_relaxed=False,
@@ -182,7 +182,7 @@ def phonon(directory="phonon",
            force_tolerance=1e-3,
            pressure_target=0,
            stress_tolerance=10,
-           max_increase=1.5,
+           max_increase=None,
            max_iteration=4,
            min_iteration=1,
            is_cell_relaxed=False,
@@ -234,7 +234,7 @@ def phonon_fc3(directory="phonon_fc3",
                force_tolerance=1e-3,
                pressure_target=0,
                stress_tolerance=10,
-               max_increase=1.5,
+               max_increase=None,
                max_iteration=4,
                min_iteration=1,
                traverse=False,
@@ -282,7 +282,7 @@ def elastic_constants(directory="elastic_constants",
                       force_tolerance=1e-3,
                       pressure_target=0,
                       stress_tolerance=10,
-                      max_increase=1.5,
+                      max_increase=None,
                       max_iteration=4,
                       min_iteration=1,
                       is_cell_relaxed=False,
@@ -333,7 +333,7 @@ def mode_gruneisen(directory="mode_gruneisen",
                    force_tolerance=1e-3,
                    pressure_target=0,
                    stress_tolerance=10,
-                   max_increase=1.5,
+                   max_increase=None,
                    max_iteration=3,
                    min_iteration=1,
                    is_cell_relaxed=False,
@@ -390,7 +390,7 @@ def quasiharmonic_phonon(directory="quasiharmonic_phonon",
                          force_tolerance=1e-3,
                          pressure_target=0,
                          stress_tolerance=10,
-                         max_increase=1.5,
+                         max_increase=None,
                          max_iteration=3,
                          min_iteration=1,
                          is_cell_relaxed=False,
@@ -442,7 +442,7 @@ def phonon_relax_element(directory="phonon_relax_element",
                          force_tolerance=1e-3,
                          pressure_target=0,
                          stress_tolerance=10,
-                         max_increase=1.5,
+                         max_increase=None,
                          max_iteration=4,
                          min_iteration=1,
                          symmetry_tolerance=0.1,
@@ -495,7 +495,7 @@ def phonon_relax(directory="phonon_relax",
                  force_tolerance=1e-3,
                  pressure_target=0,
                  stress_tolerance=10,
-                 max_increase=1.5,
+                 max_increase=None,
                  max_iteration=4,
                  min_iteration=1,
                  symmetry_tolerance=0.1,
@@ -782,7 +782,7 @@ class StructureOptimizationElement(TaskVasp,
                  force_tolerance=1e-3,
                  pressure_target=0,
                  stress_tolerance=0.1, # GPa=kbar / 10
-                 max_increase=1.5,
+                 max_increase=None,
                  traverse=False):
 
         StructureOptimizationElementBase.__init__(
@@ -807,17 +807,17 @@ class StructureOptimizationElement(TaskVasp,
 
         self._current_cell: Final crystal structure of each relaxation steps.
         self._status: "next", "done", or "terminate" is stored.
-        self._log: Terminate log is stored.
+        self._log: Logs
 
         """
         self._log = ""
-        self._status = "terminate"
 
         if os.path.exists("POSCAR"):
             self._current_cell = read_poscar("POSCAR")
     
         if not os.path.exists("vasprun.xml"):
             self._log += "vasprun.xml not exists.\n"
+            self._status = "terminate"
         else:
             vxml = VasprunxmlExpat("vasprun.xml")
             is_success = vxml.parse()
@@ -852,6 +852,7 @@ class StructureOptimizationElement(TaskVasp,
             else:
                 self._log += "Failed to parse vasprun.xml.\n"
                 self._current_cell = None
+                self._status = "terminate"
 
     def _judge(self, lattice_last, points):
         lattice_init = self._current_cell.get_lattice()
@@ -878,28 +879,32 @@ class StructureOptimizationElement(TaskVasp,
         else:
             self._current_cell = cell
 
-        vol_last = np.linalg.det(lattice_last)
-        vol_init = np.linalg.det(lattice_init)
-        if vol_last > self._max_increase * vol_init:
-            self._log += "Too large volume expansion.\n"
-        else:
-            if self._lattice_tolerance is not None:
-                if (abs(d_vecs2_ratio) > self._lattice_tolerance ** 2).any():
-                    self._log += "Lattice is not enough relaxed.\n"
-                    self._status = "next"
-
-            if self._stress_tolerance is not None:
-                if (abs(self._stress - np.eye(3) * self._pressure_target)
-                    > self._stress_tolerance).any():
-                    self._log += "Stress is not enough relaxed.\n"
-                    self._status = "next"
-
-            if (abs(self._forces) > self._force_tolerance).any():
-                self._log += "Forces are not enough relaxed.\n"
+        # Non termination conditions
+        if self._lattice_tolerance is not None:
+            if (abs(d_vecs2_ratio) > self._lattice_tolerance ** 2).any():
+                self._log += "Lattice is not enough relaxed.\n"
                 self._status = "next"
 
-            if not self._status == "next":
-                self._status = "done"
+        if self._stress_tolerance is not None:
+            if (abs(self._stress - np.eye(3) * self._pressure_target)
+                > self._stress_tolerance).any():
+                self._log += "Stress is not enough relaxed.\n"
+                self._status = "next"
+
+        if (abs(self._forces) > self._force_tolerance).any():
+            self._log += "Forces are not enough relaxed.\n"
+            self._status = "next"
+
+        if not self._status == "next":
+            self._status = "done"
+
+        # Termination condition
+        vol_last = np.linalg.det(lattice_last)
+        vol_init = np.linalg.det(lattice_init)
+        if self._max_increase is not None:
+            if vol_last > self._max_increase * vol_init:
+                self._log += "Too large volume expansion.\n"
+                self._status = "terminate"
 
 
 class StructureOptimization(TaskVasp, StructureOptimizationBase):
@@ -910,7 +915,7 @@ class StructureOptimization(TaskVasp, StructureOptimizationBase):
                  force_tolerance=1e-3,
                  pressure_target=0,
                  stress_tolerance=0.1, # GPa=kbar / 10
-                 max_increase=1.5,
+                 max_increase=None,
                  max_iteration=5,
                  min_iteration=1,
                  find_symmetry=True,
@@ -973,7 +978,7 @@ class BulkModulus(TaskVasp, BulkModulusBase):
                  force_tolerance=1e-3,
                  pressure_target=0,
                  stress_tolerance=10,
-                 max_increase=1.5,
+                 max_increase=None,
                  max_iteration=3,
                  min_iteration=1,
                  is_cell_relaxed=False,
@@ -1105,7 +1110,7 @@ class Phonon(TaskVasp, TaskVaspPhonon, PhononBase):
                  force_tolerance=1e-3,
                  pressure_target=0,
                  stress_tolerance=10,
-                 max_increase=1.5,
+                 max_increase=None,
                  max_iteration=3,
                  min_iteration=1,
                  is_cell_relaxed=False,
@@ -1146,7 +1151,7 @@ class PhononFC3(TaskVasp, TaskVaspPhonon, PhononFC3Base):
                  force_tolerance=1e-3,
                  pressure_target=0,
                  stress_tolerance=10,
-                 max_increase=1.5,
+                 max_increase=None,
                  max_iteration=3,
                  min_iteration=1,
                  is_cell_relaxed=False,
@@ -1183,7 +1188,7 @@ class ElasticConstants(TaskVasp, ElasticConstantsBase):
                  force_tolerance=1e-3,
                  pressure_target=0,
                  stress_tolerance=10,
-                 max_increase=1.5,
+                 max_increase=None,
                  max_iteration=4,
                  min_iteration=1,
                  is_cell_relaxed=False,
@@ -1281,7 +1286,7 @@ class ModeGruneisen(TaskVasp, ModeGruneisenBase):
                  force_tolerance=1e-3,
                  pressure_target=0,
                  stress_tolerance=10,
-                 max_increase=1.5,
+                 max_increase=None,
                  max_iteration=3,
                  min_iteration=1,
                  is_cell_relaxed=False,
@@ -1418,7 +1423,7 @@ class QuasiHarmonicPhonon(TaskVasp, QuasiHarmonicPhononBase):
                  force_tolerance=1e-3,
                  pressure_target=0,
                  stress_tolerance=10,
-                 max_increase=1.5,
+                 max_increase=None,
                  max_iteration=3,
                  min_iteration=1,
                  is_cell_relaxed=False,
@@ -1534,7 +1539,7 @@ class PhononRelax(TaskVasp, PhononRelaxBase):
                  force_tolerance=1e-5,
                  pressure_target=0,
                  stress_tolerance=1,
-                 max_increase=1.5,
+                 max_increase=None,
                  max_iteration=10,
                  min_iteration=5,
                  symmetry_tolerance=0.1,
@@ -1643,7 +1648,7 @@ class PhononRelaxElement(TaskVasp, PhononRelaxElementBase):
                  force_tolerance=1e-5,
                  pressure_target=0,
                  stress_tolerance=1,
-                 max_increase=1.5,
+                 max_increase=None,
                  max_iteration=10,
                  min_iteration=5,
                  symmetry_tolerance=0.1,
