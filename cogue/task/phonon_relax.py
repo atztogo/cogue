@@ -302,6 +302,8 @@ class PhononRelaxElementBase(TaskElement):
         #  Number of degeneracy)
         self._imaginary_modes = []
 
+        self._already_repeated_by_max_iteration = False
+
     def get_imaginary_modes(self):
         return self._imaginary_modes
 
@@ -401,6 +403,14 @@ class PhononRelaxElementBase(TaskElement):
             if self._status == "next":
                 self._analyze_phonon()
                 self._status = "done"
+            elif self._status == "max_iteration":
+                if not self._already_repeated_by_max_iteration:
+                    for task in self._tasks:
+                        if task.get_status() == "max_iteration":
+                            self.cell = task.get_cell()
+                            self.begin()
+                            self._already_repeated_by_max_iteration = True
+                            return self._tasks
 
         self._comment = self._space_group_type
         self._write_yaml()
