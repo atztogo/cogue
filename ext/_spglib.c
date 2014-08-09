@@ -62,7 +62,7 @@ static PyObject * get_dataset(PyObject *self, PyObject *args)
   const double *p_lattice = (double(*))lattice_vectors->data;
   const double *p_positions = (double(*))atomic_positions->data;
   const int num_atom = atom_types->dimensions[0];
-  const int types_int = (int*)atom_types->data;
+  const int *types_int = (int*)atom_types->data;
   positions = (double(*)[3]) malloc(sizeof(double[3]) * num_atom);
   types = (int*) malloc(sizeof(int) * num_atom);
   set_spglib_cell(lattice, positions, types, num_atom,
