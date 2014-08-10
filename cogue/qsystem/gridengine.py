@@ -22,7 +22,6 @@ __all__ = ['queue', 'job']
 
 import subprocess
 import shlex
-import spur
 import os
 import shutil
 import tarfile
@@ -141,6 +140,12 @@ class LocalQueue(QueueBase,Qstat):
     def __init__(self,
                  max_jobs=None,
                  qsub_command="qsub"):
+        try:
+            import spur
+        except ImportError:
+            print "You need to install spur."
+            exit(1)
+        
         QueueBase.__init__(self, max_jobs=max_jobs)
         self._qsub_command = qsub_command
         self._shell = spur.LocalShell()
