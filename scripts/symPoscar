@@ -106,7 +106,7 @@ if options.is_bravais:
         write_to_file(brv_cell, options.output_filename)
     else:
         print "--------"
-        vasp_io.write_poscar(brv_cell)
+        print vasp_io.write_poscar(brv_cell)
 elif options.is_primitive:
     prim_cell = symmetry.get_primitive_cell(cell, tolerance)
     if options.output_filename:
@@ -118,7 +118,7 @@ elif options.is_primitive:
         for v in tmat:
             print "%6.3f %6.3f %6.3f" % tuple(v)
         print "--------------------"
-        vasp_io.write_poscar(prim_cell)
+        print vasp_io.write_poscar(prim_cell)
 
 if options.orbits is not None:
     site_sym = []

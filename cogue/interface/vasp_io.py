@@ -4,6 +4,7 @@ import numpy as np
 import xml.parsers.expat
 from cogue.crystal.atom import atomic_symbols
 from cogue.crystal.cell import Cell
+import StringIO
 
 try:
     from lxml import etree
@@ -72,12 +73,11 @@ def parse_poscar(lines):
 def read_poscar(filename="POSCAR"):
     return parse_poscar(open(filename).readlines())
 
-
 def write_poscar(cell, filename=None):
-    if filename:
-        w = open(filename, 'w')
+    if filename is None:
+        w = StringIO.StringIO()
     else:
-        w = sys.stdout
+        w = open(filename, 'w')
     
     symbols = cell.get_symbols()
     symbols_compressed = []
@@ -112,8 +112,12 @@ def write_poscar(cell, filename=None):
                     if not v16[i] < 1:
                         v16[i] -= 1
                 w.write(" %20.16f%20.16f%20.16f\n" % tuple(v16))
-
-    if filename:
+    
+    if filename is None:
+        poscar_string = w.getvalue()
+        w.close()
+        return poscar_string
+    else:
         w.close()
 
 def write_potcar(names, filename="POTCAR"):
