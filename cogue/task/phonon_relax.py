@@ -170,6 +170,9 @@ class PhononRelaxBase(TaskElement):
                 print "It is something wrong happening in PhononRelaxBase."
         else:
             if self._status == "next":
+                self._log += "# phonon_relax: task ID %d\n" % self._tid
+                self._log += write_poscar(self._cell)
+                self._log += "#\n"
                 self._status = "done"
                 
         self._write_yaml()
