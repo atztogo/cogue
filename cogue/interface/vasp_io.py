@@ -163,6 +163,7 @@ class Incar:
                  isif=None,
                  ismear=None,
                  ispin=None,
+                 ivdw=None,
                  lcharg=None,
                  lepsilon=None,
                  lreal=None,
@@ -191,6 +192,7 @@ class Incar:
             'isif'    : "ISIF",
             'ismear'  : "ISMEAR",
             'ispin'   : "ISPIN",
+            'ivdw'    : "IVDW",
             'lcharg'  : "LCHARG",
             'lepsilon': "LEPSILON",
             'lreal'   : "LREAL",
@@ -219,6 +221,7 @@ class Incar:
             'isif'    : isif,
             'ismear'  : ismear,
             'ispin'   : ispin,
+            'ivdw'    : ivdw,
             'lcharg'  : lcharg,
             'lepsilon': lepsilon,
             'lreal'   : lreal,
@@ -236,6 +239,7 @@ class Incar:
 
         self._tagorder = ['prec',
                           'gga',
+                          'ivdw',
                           'luse_vdw',
                           'aggac',
                           'ibrion',
@@ -342,6 +346,12 @@ class Incar:
 
     def get_ispin(self):
         return self._tagvals['ispin']
+
+    def set_ivdw(self, x):
+        self._tagvals['ivdw'] = x
+
+    def get_ivdw(self):
+        return self._tagvals['ivdw']
 
     def set_lcharg(self, x):
         self._tagvals['lcharg'] = x
