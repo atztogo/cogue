@@ -21,7 +21,8 @@ def get_parser():
     from optparse import OptionParser
     parser = OptionParser()
     parser.set_defaults(path=True,
-                        simplify=False)
+                        simplify=False,
+                        energy=False)
     parser.add_option("--path",
                       dest="path",
                       action="store_true",
@@ -30,6 +31,10 @@ def get_parser():
                       dest="simplify",
                       action="store_true",
                       help="Remove redundant information from dot file")
+    parser.add_option("--energy",
+                      dest="energy",
+                      action="store_true",
+                      help="Show energy/atom")
     return parser
 
 ###### simplify_dot ######
@@ -86,8 +91,8 @@ def collect_labels(tpath, lines):
     labels = []
     for tid in tpath:
         line = search_line(tid, lines)
-        m = re.search('label=\".+\"', line)
-        labels.append(m.group(0))
+        m = re.search('label=\"(.+)\"', line)
+        labels.append(m.group(1))
     return labels
 
 def get_path_string(labels):
@@ -97,10 +102,29 @@ def get_path_string(labels):
         path += '/'
     return path
 
+##### Collect energy #####
+def get_enrergy(tid, lines):
+    energy_str = collect_labels([tid], lines)[0].split('\\n')[3]
+    energy = float(energy_str.split('/')[0])
+    num_atom = int(energy_str.split('/')[1])
+    return energy, num_atom
+
 
 options, args = get_parser().parse_args()
 
-if options.path and not options.simplify:
+if options.simplify:
+    with open(args[0]) as f:
+        lines = f.readlines()
+        simplified_lines = simplify_dot(lines)
+        for line in simplified_lines:
+            print line,
+elif options.energy:
+    with open(args[0]) as f:
+        lines = f.readlines()
+        tid = int(args[1])
+        energy, num_atom = get_enrergy(tid, lines)
+        print energy / num_atom, num_atom
+elif options.path:
     with open(args[0]) as f:
         lines = f.readlines()
         tid = int(args[1])
@@ -110,11 +134,4 @@ if options.path and not options.simplify:
         first_directory = path_string.split('/')[0]
         print (first_directory + "/" + path_string +
                "phonon_relax_element/phonon-1/POSCAR-unitcell")
-
-if options.simplify:
-    with open(args[0]) as f:
-        lines = f.readlines()
-        simplified_lines = simplify_dot(lines)
-        for line in simplified_lines:
-            print line,
     

@@ -123,12 +123,12 @@ def write_cells(write_func, cells,
                 print "-" * len(input_filenames[i])
                 print input_filenames[i]
                 print "-" * len(input_filenames[i])
-                write_func(cell)
+                print write_func(cell)
         else:
             if output_filename:
                 write_func(cell, output_filename)
             else:
-                write_func(cell)
+                print write_func(cell),
 
 def _get_matrix(mat):
     if len(mat) == 3:

@@ -39,12 +39,12 @@ _atom_site_occupancy\n""" % (a, b, c, alpha, beta, gamma, cell.get_volume())
         symbols.append(s)
         cif += "%-7s%2s %10.5f%10.5f%10.5f   1.00000\n" % (s + "%d" % symbols.count(s), s, p[0], p[1], p[2])
         
-    if filename:
+    if filename is None:
+        return cif
+    else:
         w = open(filename, 'w')
         w.write(cif)
         w.close()
-    else:
-        print cif,
 
 def read_cif(str_cif):
     """

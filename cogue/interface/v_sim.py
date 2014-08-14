@@ -20,4 +20,4 @@ def write_v_sim(cell, filename=None):
         w.write(text)
         w.close()
     else:
-        print text,
+        return text
