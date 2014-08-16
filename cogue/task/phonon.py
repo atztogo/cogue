@@ -92,7 +92,7 @@ class PhononBase(TaskElement):
             task = self._tasks[0]
             if task.done():
                 self._space_group = task.get_space_group()
-                status = self._tasks[0].get_status()
+                status = task.get_status()
                 if status == "done":
                     if not self._evaluate_stop_condition():
                         self._status = "next"

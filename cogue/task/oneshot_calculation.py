@@ -46,8 +46,6 @@ class OneShotCalculation(TaskElement):
         return (self._status == "terminate" or
                 self._status == "done")
 
-
-
 class ElectronicStructureBase(OneShotCalculation):
     def __init__(self,
                  directory="electronic_structure",

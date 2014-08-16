@@ -162,6 +162,7 @@ class Incar:
                  gga=None,
                  ialgo=None,
                  ibrion=None,
+                 icharg=None,
                  isif=None,
                  ismear=None,
                  ispin=None,
@@ -191,6 +192,7 @@ class Incar:
             'gga'     : "GGA",
             'ialgo'   : "IALGO",
             'ibrion'  : "IBRION",
+            'icharg'  : "ICHARG",
             'isif'    : "ISIF",
             'ismear'  : "ISMEAR",
             'ispin'   : "ISPIN",
@@ -220,6 +222,7 @@ class Incar:
             'gga'     : gga,
             'ialgo'   : ialgo,
             'ibrion'  : ibrion,
+            'icharg'  : icharg,
             'isif'    : isif,
             'ismear'  : ismear,
             'ispin'   : ispin,
@@ -253,6 +256,7 @@ class Incar:
                           'encut',
                           'ediff',
                           'ediffg',
+                          'icharg',
                           'ispin',
                           'magmom',
                           'ismear',
@@ -330,6 +334,12 @@ class Incar:
 
     def get_ibrion(self):
         return self._tagvals['ibrion']
+
+    def set_icharg(self, x):
+        self._tagvals['icharg'] = x
+
+    def get_icharg(self):
+        return self._tagvals['icharg']
 
     def set_isif(self, x):
         self._tagvals['isif'] = x
@@ -505,7 +515,8 @@ def write_kpoints(filename="KPOINTS",
                   mesh=None,
                   shift=None,
                   gamma=False,
-                  length=None):
+                  length=None,
+                  kpoint=None):
 
     w = open(filename, 'w')
     if length:
@@ -513,6 +524,11 @@ def write_kpoints(filename="KPOINTS",
         w.write("0\n")
         w.write("Auto\n")
         w.write("%4d\n" % length)
+    elif kpoint is not None:
+        w.write("Explicit k-point\n")
+        w.write("1\n")
+        w.write("Reciprocal\n")
+        w.write("%10.7f %10.7f %10.7f  1\n" % tuple(kpoint))
     elif not mesh == None:
         w.write("Automatic mesh\n")
         w.write("0\n")

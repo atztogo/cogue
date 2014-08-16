@@ -1,18 +1,20 @@
+import numpy as np
 from cogue.task import TaskElement
 
-class BulkModulusBase(TaskElement):
-    """BulkModulus class
+class BandStructureBase(TaskElement):
+    """BandStructure class
 
     Three stages:
     1. structure optimization of input cell
-    2. create cells with +1% and -1% volume and optimize them
-    3. calculate bulk modulus from stress of two cells
+    2. calculate charge density
+    3. calculate eigenvalues at k-points
     
     """
     
     def __init__(self,
                  directory=None,
                  name=None,
+                 paths=None,
                  lattice_tolerance=None,
                  force_tolerance=None,
                  pressure_target=None,
@@ -30,7 +32,8 @@ class BulkModulusBase(TaskElement):
             self._name = directory
         else:
             self._name = name
-        self._task_type = "bulk_modulus"
+        self._task_type = "band_structure"
+        self._paths = paths
         self._lattice_tolerance = lattice_tolerance
         self._pressure_target = pressure_target
         self._stress_tolerance = stress_tolerance
@@ -45,17 +48,17 @@ class BulkModulusBase(TaskElement):
         self._tasks = None
 
         self._cell = None
-        self._bulk_modulus = None
-        self._bm_tasks = None
+        self._band_structure = None
+        self._bs_tasks = None
 
-    def get_bulk_modulus(self):
-        return self._bulk_modulus
+    def get_band_structure(self):
+        return self._band_structure
 
     def set_status(self):
         done = True
         terminate = False
 
-        if self._stage == 0:
+        if self._stage == 0 or self._stage == 1:
             task = self._tasks[0]
             if task.done():
                 status = task.get_status()
@@ -73,19 +76,19 @@ class BulkModulusBase(TaskElement):
                     self._status = "terminate"
                 else:
                     self._status = "next"
-        
+
     def begin(self):
         if not self._job:
             print "set_job has to be executed."
             raise
 
         if self._is_cell_relaxed:
-            self._bm_tasks = [None]
-            self._prepare_next(self._cell)
+            self._bs_tasks = [None]
+            self._set_stage1(self._cell)
         else:
             self._status = "equilibrium"
-            self._bm_tasks = [self._get_equilibrium_task()]
-            self._tasks = [self._bm_tasks[0]]
+            self._bs_tasks = [self._get_equilibrium_task()]
+            self._tasks = [self._bs_tasks[0]]
 
     def done(self):
         return (self._status == "done" or
@@ -96,45 +99,56 @@ class BulkModulusBase(TaskElement):
     def next(self):    
         if self._stage == 0:
             if self._status == "next":
-                self._prepare_next(self._bm_tasks[0].get_cell())
+                self._set_stage1()
+                return self._tasks
+        elif self._stage == 1:
+            if self._status == "next":
+                self._set_stage2()
                 return self._tasks
         else:
             if self._status == "next":
-                stress_p = self._bm_tasks[1].get_stress()
-                stress_m = self._bm_tasks[2].get_stress()
-
-                if (stress_p == None or stress_m == None):
-                    self._status = "terminate"
-                else:
-                    self._calculate_bulk_modulus()
-                    self._status = "done"
+                self._create_band_structure()
+                self._status = "done"
 
         self._write_yaml()
         raise StopIteration
 
-    def _calculate_bulk_modulus(self):
-        if self._is_cell_relaxed:
-            V = self._cell.get_volume()
-        else:
-            V = self._bm_tasks[0].get_cell().get_volume()
-        V_p = self._bm_tasks[1].get_cell().get_volume()
-        V_m = self._bm_tasks[2].get_cell().get_volume()
-        s_p = self._bm_tasks[1].get_stress()
-        s_m = self._bm_tasks[2].get_stress()
-
-        self._bulk_modulus = - (s_p - s_m).trace() / 3 * V / (V_p - V_m)
+    def _create_band_structure(self):
+        eigvals = []
+        count = 0
+        for kpoints in self._paths:
+            eigs_path = []
+            for kpt in kpoints:
+                task = self._tasks[count]
+                eigs_path.append(task.get_properties()['eigenvalues'][0][0])
+                count += 1
+            eigvals.append(eigs_path)
+            
+        from cogue.electron.band_structure import BandStructure as BS
+        cell = self._bs_tasks[0].get_cell()
+        bs = BS(self._paths, cell, eigvals)
+        bs.write_yaml()
         
-    def _prepare_next(self, cell):
+        
+    def _set_stage1(self):
+        cell = self._bs_tasks[0].get_cell()
         self._stage = 1
-        self._status = "plus minus"
-        plus, minus = self._get_plus_minus_tasks(cell)
-        self._bm_tasks.append(plus)
-        self._bm_tasks.append(minus)
-        self._tasks = self._bm_tasks[1:]
+        self._status = "charge density"
+        task = self._get_charge_density_task(cell)
+        self._bs_tasks.append(task)
+        self._tasks = [task]
 
+    def _set_stage2(self):
+        cell = self._bs_tasks[0].get_cell()
+        self._stage = 2
+        self._status = "kpoint paths"
+        tasks = self._get_band_point_tasks(cell)
+        self._bs_tasks += tasks
+        self._tasks = tasks
+        
     def _write_yaml(self):
         w = open("%s.yaml" % self._directory, 'w')
-        if self._bm_tasks[0]:
+        if self._bs_tasks[0]:
             if self._lattice_tolerance is not None:
                 w.write("lattice_tolerance: %f\n" % self._lattice_tolerance)
             if self._stress_tolerance is not None:
@@ -147,12 +161,12 @@ class BulkModulusBase(TaskElement):
                 w.write("max_increase: %f\n" % self._max_increase)
             w.write("max_iteration: %d\n" % self._max_iteration)
             w.write("min_iteration: %d\n" % self._min_iteration)
-            w.write("iteration: %d\n" % self._bm_tasks[0].get_stage())
+            w.write("iteration: %d\n" % self._bs_tasks[0].get_stage())
         w.write("status: %s\n" % self._status)
         if self._is_cell_relaxed:
             cell = self._cell
         else:
-            cell = self._bm_tasks[0].get_cell()
+            cell = self._bs_tasks[0].get_cell()
 
         if cell:
             lattice = cell.get_lattice().T
@@ -172,7 +186,4 @@ class BulkModulusBase(TaskElement):
             w.write("symbols:\n")
             for i, v in enumerate(symbols):
                 w.write("- %2s # %d\n" % (v, i + 1))
-
-        if self._bulk_modulus:
-            w.write("bulk_modulus: %f\n" % self._bulk_modulus)
         w.close()

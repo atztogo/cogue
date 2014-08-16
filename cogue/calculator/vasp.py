@@ -1,9 +1,11 @@
 __all__ = ['incar', 'electronic_structure', 'structure_optimization',
            'bulk_modulus', 'phonon', 'elastic_constants',
-           'mode_gruneisen', 'quasiharmonic_phonon', 'phonon_relax']
+           'mode_gruneisen', 'quasiharmonic_phonon', 'phonon_relax',
+           'band_structure']
 
 import os
 import numpy as np
+import shutil
 from cogue.crystal.cell import Cell
 from cogue.crystal.converter import atoms2cell
 from cogue.task.oneshot_calculation import *
@@ -15,6 +17,7 @@ from cogue.task.phonon_fc3 import *
 from cogue.task.phonon_relax import *
 from cogue.task.elastic_constants import *
 from cogue.task.quasiharmonic_phonon import *
+from cogue.task.band_structure import *
 from cogue.interface.vasp_io import *
 
 def incar(addgrid=None,
@@ -171,6 +174,50 @@ def bulk_modulus(directory="bulk_modulus",
 
     return bk
 
+def band_structure(directory="band_structure",
+                   name=None,
+                   job=None,
+                   paths=None,
+                   lattice_tolerance=0.1,
+                   force_tolerance=1e-3,
+                   pressure_target=0,
+                   stress_tolerance=10,
+                   max_increase=None,
+                   max_iteration=4,
+                   min_iteration=1,
+                   is_cell_relaxed=False,
+                   traverse=False,
+                   cell=None,
+                   pseudo_potential_map=None,
+                   k_mesh=None,
+                   k_shift=None,
+                   k_gamma=None,
+                   k_length=None,
+                   incar=None):
+
+    bs = BandStructure(directory=directory,
+                       name=name,
+                       paths=paths,
+                       lattice_tolerance=lattice_tolerance,
+                       force_tolerance=force_tolerance,
+                       pressure_target=pressure_target,
+                       stress_tolerance=stress_tolerance,
+                       max_increase=max_increase,
+                       max_iteration=max_iteration,
+                       min_iteration=min_iteration,
+                       is_cell_relaxed=is_cell_relaxed,
+                       traverse=traverse)
+
+    bs.set_configurations(cell=cell,
+                          pseudo_potential_map=pseudo_potential_map,
+                          k_mesh=k_mesh,
+                          k_shift=k_shift,
+                          k_gamma=k_gamma,
+                          k_length=k_length,
+                          incar=incar)
+    bs.set_job(job)
+
+    return bs
 
 def phonon(directory="phonon",
            name=None,
@@ -563,6 +610,7 @@ class TaskVasp:
                            k_shift=None,
                            k_gamma=False,
                            k_length=None,
+                           kpoint=None,
                            incar=None):
 
         if not cell:
@@ -601,10 +649,20 @@ class TaskVasp:
         else:
             self._k_length = k_length
 
+        if isinstance(kpoint, np.ndarray):
+            self._kpoint = list(kpoint)
+        elif isinstance(kpoint, tuple):
+            self._kpiont = list(kpoint)
+        else:
+            self._kpoint = kpoint
+            
         if isinstance(incar, tuple):
             self._incar = list(incar)
         else:
             self._incar = incar
+
+    def set_copy_files(self, copy_files):
+        self._copy_files = copy_files
 
     def _prepare(self):
         """
@@ -632,8 +690,12 @@ class TaskVasp:
             
         write_kpoints(mesh=k_mesh,
                       shift=k_shift,
-                      gamma=k_gamma)
+                      gamma=k_gamma,
+                      kpoint=self._kpoint)
         self._incar.write()
+
+        for (fsrc, fdst) in self._copy_files:
+            shutil.copy(fsrc, fdst)            
 
     def _choose_configuration(self, index=0):
         # incar
@@ -670,13 +732,23 @@ class TaskVasp:
         else:
             k_length = self._k_length
 
+        # kpoint
+        kpoint = self._kpoint
+        if self._kpoint:
+            if np.array(self._kpoint).ndim == 2:
+                kpoint = self._kpoint[index]
+            
         # job
         if isinstance(self._job, list):
             job = self._job[index]
         else:
             job = self._job
 
-        return job, incar, k_mesh, k_shift, k_gamma, k_length
+        return job, incar, {'mesh': k_mesh,
+                            'shift': k_shift,
+                            'gamma': k_gamma,
+                            'length': k_length,
+                            'kpoint': kpoint}
 
     def _get_equilibrium_task(self,
                               index=0,
@@ -686,8 +758,11 @@ class TaskVasp:
                               directory="equilibrium"):
         if not cell:
             cell = self._cell
-        job, incar, k_mesh, k_shift, k_gamma, k_length = \
-            self._choose_configuration(index=index)
+        job, incar, kpoints = self._choose_configuration(index=index)
+        k_mesh = kpoints['mesh']
+        k_shift = kpoints['shift']
+        k_gamma = kpoints['gamma']
+        k_length = kpoints['length']
 
         if symmetry_tolerance:
             task = StructureOptimization(
@@ -744,6 +819,7 @@ class ElectronicStructure(TaskVasp, ElectronicStructureBase):
         self._k_shift = None
         self._k_gamma = None
         self._incar = None
+        self._copy_files = []
         
     def _collect(self):
         """Collect information from output files of VASP.
@@ -801,6 +877,7 @@ class StructureOptimizationElement(TaskVasp,
         self._k_shift = None
         self._k_gamma = None
         self._incar = None
+        self._copy_files = []
 
     def _collect(self):
         """Collect information from output files of VASP.
@@ -1012,8 +1089,11 @@ class BulkModulus(TaskVasp, BulkModulusBase):
         return plus, minus
 
     def _get_bm_task(self, cell, directory):
-        job, incar, k_mesh, k_shift, k_gamma, k_length = \
-            self._choose_configuration(index=1)
+        job, incar, kpoints = self._choose_configuration(index=1)
+        k_mesh = kpoints['mesh']
+        k_shift = kpoints['shift']
+        k_gamma = kpoints['gamma']
+        k_length = kpoints['length']
         incar.set_isif(4)
 
         task=StructureOptimization(
@@ -1039,6 +1119,93 @@ class BulkModulus(TaskVasp, BulkModulusBase):
                               (job.get_jobname(), directory)))
         return task
 
+class BandStructure(TaskVasp, BandStructureBase):
+    """Task to calculate band structure by VASP."""
+    
+    def __init__(self,
+                 directory="band_structure",
+                 name=None,
+                 paths=None,
+                 lattice_tolerance=0.1,
+                 force_tolerance=1e-3,
+                 pressure_target=0,
+                 stress_tolerance=10,
+                 max_increase=None,
+                 max_iteration=3,
+                 min_iteration=1,
+                 is_cell_relaxed=False,
+                 traverse=False):
+
+        BandStructureBase.__init__(
+            self,
+            directory=directory,
+            name=name,
+            paths=paths,
+            lattice_tolerance=lattice_tolerance,
+            force_tolerance=force_tolerance,
+            pressure_target=pressure_target,
+            stress_tolerance=stress_tolerance,
+            max_increase=max_increase,
+            max_iteration=max_iteration,
+            min_iteration=min_iteration,
+            is_cell_relaxed=is_cell_relaxed,
+            traverse=traverse)
+
+    def _get_charge_density_task(self, cell):
+        directory = "charge_density"
+        
+        job, incar, kpoints = self._choose_configuration(index=1)
+        k_mesh = kpoints['mesh']
+        k_shift = kpoints['shift']
+        k_gamma = kpoints['gamma']
+        k_length = kpoints['length']
+        incar.set_lcharg(True)
+        incar.set_ibrion(-1)
+        incar.set_nsw(0)
+        incar.set_isif(None)
+        incar.set_ediffg(None)
+
+        task = ElectronicStructure(directory=directory,
+                                   traverse=self._traverse)
+        task.set_configurations(
+            cell=cell,
+            pseudo_potential_map=self._pseudo_potential_map,
+            k_mesh=k_mesh,
+            k_shift=k_shift,
+            k_gamma=k_gamma,
+            k_length=k_length,
+            incar=incar)
+        task.set_job(job.copy("%s-%s" % (job.get_jobname(), directory)))
+
+        return task
+
+    def _get_band_point_tasks(self, cell):
+        directory = "path"
+        tasks = []
+        all_kpoints = []
+        for kpoints in self._paths:
+            all_kpoints += list(kpoints)
+        for i, kpoint in enumerate(all_kpoints):
+            job, incar, kpoints = self._choose_configuration(index=1)
+            incar.set_icharg(11)
+            incar.set_ibrion(-1)
+            incar.set_nsw(0)
+            incar.set_isif(None)
+            incar.set_ediffg(None)
+            task = ElectronicStructure(directory=directory + "%d" % i,
+                                       traverse=self._traverse)
+            task.set_configurations(
+                cell=cell,
+                pseudo_potential_map=self._pseudo_potential_map,
+                kpoint=kpoint,
+                incar=incar)
+            task.set_job(
+                job.copy("%s-%s%d" % (job.get_jobname(), directory, i)))
+            task.set_copy_files([("../charge_density/CHGCAR", "CHGCAR")])
+            tasks.append(task)
+
+        return tasks
+        
 class TaskVaspPhonon:
     def _get_vasp_displacement_tasks(self,
                                      phonon,
@@ -1065,8 +1232,11 @@ class TaskVaspPhonon:
         task = self._get_disp_task(atoms2cell(supercell), incar, "perfect")
     
     def _get_disp_task(self, cell, incar, disp_number, digit_number=3):
-        (job, incar, k_mesh,
-         k_shift, k_gamma, k_length) =  self._choose_configuration(index=1)
+        job, incar, kpoints = self._choose_configuration(index=1)
+        k_mesh = kpoints['mesh']
+        k_shift = kpoints['shift']
+        k_gamma = kpoints['gamma']
+        k_length = kpoints['length']
 
         directory = ("disp-%0" + "%d" % digit_number + "d") % disp_number
 
@@ -1209,8 +1379,11 @@ class ElasticConstants(TaskVasp, ElasticConstantsBase):
             traverse=traverse)
     
     def _get_ec_task(self, cell):
-        job, incar, k_mesh, k_shift, k_gamma, k_length = \
-            self._choose_configuration(index=1)
+        job, incar, kpoints = self._choose_configuration(index=1)
+        k_mesh = kpoints['mesh']
+        k_shift = kpoints['shift']
+        k_gamma = kpoints['gamma']
+        k_length = kpoints['length']
         incar.set_ibrion(6)
         incar.set_isif(3)
         incar.set_nsw(1)
@@ -1248,6 +1421,7 @@ class ElasticConstantsElement(TaskVasp, ElasticConstantsElementBase):
         self._k_shift = None
         self._k_gamma = None
         self._incar = None
+        self._copy_files = []
         
     def _collect(self):
         """Collect information from output files of VASP.
