@@ -636,6 +636,8 @@ class Vasprunxml:
     def get_epsilon(self):
         return self._epsilon
 
+    def get_efermi(self):
+        return self._efermi
 
     def parse_calculation(self):
         forces = []
@@ -685,6 +687,19 @@ class Vasprunxml:
         except:
             return False
 
+    def parse_efermi(self):
+        xml = etree.iterparse(self._filename, tag='dos')
+        try:
+            for event, element in xml:
+                for array in element.xpath('./i'):
+                    if array.attrib['name'] == 'efermi':
+                        efermi = float(array.text)
+                        
+            self._efermi = efermi
+            return True
+        except:
+            return False
+            
     def parse_eigenvalues(self):
         xml = etree.iterparse(self._filename, tag='eigenvalues')
         spin1 = []

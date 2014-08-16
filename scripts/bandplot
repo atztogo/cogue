@@ -69,7 +69,6 @@ def get_plot_data(data):
     return distances, eigenvalues, segment_positions
 
 
-
 # Parse options
 from optparse import OptionParser
 parser = OptionParser()
@@ -109,7 +108,6 @@ parser.add_option("-t", "--title", dest="title", action="store",
 if not options.is_gnuplot:
     import matplotlib.pyplot as plt
     if options.labels:
-        
         from matplotlib import rc
         rc('text', usetex=True)
 
@@ -119,14 +117,13 @@ if options.is_points:
 
 count = 0
 
-
 if len(args) == 0:
     filenames = ['band.yaml']
 else:
     filenames = args
 
 if options.is_gnuplot:
-    print "# distance  frequency (bands are separated by blank lines)"
+    print "# distance  eigenvalue (bands are separated by blank lines)"
 
 for i, filename in enumerate(filenames):
     string = open(filename).read()
@@ -146,12 +143,11 @@ for i, filename in enumerate(filenames):
     for j, eigvals in enumerate(np.array(eigenvalues).T):
         if options.is_gnuplot:
             for d, f in zip(distances, eigvals):
-                print d,f
+                print d, f
             print
         else:
             if j==0:
-                plt.plot(distances, eigvals, colors[i],
-                         label=filename)
+                plt.plot(distances, eigvals, colors[i], label=filename)
             else:
                 plt.plot(distances, eigvals, colors[i])
 

@@ -126,9 +126,11 @@ class BandStructureBase(TaskElement):
             
         from cogue.electron.band_structure import BandStructure as BS
         cell = self._bs_tasks[0].get_cell()
-        bs = BS(self._paths, cell, eigvals)
+        bs = BS(self._paths,
+                cell,
+                eigvals,
+                fermi_energy=self._bs_tasks[1].get_properties()['fermi-energy'])
         bs.write_yaml()
-        
         
     def _set_stage1(self):
         cell = self._bs_tasks[0].get_cell()
