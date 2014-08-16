@@ -1163,7 +1163,7 @@ class BandStructure(TaskVasp, BandStructureBase):
         k_length = kpoints['length']
         incar.set_lcharg(True)
         incar.set_ibrion(-1)
-        incar.set_nsw(0)
+        incar.set_nsw(None)
         incar.set_isif(None)
         incar.set_ediffg(None)
 
@@ -1191,7 +1191,7 @@ class BandStructure(TaskVasp, BandStructureBase):
             job, incar, kpoints = self._choose_configuration(index=1)
             incar.set_icharg(11)
             incar.set_ibrion(-1)
-            incar.set_nsw(0)
+            incar.set_nsw(None)
             incar.set_isif(None)
             incar.set_ediffg(None)
             task = ElectronicStructure(directory=directory + "%04d" % i,
