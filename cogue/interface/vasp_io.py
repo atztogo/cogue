@@ -593,6 +593,7 @@ class Vasprunxml:
         self._kpoint_weights = None
         self._born_charges = None
         self._epsilon = None
+        self._nbands = None
 
     def get_forces(self):
         return self._forces
@@ -639,6 +640,9 @@ class Vasprunxml:
     def get_efermi(self):
         return self._efermi
 
+    def get_nbands(self):
+        return self._nbands
+    
     def parse_calculation(self):
         forces = []
         stress = []
@@ -687,13 +691,26 @@ class Vasprunxml:
         except:
             return False
 
+    def parse_parameters(self):
+        xml = etree.iterparse(self._filename, tag='parameters')
+        try:
+            for event, element in xml:
+                for separator in element.xpath('./separator'):
+                    if separator.attrib['name'] == 'electronic':
+                        for i in separator.xpath('./i'):
+                            if i.attrib['name'] == 'NBANDS':
+                                self._nbands = int(i.text)
+            return True
+        except:
+            return False
+            
     def parse_efermi(self):
         xml = etree.iterparse(self._filename, tag='dos')
         try:
             for event, element in xml:
-                for array in element.xpath('./i'):
-                    if array.attrib['name'] == 'efermi':
-                        efermi = float(array.text)
+                for i in element.xpath('./i'):
+                    if i.attrib['name'] == 'efermi':
+                        efermi = float(i.text)
                         
             self._efermi = efermi
             return True

@@ -109,6 +109,21 @@ class BandStructureBase(TaskElement):
             if self._status == "next":
                 self._create_band_structure()
                 self._status = "done"
+            elif self._status == "terminate" and self._traverse == "restart":
+                self._traverse = False
+                kpoints_terminated = []
+                for i, task in enumerate(self._tasks):
+                    if task.get_status() == "terminate":
+                        kpoints_terminated.append(i)
+                cell = self._bs_tasks[0].get_cell()
+                properties = self._bs_tasks[1].get_properties()
+                tasks = self._get_band_point_tasks(cell, properties=properties)
+                self._tasks = []
+                for i in kpoints_terminated:
+                    self._tasks.append(tasks[i])
+                    self._bs_tasks[i + 2] = tasks[i]
+                self._status = "kpoint paths"
+                return self._tasks
 
         self._write_yaml()
         raise StopIteration
@@ -142,9 +157,10 @@ class BandStructureBase(TaskElement):
 
     def _set_stage2(self):
         cell = self._bs_tasks[0].get_cell()
+        properties = self._bs_tasks[1].get_properties()
         self._stage = 2
         self._status = "kpoint paths"
-        tasks = self._get_band_point_tasks(cell)
+        tasks = self._get_band_point_tasks(cell, properties=properties)
         self._bs_tasks += tasks
         self._tasks = tasks
         

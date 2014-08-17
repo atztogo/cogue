@@ -837,6 +837,7 @@ class ElectronicStructure(TaskVasp, ElectronicStructureBase):
             if vxml.parse_calculation():
                 vxml.parse_eigenvalues()
                 vxml.parse_efermi()
+                vxml.parse_parameters()
                 kpoints, weights = vxml.get_kpoints()
                 self._properties = {'stress': vxml.get_stress(),
                                     'forces': vxml.get_forces(),
@@ -845,7 +846,8 @@ class ElectronicStructure(TaskVasp, ElectronicStructureBase):
                                     'occupancies': vxml.get_occupancies(),
                                     'kpoints': kpoints,
                                     'kpoint-weights': weights,
-                                    'fermi-energy': vxml.get_efermi()}
+                                    'fermi-energy': vxml.get_efermi(),
+                                    'nbands': vxml.get_nbands()}
                 self._status = "done"
             else:
                 self._log += "Failed to parse vasprun.xml.\n"
@@ -1181,7 +1183,7 @@ class BandStructure(TaskVasp, BandStructureBase):
 
         return task
 
-    def _get_band_point_tasks(self, cell):
+    def _get_band_point_tasks(self, cell, properties=None):
         directory = "path"
         tasks = []
         all_kpoints = []
@@ -1194,6 +1196,9 @@ class BandStructure(TaskVasp, BandStructureBase):
             incar.set_nsw(None)
             incar.set_isif(None)
             incar.set_ediffg(None)
+            if properties:
+                if 'nbands' in properties:
+                    incar.set_nbands(2 * properties['nbands'])
             task = ElectronicStructure(directory=directory + "%04d" % i,
                                        traverse=self._traverse)
             task.set_configurations(
