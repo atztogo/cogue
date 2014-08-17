@@ -58,9 +58,10 @@ def get_plot_data(data):
     eigenvalues = []
     distances = []
     npoints = data['nkpoint'] / data['npath']
+    efermi = data['fermi-energy']
 
     for j, v in enumerate(data['path']):
-        eigenvalues.append([f['eigenvalue'] for f in v['band']])
+        eigenvalues.append([f['eigenvalue'] - efermi for f in v['band']])
         distances.append(v['distance'])
         
         if j % npoints == 0:
@@ -78,7 +79,8 @@ parser.set_defaults(e_max=None,
                     is_points=False,
                     is_vertial_line=False,
                     output_filename=None,
-                    labels=None,
+                    symbols=None,
+                    ylabel=None,
                     show_legend=False,
                     title=None)
 parser.add_option("--emax", dest="e_max", type="float",
@@ -96,8 +98,10 @@ parser.add_option("--line", "-l", dest="is_vertial_line",
 parser.add_option("-o", "--output", dest="output_filename",
                   action="store", type="string",
                   help="Output filename of PDF plot")
-parser.add_option("--labels", dest="labels", action="store", type="string",
-                  help="Show labels at band segments")
+parser.add_option("--symbols", dest="symbols", action="store", type="string",
+                  help="Show symbols at band segments")
+parser.add_option("--ylabel", dest="ylabel", action="store", type="string",
+                  help="")
 parser.add_option("--points", dest="is_points",
                   action="store_true",
                   help="Draw points")
@@ -107,7 +111,7 @@ parser.add_option("-t", "--title", dest="title", action="store",
 
 if not options.is_gnuplot:
     import matplotlib.pyplot as plt
-    if options.labels:
+    if options.symbols:
         from matplotlib import rc
         rc('text', usetex=True)
 
@@ -156,7 +160,10 @@ for i, filename in enumerate(filenames):
 
     
 if not options.is_gnuplot:
-    plt.ylabel('Eigenvalue')
+    if options.ylabel:
+        plt.ylabel(options.ylabel)
+    else:
+        plt.ylabel('Energy')
     plt.xlabel('Wave vector')
     plt.xlim(distances[0], distances[-1])
     if not options.e_max == None:
@@ -166,12 +173,12 @@ if not options.is_gnuplot:
     plt.axhline(y=0, linestyle=':', linewidth=0.5, color='b')
     if len(filenames) == 1:
         xticks = segment_positions + [distances[-1]]
-        if options.labels:
-            labels = [x for x in options.labels.split()]
-            if len(labels)==len(xticks):
-                plt.xticks(xticks, labels)
+        if options.symbols:
+            symbols = [x for x in options.symbols.split()]
+            if len(symbols)==len(xticks):
+                plt.xticks(xticks, symbols)
             else:
-                print "Numbers of labels and band segments don't match."
+                print "Numbers of symbols and band segments don't match."
                 sys.exit(1)
         else:
             plt.xticks(xticks, [''] * len(xticks))
