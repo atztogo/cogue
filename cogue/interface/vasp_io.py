@@ -2,15 +2,10 @@ import os
 import sys
 import numpy as np
 import xml.parsers.expat
+import xml.etree.cElementTree as etree
 from cogue.crystal.atom import atomic_symbols
 from cogue.crystal.cell import Cell
 import StringIO
-
-try:
-    from lxml import etree
-except ImportError:
-    print "python-lxml is required."
-    sys.exit(1)
 
 def parse_poscar(lines):
     isvasp5 = False
@@ -652,27 +647,29 @@ class Vasprunxml:
         born_charges = []
         epsilon = []
 
-        xml = etree.iterparse(self._filename, tag='calculation')
         try:
-            for event, element in xml:
+            for event, element in etree.iterparse(self._filename):
+
+                if element.tag != 'calculation':
+                    continue
     
-                for varray in element.xpath('./varray'):
+                for varray in element.findall('./varray'):
                     self._parse_forces_and_stress(varray, forces, stress)
         
-                for varray in element.xpath('./structure/varray'):
+                for varray in element.findall('./structure/varray'):
                     self._parse_points(varray, points)
                     
-                for varray in element.xpath('./structure/crystal/varray'):
+                for varray in element.findall('./structure/crystal/varray'):
                     self._parse_lattice(varray, lattice)
     
-                for energy in element.xpath('./energy'):
+                for energy in element.findall('./energy'):
                     self._parse_energies(energy, energies)
 
-                for array in element.xpath('./array'):
+                for array in element.findall('./array'):
                     if array.attrib['name'] == 'born_charges':
                         self._parse_born_charges(array, born_charges)
 
-                for varray in element.xpath('./varray'):
+                for varray in element.findall('./varray'):
                     if varray.attrib['name'] == 'epsilon':
                         self._parse_vectors(varray, epsilon)
 
@@ -692,12 +689,15 @@ class Vasprunxml:
             return False
 
     def parse_parameters(self):
-        xml = etree.iterparse(self._filename, tag='parameters')
         try:
-            for event, element in xml:
-                for separator in element.xpath('./separator'):
+            for event, element in etree.iterparse(self._filename):
+
+                if element.tag != 'parameters':
+                    continue
+                
+                for separator in element.findall('./separator'):
                     if separator.attrib['name'] == 'electronic':
-                        for i in separator.xpath('./i'):
+                        for i in separator.findall('./i'):
                             if i.attrib['name'] == 'NBANDS':
                                 self._nbands = int(i.text)
             return True
@@ -705,10 +705,13 @@ class Vasprunxml:
             return False
             
     def parse_efermi(self):
-        xml = etree.iterparse(self._filename, tag='dos')
         try:
-            for event, element in xml:
-                for i in element.xpath('./i'):
+            for event, element in etree.iterparse(self._filename):
+
+                if element.tag != 'dos':
+                    continue
+                
+                for i in element.findall('./i'):
                     if i.attrib['name'] == 'efermi':
                         efermi = float(i.text)
                         
@@ -718,14 +721,17 @@ class Vasprunxml:
             return False
             
     def parse_eigenvalues(self):
-        xml = etree.iterparse(self._filename, tag='eigenvalues')
         spin1 = []
         spin2 = []
         occ1 = []
         occ2 = []
         try:
-            for event, element in xml:
-                for array in element.xpath('./array/set/set'):
+            for event, element in etree.iterparse(self._filename):
+
+                if element.tag != 'eigenvalues':
+                    continue
+                
+                for array in element.findall('./array/set/set'):
 
                     if array.attrib['comment'] == 'spin 1':
                         self._parse_eigenvalues_spin(array, spin1, occ1)
@@ -746,19 +752,22 @@ class Vasprunxml:
             return False
 
     def _parse_kpoints(self):
-        xml = etree.iterparse(self._filename, tag='kpoints')
         try:
-            for event, element in xml:
+            for event, element in etree.iterparse(self._filename):
+
+                if element.tag != 'kpoints':
+                    continue
+                
                 kpoints = []
                 weights = []
-                for varray in element.xpath('./varray'):
+                for varray in element.findall('./varray'):
                     if varray.attrib['name'] == 'kpointlist':
-                        for v in varray.xpath('./v'):
+                        for v in varray.findall('./v'):
                             kpoints.append(
                                 [float(x) for x in v.text.split()])
 
                     if varray.attrib['name'] == 'weights':
-                        for v in varray.xpath('./v'):
+                        for v in varray.findall('./v'):
                             weights.append(float(v.text))
 
             self._kpoints = np.array(kpoints)
@@ -769,10 +778,10 @@ class Vasprunxml:
             return False
 
     def _parse_eigenvalues_spin(self, array, eigenvals, occupancies):
-        for kset in array.xpath('./set'):
+        for kset in array.findall('./set'):
             eigs = []
             occs = []
-            for r in kset.xpath('./r'):
+            for r in kset.findall('./r'):
                 vals = r.text.split()
                 eigs.append(float(vals[0]))
                 occs.append(float(vals[1]))
@@ -783,7 +792,7 @@ class Vasprunxml:
         # force
         if varray.attrib['name'] == 'forces':
             forces_geomopt = []
-            for v in varray.xpath('./v'):
+            for v in varray.findall('./v'):
                 forces_geomopt.append(
                     [float(x) for x in v.text.strip().split()])
             forces.append(forces_geomopt)
@@ -791,7 +800,7 @@ class Vasprunxml:
         # stress
         if varray.attrib['name'] == 'stress':
             stress_geomopt = []
-            for v in varray.xpath('./v'):
+            for v in varray.findall('./v'):
                 stress_geomopt.append(
                     [float(x) for x in v.text.strip().split()])
             stress.append(stress_geomopt)
@@ -800,7 +809,7 @@ class Vasprunxml:
         # points
         if varray.attrib['name'] == 'positions':
             points_geomopt = []
-            for v in varray.xpath('./v'):
+            for v in varray.findall('./v'):
                 points_geomopt.append(
                     [float(x) for x in v.text.strip().split()])
             points.append(np.transpose(points_geomopt))
@@ -808,7 +817,7 @@ class Vasprunxml:
     def _parse_lattice(self, varray, lattice):
         if varray.attrib['name'] == 'basis':
             lattice_geomopt = []
-            for v in varray.xpath('./v'):
+            for v in varray.findall('./v'):
                 lattice_geomopt.append(
                     np.transpose(
                         [float(x) for x in v.text.strip().split()]))
@@ -816,20 +825,20 @@ class Vasprunxml:
 
     def _parse_energies(self, energy, energies):
         energies_geomopt = []
-        for v in energy.xpath('./i'):
+        for v in energy.findall('./i'):
             energies_geomopt.append(
                 [float(x) for x in v.text.strip().split()])
         energies.append(energies_geomopt)
 
     def _parse_born_charges(self, array, born_charges):
-        for ion_set in array.xpath('./set'):
+        for ion_set in array.findall('./set'):
             tensor = []
-            for v in ion_set.xpath('./v'):
+            for v in ion_set.findall('./v'):
                 tensor.append([float(x) for x in v.text.strip().split()])
             born_charges.append(tensor)
 
     def _parse_vectors(self, varray, vectors):
-        for v in varray.xpath('./v'):
+        for v in varray.findall('./v'):
             vectors.append([float(x) for x in v.text.strip().split()])
 
 class VasprunxmlExpat:

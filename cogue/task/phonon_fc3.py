@@ -82,17 +82,26 @@ class PhononFC3Base(TaskElement):
         return self._energy
 
     def set_status(self):
-        done = True
-        terminate = False
-        for task in self._tasks:
-            done &= task.done()
-            if task.get_status() == "terminate":
-                terminate = True
-        if done:
-            if terminate:
-                self._status = "terminate"
-            else:
-                self._status = "next"
+        if self._stage == 0:
+            task = self._tasks[0]
+            if task.done():
+                status = task.get_status()
+                if status == "done":
+                    self._status = "next"
+                else:
+                    self._status = status
+        else:
+            done = True
+            terminate = True
+            for task in self._tasks:
+                done &= task.done()
+                terminate &= (task.get_status() == "terminate")
+                
+            if done:
+                if terminate:
+                    self._status = "terminate"
+                else:
+                    self._status = "next"
 
         self._write_yaml()
 
@@ -111,10 +120,11 @@ class PhononFC3Base(TaskElement):
         pass
 
     def done(self):
-        return ("terminate" in self._status or 
-                "done" in self._status or
-                "next" in self._status or
-                "imaginary_mode" in self._status )
+        return (self._status == "terminate" or
+                self._status == "done" or
+                self._status == "max_iteration" or
+                self._status == "next" or
+                self._status == "imaginary_mode")
 
     def next(self):
         if self._stage == 0:
