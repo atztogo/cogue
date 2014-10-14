@@ -29,8 +29,8 @@ class PhononBase(TaskElement):
                  supercell_matrix=None,
                  primitive_matrix=None,
                  distance=None,
-                 is_plusminus='auto',
-                 is_diagonal=False,
+                 displace_plusminus='auto',
+                 displace_diagonal=False,
                  lattice_tolerance=None,
                  force_tolerance=None,
                  pressure_target=None,
@@ -53,8 +53,8 @@ class PhononBase(TaskElement):
         self._supercell_matrix = supercell_matrix
         self._primitive_matrix = primitive_matrix
         self._distance = distance
-        self._is_plusminus = is_plusminus
-        self._is_diagonal = is_diagonal
+        self._displace_plusminus = displace_plusminus
+        self._displace_diagonal = displace_diagonal
         self._lattice_tolerance = lattice_tolerance
         self._pressure_target = pressure_target
         self._stress_tolerance = stress_tolerance
@@ -209,9 +209,10 @@ class PhononBase(TaskElement):
                                is_auto_displacements=False,
                                dynamical_matrix_decimals=14,
                                force_constants_decimals=14)
-        self._phonon.generate_displacements(distance=self._distance,
-                                            is_plusminus=self._is_plusminus,
-                                            is_diagonal=self._is_diagonal)
+        self._phonon.generate_displacements(
+            distance=self._distance,
+            is_plusminus=self._displace_plusminus,
+            is_diagonal=self._displace_diagonal)
         supercell = self._phonon.get_supercell()
         displacements = self._phonon.get_displacements()
 
