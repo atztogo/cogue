@@ -1,3 +1,8 @@
+import os
+import shlex
+import shutil
+import tarfile
+
 class EmptyQueue:
     def __init__(self):
         pass
@@ -69,3 +74,106 @@ class QueueBase:
                 del self._tid2jobid[tid]
                 job.set_status("done")
 
+class LocalQueueBase(QueueBase):
+    def __init__(self,
+                 max_jobs=None,
+                 qsub_command="qsub"):
+        try:
+            import spur
+        except ImportError:
+            print "You need to install spur."
+            exit(1)
+        
+        QueueBase.__init__(self, max_jobs=max_jobs)
+        self._qsub_command = qsub_command
+        self._shell = spur.LocalShell()
+
+    def submit(self, task):
+        job = task.get_job()
+        tid = task.get_tid()
+        self._set_job_status(job, tid)
+        if "ready" in job.get_status():
+            job.write_script()
+            if task.get_traverse():
+                jobid = None
+            else:
+                qsub_out = self._shell.run(
+                    shlex.split(self._qsub_command + " " + "job.sh"),
+                    cwd=os.getcwd()).output
+                jobid = self._get_jobid(qsub_out)
+            self._tid2jobid[tid] = jobid
+            self._tid_queue.pop(0)
+            job.set_status("submitted", jobid)
+
+
+class RemoteQueueBase(QueueBase):
+    def __init__(self,
+                 ssh_shell,
+                 temporary_dir,
+                 max_jobs=None,
+                 qsub_command="qsub"):
+        QueueBase.__init__(self, max_jobs=max_jobs)
+        self._qsub_command = qsub_command
+        self._shell = ssh_shell
+        self._temporary_dir = temporary_dir
+
+    def submit(self, task):
+        job = task.get_job()
+        tid = task.get_tid()
+        remote_dir = "%s/c%05d" % (self._temporary_dir, tid)
+        self._set_job_status(job, tid)
+        if "ready" in job.get_status():
+            job.write_script()
+            self._shell.run(["mkdir", "-p", remote_dir])
+            tar = tarfile.open("cogue.tar", "w")
+            for name in os.listdir("."):
+                tar.add(name)
+            tar.close()
+            with open("cogue.tar", "rb") as local_file:
+                with self._shell.open("%s/%s" % (remote_dir, "cogue.tar"),
+                                      "wb") as remote_file:
+                    shutil.copyfileobj(local_file, remote_file)
+                    os.remove("cogue.tar")
+                    self._shell.run(["tar", "xvf", "cogue.tar"], cwd=remote_dir)
+                    self._shell.run(["rm", "cogue.tar"], cwd=remote_dir)
+            if task.get_traverse():
+                jobid = None
+            else:
+                qsub_out = self._shell.run(
+                    shlex.split(self._qsub_command + " " + "job.sh"),
+                    cwd=remote_dir).output
+                jobid = self._get_jobid(qsub_out)
+            self._tid2jobid[tid] = jobid
+            self._tid_queue.pop(0)
+            job.set_status("submitted", jobid)
+
+        elif "done" in job.get_status():
+            names = self._shell.run(["/bin/ls"], cwd=remote_dir).output.split()
+            self._shell.run(["tar", "cvf", "cogue.tar"] + names, cwd=remote_dir)
+            with self._shell.open("%s/%s" % (remote_dir, "cogue.tar"),
+                                  "rb") as remote_file:
+                with open("cogue.tar", "wb") as local_file:
+                    shutil.copyfileobj(remote_file, local_file)
+                    tar = tarfile.open("cogue.tar")
+                    tar.extractall()
+                    tar.close()
+                    os.remove("cogue.tar")
+                    self._shell.run(["rm", "cogue.tar"], cwd=remote_dir)
+
+class JobBase:
+    def set_jobname(self, jobname):
+        self._jobname = jobname
+
+    def get_jobname(self):
+        return self._jobname
+
+    def set_status(self, status, jobid=None):
+        if jobid:
+            self._status = "%s (id:%d)" % (status, jobid)
+        else:
+            self._status = status
+    
+    def get_status(self):
+        return self._status
+    
+    
