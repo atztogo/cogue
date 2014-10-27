@@ -173,7 +173,9 @@ class PhononBase(TaskElement):
                     self._phonon_tasks[i + 1] = tasks[i]
                 self._status = "displacements"
                 return self._tasks
-
+                
+        self._write_yaml()
+            
         raise StopIteration
 
     def _set_stage0(self):
