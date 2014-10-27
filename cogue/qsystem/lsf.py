@@ -20,23 +20,21 @@
 
 __all__ = ['queue', 'job']
 
-import subprocess
-import shlex
-import os
 import sys
-import shutil
-import tarfile
-from cogue.qsystem import QueueBase, LocalQueueBase, RemoteQueueBase, JobBase
+from cogue.qsystem.queue import QueueBase, LocalQueueBase, RemoteQueueBase
+from cogue.qsystem.job import JobBase
 
 def queue(max_jobs=None,
           ssh_shell=None,
-          temporary_dir=None):
+          temporary_dir=None,
+          name=None):
     if ssh_shell is None:
         return LocalQueue(max_jobs=max_jobs)
     elif temporary_dir is not None:
         return RemoteQueue(ssh_shell,
                            temporary_dir,
-                           max_jobs=max_jobs)
+                           max_jobs=max_jobs,
+                           name=name)
 
 def job(script=None,
         shell=None,
@@ -75,60 +73,6 @@ class Qstat:
                     elif s == 'PEND':
                         self._qstatus[jobid] = 'Pending'
         
-class RemoteQueue(QueueBase,Qstat):
-    def __init__(self,
-                 ssh_shell,
-                 temporary_dir,
-                 max_jobs=None,
-                 qsub_command="qsub"):
-        QueueBase.__init__(self, max_jobs=max_jobs)
-        self._qsub_command = qsub_command
-        self._shell = ssh_shell
-        self._temporary_dir = temporary_dir
-
-    def submit(self, task):
-        job = task.get_job()
-        tid = task.get_tid()
-        remote_dir = "%s/c%05d" % (self._temporary_dir, tid)
-        self._set_job_status(job, tid)
-        if "ready" in job.get_status():
-            job.write_script()
-            self._shell.run(["mkdir", "-p", remote_dir])
-            tar = tarfile.open("cogue.tar", "w")
-            for name in os.listdir("."):
-                tar.add(name)
-            tar.close()
-            with open("cogue.tar", "rb") as local_file:
-                with self._shell.open("%s/%s" % (remote_dir, "cogue.tar"),
-                                      "wb") as remote_file:
-                    shutil.copyfileobj(local_file, remote_file)
-                    os.remove("cogue.tar")
-                    self._shell.run(["tar", "xvf", "cogue.tar"], cwd=remote_dir)
-                    self._shell.run(["rm", "cogue.tar"], cwd=remote_dir)
-            if task.get_traverse():
-                jobid = None
-            else:
-                qsub_out = self._shell.run(
-                    shlex.split(self._qsub_command + " " + "job.sh"),
-                    cwd=remote_dir).output
-                jobid = int(qsub_out.split()[2]) # GE specific
-            self._tid2jobid[tid] = jobid
-            self._tid_queue.pop(0)
-            job.set_status("submitted", jobid)
-
-        elif "done" in job.get_status():
-            names = self._shell.run(["/bin/ls"], cwd=remote_dir).output.split()
-            self._shell.run(["tar", "cvf", "cogue.tar"] + names, cwd=remote_dir)
-            with self._shell.open("%s/%s" % (remote_dir, "cogue.tar"),
-                                  "rb") as remote_file:
-                with open("cogue.tar", "wb") as local_file:
-                    shutil.copyfileobj(remote_file, local_file)
-                    tar = tarfile.open("cogue.tar")
-                    tar.extractall()
-                    tar.close()
-                    os.remove("cogue.tar")
-                    self._shell.run(["rm", "cogue.tar"], cwd=remote_dir)
-
 def _get_jobid(qsub_out):
     return int(qsub_out.split()[1].replace("<", "").replace(">", ""))
 
@@ -148,11 +92,14 @@ class RemoteQueue(RemoteQueueBase,Qstat):
                  ssh_shell,
                  temporary_dir,
                  max_jobs=None,
+                 name=None,
                  qsub_command="qsub"):
-        QueueBase.__init__(self, max_jobs=max_jobs)
-        self._qsub_command = qsub_command
-        self._shell = ssh_shell
-        self._temporary_dir = temporary_dir
+        RemoteQueueBase.__init__(self,
+                                 ssh_shell,
+                                 temporary_dir,
+                                 max_jobs=max_jobs,
+                                 name=name,
+                                 qsub_command=qsub_command)
 
     def _get_jobid(self, qsub_out):
         return _get_jobid(qsub_out)

@@ -20,18 +20,21 @@
 
 __all__ = ['queue', 'job']
 
-from cogue.qsystem import QueueBase, LocalQueueBase, RemoteQueueBase, JobBase
+import sys
+from cogue.qsystem.queue import QueueBase, LocalQueueBase, RemoteQueueBase
+from cogue.qsystem.job import JobBase
 
 def queue(max_jobs=None,
           ssh_shell=None,
-          temporary_dir=None):
+          temporary_dir=None,
+          name=None):
     if ssh_shell is None:
         return LocalQueue(max_jobs=max_jobs)
     elif temporary_dir is not None:
         return RemoteQueue(ssh_shell,
                            temporary_dir,
-                           max_jobs=max_jobs)
-        
+                           max_jobs=max_jobs,
+                           name=name)
 
 def job(script=None,
         shell=None,
@@ -95,11 +98,14 @@ class RemoteQueue(RemoteQueueBase,Qstat):
                  ssh_shell,
                  temporary_dir,
                  max_jobs=None,
+                 name=None,
                  qsub_command="qsub"):
-        QueueBase.__init__(self, max_jobs=max_jobs)
-        self._qsub_command = qsub_command
-        self._shell = ssh_shell
-        self._temporary_dir = temporary_dir
+        RemoteQueueBase.__init__(self,
+                                 ssh_shell,
+                                 temporary_dir,
+                                 max_jobs=max_jobs,
+                                 name=name,
+                                 qsub_command=qsub_command)
 
     def _get_jobid(self, qsub_out):
         return _get_jobid(qsub_out)

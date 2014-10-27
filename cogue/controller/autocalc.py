@@ -2,7 +2,7 @@ import os
 import time
 import datetime
 from cogue.task import TaskSet
-from cogue.qsystem import EmptyQueue
+from cogue.qsystem.queue import EmptyQueue
 
 def date():
     return datetime.datetime.today().strftime("%Y-%m-%d %H:%M:%S")
