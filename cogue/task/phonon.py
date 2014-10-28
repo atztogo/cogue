@@ -223,6 +223,14 @@ class PhononBase(TaskElement):
 
     def _write_yaml(self):
         w = open("%s.yaml" % self._directory, 'w')
+        w.write("supercell_matrix:\n")
+        for row in self._supercell_matrix:
+            w.write("- [ %3d, %3d, %3d ]\n" % tuple(row))
+        w.write("primitive_matrix:\n")
+        for row in self._primitive_matrix:
+            w.write("- [ %6.3f, %6.3f, %6.3f ]\n" % tuple(row))
+        w.write("distance: %f\n" % self._distance)
+        
         if self._phonon_tasks[0]:
             if self._lattice_tolerance is not None:
                 w.write("lattice_tolerance: %f\n" % self._lattice_tolerance)
@@ -236,16 +244,10 @@ class PhononBase(TaskElement):
                 w.write("max_increase: %f\n" % self._max_increase)
             w.write("max_iteration: %d\n" % self._max_iteration)
             w.write("min_iteration: %d\n" % self._min_iteration)
-            w.write("supercell_matrix:\n")
-            for row in self._supercell_matrix:
-                w.write("- [ %3d, %3d, %3d ]\n" % tuple(row))
-            w.write("primitive_matrix:\n")
-            for row in self._primitive_matrix:
-                w.write("- [ %6.3f, %6.3f, %6.3f ]\n" % tuple(row))
-            w.write("distance: %f\n" % self._distance)
             w.write("iteration: %d\n" % self._phonon_tasks[0].get_stage())
             if self._energy:
                 w.write("electric_total_energy: %20.10f\n" % self._energy)
+                
         w.write("status: %s\n" % self._status)
         w.write("tasks:\n")
         for task in self._phonon_tasks:
