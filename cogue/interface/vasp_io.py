@@ -175,7 +175,8 @@ class Incar:
                  nsw=None,
                  prec=None,
                  pstress=None,
-                 sigma=None):
+                 sigma=None,
+                 symprec=None):
 
         self._tagnames = {
             'addgrid' : "ADDGRID",
@@ -205,7 +206,8 @@ class Incar:
             'nsw'     : "NSW",
             'prec'    : "PREC",
             'pstress' : "PSTRESS",
-            'sigma'   : "SIGMA"}
+            'sigma'   : "SIGMA",
+            'symprec' : "SYMPREC"}
 
         self._tagvals = {
             'addgrid' : addgrid,
@@ -235,7 +237,8 @@ class Incar:
             'nsw'     : nsw,
             'prec'    : prec,
             'pstress' : pstress,
-            'sigma'   : sigma}
+            'sigma'   : sigma,
+            'symprec' : symprec}
 
         self._tagorder = ['prec',
                           'gga',
@@ -264,7 +267,8 @@ class Incar:
                           'lwave',
                           'lcharg',
                           'lepsilon',
-                          'npar']
+                          'npar',
+                          'symprec']
 
     def clear(self):
         for k in self._tagvals.keys():
@@ -443,6 +447,12 @@ class Incar:
 
     def get_sigma(self):
         return self._tagvals['sigma']
+
+    def set_symprec(self, x):
+        self._tagvals['symprec'] = x
+
+    def get_symprec(self):
+        return self._tagvals['symprec']
 
     def set_electronic_structure(self):
         tags = self._tagvals
