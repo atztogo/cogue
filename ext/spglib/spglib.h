@@ -1,4 +1,4 @@
-/* spglib.h version 1.5.1 */
+/* spglib.h version 1.6.4 */
 /* Copyright (C) 2008 Atsushi Togo */
 
 #ifndef __spglib_H__
@@ -75,7 +75,6 @@ typedef struct {
   int *equivalent_atoms;
 } SpglibDataset;
 
-/* This is a copy from spg_database.h except for holohedry. */
 typedef struct {
   int number;
   char schoenflies[7];
