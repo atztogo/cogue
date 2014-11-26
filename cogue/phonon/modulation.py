@@ -102,7 +102,7 @@ class PhononModulation:
                         for i in self._band_indices]
         self._phonon.set_modulations(self._modulation_dimension,
                                      phonon_modes)
-        modulations, supercell = self._phonon.get_delta_modulations()
+        modulations, supercell = self._phonon.get_modulations_and_supercell()
         self._vectors = [delta.T for delta in modulations]
         self._supercell = atoms2cell(supercell)
         self._lattice = self._supercell.get_lattice()
@@ -290,7 +290,7 @@ class PhononModulationOld:
         phonon_modes = [[self._qpoint, i, 1, 0]
                         for i in self._band_indices]
         self._phonon.set_modulations(self._modulation_dimension, phonon_modes)
-        modulations, supercell = self._phonon.get_delta_modulations()
+        modulations, supercell = self._phonon.get_modulations_and_supercell()
             
         self._supercell = atoms2cell(supercell)
 
