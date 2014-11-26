@@ -40,6 +40,7 @@ def job(script=None,
         shell=None,
         jobname=None,
         q=None,
+        A="p=20:t=1:c=1:m=3072M",
         W="24:00",
         stdout=None,
         stderr=None):
@@ -47,6 +48,7 @@ def job(script=None,
                shell=shell,
                jobname=jobname,
                q=q,
+               A=A,
                W=W,
                stdout=stdout,
                stderr=stderr)
@@ -110,6 +112,7 @@ class Job(JobBase):
                  shell=None,
                  jobname=None,
                  q=None,
+                 A="p=20:t=1:c=1:m=3072M",
                  W="24:00",
                  stdout=None,
                  stderr=None):
@@ -136,6 +139,7 @@ class Job(JobBase):
         else:
             self._jobname = jobname
 
+        self._A = A
         self._W = W
         self._stdout = stdout
         self._stderr = stderr
@@ -151,6 +155,7 @@ class Job(JobBase):
                    shell=self._shell,
                    jobname=jobname_new,
                    q=self._q,
+                   A=self._A,
                    W=self._W,
                    stdout=self._stdout,
                    stderr=self._stderr)
@@ -174,7 +179,7 @@ class Job(JobBase):
         w.write("#!%s\n" % self._shell)
         w.write("#QSUB -q %s\n" % self._q)
         w.write("#QSUB -W %s\n" % self._W)
-        w.write("#QSUB -A p=20:t=1:c=1:m=3072M\n")
+        w.write("#QSUB -A %s\n" % self._A)
         w.write("#QSUB -rn\n")
         w.write("#QSUB -J %s\n" % self._jobname)
         if self._stderr:
