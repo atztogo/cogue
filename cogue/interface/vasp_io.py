@@ -68,7 +68,7 @@ def parse_poscar(lines):
 def read_poscar(filename="POSCAR"):
     return parse_poscar(open(filename).readlines())
 
-def write_poscar(cell, filename=None, vasp4=False):
+def write_poscar(cell, filename=None, vasp4=False, comment=None):
     if filename is None:
         w = StringIO.StringIO()
     else:
@@ -79,10 +79,13 @@ def write_poscar(cell, filename=None, vasp4=False):
     for s in symbols:
         if not s in symbols_compressed:
             symbols_compressed.append(s)
-
-    for s in symbols_compressed:
-        w.write(" %s" % s)
-    w.write("\n")
+    
+    if vasp4 or comment is None:
+        for s in symbols_compressed:
+            w.write(" %s" % s)
+        w.write("\n")
+    else:
+        w.write(comment.strip() + "\n")
 
     w.write("   1.0\n")
 
@@ -101,6 +104,8 @@ def write_poscar(cell, filename=None, vasp4=False):
     w.write("Direct\n")
 
     points = cell.get_points().T
+    count_atoms = 0
+    num_atoms = len(points)
     for sc in symbols_compressed:
         for s, v in zip(symbols, points):
             if s == sc:
@@ -108,7 +113,12 @@ def write_poscar(cell, filename=None, vasp4=False):
                 for i in range(3):
                     if not v16[i] < 1:
                         v16[i] -= 1
-                w.write(" %20.16f%20.16f%20.16f\n" % tuple(v16))
+                w.write(" %20.16f%20.16f%20.16f" % tuple(v16))
+                count_atoms += 1
+                if count_atoms < num_atoms:
+                    w.write("\n")
+                
+                
     
     if filename is None:
         poscar_string = w.getvalue()
