@@ -44,11 +44,11 @@ def get_parser():
                       help="Show a primitive cell where the lattice vectors and atomic points are not refined. Used togather with -o option, the cell is stored in the file.")
     return parser
 
-def write_to_file(cell, filename):
+def write_to_file(cell, filename, comment=None):
     if filename.split('.')[-1] == 'cif':
         write_cif_P1(cell, filename)
     else:
-        vasp_io.write_poscar(cell, filename)
+        vasp_io.write_poscar(cell, filename=filename, comment=comment)
     
 
 options, args = ui_utils.get_options(get_parser())
@@ -58,6 +58,7 @@ dataset = symmetry.get_symmetry_dataset(cell, tolerance)
 
 spg_type = dataset['international']
 spg_number = dataset['number']
+hall_number = dataset['hall_number']
 hall_symbol = dataset['hall']
 tmat = dataset['transformation_matrix']
 shift = dataset['origin_shift']
@@ -69,10 +70,11 @@ eqiv_atoms = dataset['equivalent_atoms']
 plat = cell.get_lattice()
 blat = np.dot(plat, tmat)
 
-print "%s (%d)" % (spg_type, spg_number),
+spg_info = "%s (%d) / %s (%d)" % (spg_type, spg_number, hall_symbol, hall_number)
+if not options.is_bravais:
+    print spg_info
 
 if options.show_details:
-    print "/ %s" % hall_symbol
     print
     print "Original lattice vecs      Bravais lattice vecs"
     for vp, vb, arrow in zip(plat, blat, ("     ", " --> ", "     ")):
@@ -89,8 +91,6 @@ if options.show_details:
             zip(wyckoffs, cell.get_points().T, eqiv_atoms)):
             print "%4d: %s  %f %f %f -> %d" % ((i + 1, w) + tuple(p) + (e + 1,))
     
-print
-
 if options.show_operations:
     print "Symmetry operations:"
     for i, (r, t) in enumerate(zip(rots, trans)):
@@ -105,8 +105,7 @@ if options.is_bravais:
     if options.output_filename:
         write_to_file(brv_cell, options.output_filename)
     else:
-        print "--------"
-        print vasp_io.write_poscar(brv_cell)
+        print vasp_io.write_poscar(brv_cell, comment=spg_info)
 elif options.is_primitive:
     prim_cell = symmetry.get_primitive_cell(cell, tolerance)
     if options.output_filename:
@@ -118,7 +117,7 @@ elif options.is_primitive:
         for v in tmat:
             print "%6.3f %6.3f %6.3f" % tuple(v)
         print "--------------------"
-        print vasp_io.write_poscar(prim_cell)
+        print vasp_io.write_poscar(prim_cell, comment=spg_info)
 
 if options.orbits is not None:
     site_sym = []
