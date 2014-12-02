@@ -174,6 +174,7 @@ class Incar:
                  ivdw=None,
                  lcharg=None,
                  lepsilon=None,
+                 lorbit=None,
                  lreal=None,
                  luse_vdw=None,
                  lwave=None,
@@ -205,6 +206,7 @@ class Incar:
             'ivdw'    : "IVDW",
             'lcharg'  : "LCHARG",
             'lepsilon': "LEPSILON",
+            'lorbit'  : "LORBIT",
             'lreal'   : "LREAL",
             'luse_vdw': "LUSE_VDW",
             'lwave'   : "LWAVE",
@@ -236,6 +238,7 @@ class Incar:
             'ivdw'    : ivdw,
             'lcharg'  : lcharg,
             'lepsilon': lepsilon,
+            'lorbit'  : lorbit,
             'lreal'   : lreal,
             'luse_vdw': luse_vdw,
             'lwave'   : lwave,
@@ -266,6 +269,7 @@ class Incar:
                           'ediffg',
                           'icharg',
                           'ispin',
+                          'lorbit',
                           'magmom',
                           'ismear',
                           'sigma',
@@ -385,6 +389,12 @@ class Incar:
 
     def get_lepsilon(self):
         return self._tagvals['lepsilon']
+
+    def set_lorbit(self, x):
+        self._tagvals['lorbit'] = x
+
+    def get_lorbit(self):
+        return self._tagvals['lorbit']
 
     def set_lreal(self, x):
         self._tagvals['lreal'] = x
