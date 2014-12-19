@@ -69,7 +69,7 @@ class AutoCalc:
 
     def _deep_begin(self, task):
         directory = task.get_directory()
-        if not directory == None:
+        if directory is not None:
             if not os.path.exists(directory):
                 os.mkdir(directory)
 
@@ -115,7 +115,7 @@ class AutoCalc:
         self._chdir_out(orig_cwd, task.get_status())
 
     def _chdir_in(self, directory_in):
-        if directory_in == None:
+        if directory_in is None:
             return None
         else:
             cwd = os.getcwd()
@@ -125,7 +125,7 @@ class AutoCalc:
             return cwd
 
     def _chdir_out(self, cwd, status): 
-       if not cwd == None:
+       if cwd is not None:
            self._write_log("        [ %s ]\n" % status)
            directory = cwd.replace(self._cwd, '').lstrip('/')
            if directory == "":
@@ -178,7 +178,7 @@ class AutoCalc:
             color = "khaki1"
 
         f_dot.write("n%d ;\n" % tid)
-        if status == None:
+        if status is None:
             f_dot.write("n%d [label=\"%s\"] ;\n" % (tid, name))
         else:
             if comment:
