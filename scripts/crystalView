@@ -20,7 +20,9 @@ parser.add_option("--margin",
                   help="Margin to plot atoms within crystal lattice")
 options, args = ui_utils.get_options(parser)
 cell = vasp_io.read_poscar(args[0])
-dataset = symmetry.get_symmetry_dataset(cell, options.symprec)
+if options.is_bravais:
+    cell = symmetry.get_crystallographic_cell(cell, tolerance=options.symprec)
+dataset = symmetry.get_symmetry_dataset(cell, tolerance=options.symprec)
 if options.position_margin:
     margin = [frac2val(x) for x in options.position_margin.split()]
     if len(margin) == 1:
