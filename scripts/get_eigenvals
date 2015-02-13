@@ -10,6 +10,8 @@ args = parser.parse_args()
 
 for filename in args.filenames:
     vasprun = Vasprunxml(filename=filename)
+    if vasprun.parse_efermi():
+        efermi = vasprun.get_efermi()
     if vasprun.parse_eigenvalues():
         eigvals = np.ravel(vasprun.get_eigenvalues())
         occupancies = np.ravel(vasprun.get_occupancies())
@@ -17,13 +19,25 @@ for filename in args.filenames:
         prev_occ = 0
         prev_eig = 0
         band_gap = 0
+        set_band_gap = False
         for i, (e, o) in enumerate(zip(eigvals[indices], occupancies[indices])):
             if i > 0:
                 if np.abs(np.abs(prev_occ - o) - 1) < 1e-6:
                     band_gap = e - prev_eig
+                    set_band_gap = True
                     
             print "%10.5f %7.5f" % (e, o)
+            if set_band_gap:
+                VBM = prev_eig
+                CBM = e
+                set_band_gap = False
+
             prev_occ = o
             prev_eig = e
 
+        print "# [VBM, CBM]: [%f, %f]" % (VBM, CBM)
         print "# Band gap:", band_gap
+
+    if efermi:
+        print "# Fermi level:", efermi
+        

@@ -619,6 +619,7 @@ class Vasprunxml:
         self._born_charges = None
         self._epsilon = None
         self._nbands = None
+        self._efermi = None
 
     def get_forces(self):
         return self._forces
