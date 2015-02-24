@@ -197,7 +197,8 @@ static Symmetry * get_symmetry_settings(double conv_lattice[3][3],
 					Pointgroup *pointgroup,
 					Centering *centering,
 					SPGCONST double primitive_lattice[3][3],
-					SPGCONST Symmetry * symmetry);
+					SPGCONST Symmetry * symmetry,
+					const double symprec);
 static int search_hall_number(double origin_shift[3],
 			      double conv_lattice[3][3],
 			      const int candidates[],
@@ -216,22 +217,44 @@ static Symmetry * get_conventional_symmetry(SPGCONST double transform_mat[3][3],
 					    const Centering centering,
 					    const Symmetry *primitive_sym);
 
-Spacegroup spa_get_spacegroup(SPGCONST Cell * primitive,
-			      const double symprec)
+Primitive * spa_get_spacegroup(Spacegroup * spacegroup,
+			       SPGCONST Cell * cell,
+			       const double symprec)
 {
-  Spacegroup spacegroup;
-  
-  if (primitive->size > 0) {
-    spacegroup = search_spacegroup(primitive,
-				   spacegroup_to_hall_number,
-				   230,
-				   symprec);
-  } else {
-    spacegroup.number = 0;
+  int attempt;
+  double tolerance;
+  Primitive *primitive;
+
+  tolerance = symprec;
+
+  for (attempt = 0; attempt < 100; attempt++) {
+    primitive = prm_get_primitive(cell, tolerance);
+    if (primitive->size > 0) {
+      *spacegroup = search_spacegroup(primitive->cell,
+				      spacegroup_to_hall_number,
+				      230,
+				      primitive->tolerance);
+      if (spacegroup->number > 0) {
+	break;
+      }
+    }
+    
+    tolerance *= REDUCE_RATE;
+    prm_free_primitive(primitive);
+    
+    warning_print("  Attempt %d tolerance = %f failed.", attempt, tolerance);
+    warning_print(" (line %d, %s).\n", __LINE__, __FILE__);
+  }
+
+  if (primitive->size == 0) {
     warning_print("spglib: Space group could not be found ");
     warning_print("(line %d, %s).\n", __LINE__, __FILE__);
+    primitive = prm_alloc_primitive(0);
+    primitive->cell = cel_alloc_cell(0);
+    primitive->pure_trans = mat_alloc_VecDBL(0);
   }
-  return spacegroup;
+
+  return primitive;
 }
 
 Spacegroup spa_get_spacegroup_with_hall_number(SPGCONST Cell * primitive,
@@ -405,7 +428,8 @@ static int search_hall_number(double origin_shift[3],
 					&pointgroup,
 					&centering,
 					primitive_lattice,
-					symmetry);
+					symmetry,
+					symprec);
   if (conv_symmetry->size == 0) {
     hall_number = 0;
     goto ret;
@@ -433,11 +457,11 @@ static Symmetry * get_symmetry_settings(double conv_lattice[3][3],
 					Pointgroup *pointgroup,
 					Centering *centering,
 					SPGCONST double primitive_lattice[3][3],
-					SPGCONST Symmetry * symmetry)
+					SPGCONST Symmetry * symmetry,
+					const double symprec)
 {
   int tmp_transform_mat[3][3];
-  double correction_mat[3][3];
-  double transform_mat[3][3];
+  double correction_mat[3][3], transform_mat[3][3], tmp_lattice[3][3];
   Symmetry * conv_symmetry;
   
   *pointgroup = ptg_get_transformation_matrix(tmp_transform_mat,
@@ -467,6 +491,17 @@ static Symmetry * get_symmetry_settings(double conv_lattice[3][3],
   mat_multiply_matrix_d3(conv_lattice,
 			 primitive_lattice,
 			 transform_mat);
+
+  if (pointgroup->laue == LAUE2M) {
+    if (lat_smallest_lattice_vector_2D(tmp_lattice,
+				       conv_lattice,
+				       1, /* unique axis of b */
+				       symprec)) {
+      mat_copy_matrix_d3(conv_lattice, tmp_lattice);
+      mat_inverse_matrix_d3(tmp_lattice, primitive_lattice, 0);
+      mat_multiply_matrix_d3(transform_mat, tmp_lattice, conv_lattice);
+    }
+  }
 
   if (*centering == R_CENTER) {
     /* hR is handled in match_hall_symbol_db. */
