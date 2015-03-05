@@ -3,7 +3,7 @@ import sys
 import numpy as np
 import xml.parsers.expat
 import xml.etree.cElementTree as etree
-from cogue.crystal.atom import atomic_symbols
+from cogue.crystal.atom import atomic_symbols, atomic_weights
 from cogue.crystal.cell import Cell
 import StringIO
 
@@ -49,16 +49,16 @@ def parse_poscar(lines):
 
     points = np.zeros((3, num_atoms.sum()), dtype=float)
     for i in range(num_atoms.sum()):
-        points[:, i] = [float(x) for x in lines[i + 7].split()]
+        points[:, i] = [float(x) for x in lines[i + 7].split()[:3]]
 
     # Expand symbols
     symbols_expanded = []
-    if len(symbols) == len(num_atoms):
-        for i, n in enumerate(num_atoms):
-            symbols_expanded += [symbols[i]] * n
-    else:
-        print "Chemical symbols are not found."
-        raise
+    if len(symbols) != len(num_atoms):
+        sys.stderr.write("Chemical symbols are not specified correctly.\n")
+        symbols = [atomic_weights[i + 1][0] for i in range(len(num_atoms))]
+
+    for i, n in enumerate(num_atoms):
+        symbols_expanded += [symbols[i]] * n
     
     return Cell(lattice=lattice,
                 points=points,
