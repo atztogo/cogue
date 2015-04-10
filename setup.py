@@ -26,7 +26,6 @@ spglib = Extension('cogue._spglib',
                    sources = ['ext/_spglib.c',
                               'ext/spglib/refinement.c',
                               'ext/spglib/cell.c',
-                              'ext/spglib/debug.c',
                               'ext/spglib/hall_symbol.c',
                               'ext/spglib/kpoint.c',
                               'ext/spglib/lattice.c',
@@ -40,8 +39,10 @@ spglib = Extension('cogue._spglib',
                               'ext/spglib/spin.c',
                               'ext/spglib/site_symmetry.c',
                               'ext/spglib/sitesym_database.c',
+                              'ext/spglib/symmetry.c',
                               'ext/spglib/tetrahedron_method.c',
-                              'ext/spglib/symmetry.c'] )
+                              'ext/spglib/triplet_kpoint.c'] )
+
 
 xtalcomp = Extension('cogue._xtalcomp',
                      libraries = ['stdc++'],
