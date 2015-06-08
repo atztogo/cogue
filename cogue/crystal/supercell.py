@@ -1,6 +1,7 @@
 import numpy as np
 from cogue.crystal.cell import Cell
-from cogue.crystal.converter import reduce_points
+from cogue.crystal.converter import reduce_points, get_lattice_parameters
+from cogue.crystal.symmetry import get_symmetry_dataset
 
 def get_supercell(cell, supercell_matrix, tolerance=1e-5):
     """
@@ -70,3 +71,79 @@ def get_smallest_surrounding_lattice_multiplicities(supercell_matrix):
                      m[:,0] + m[:,1] + m[:,2]])
     frame = [max(axes[:, i]) - min(axes[:, i]) for i in (0, 1, 2)]
     return frame
+
+def estimate_supercell_matrix(cell,
+                              max_num_atoms=120,
+                              symprec=1e-5):
+    """Estimate supercell matrix from conventional cell
+
+    Supercell matrix is estimated from basis vector lengths and
+    maximum number of atoms accepted. The input cell must be already
+    standarized. For triclinic, monoclinic, and orthorhombic cells,
+    basis vectors of a, b, c are freely multiplied, but for tetragonal
+    and hexagonal cells, multiplicities of a and b are the same, and
+    for cubic cell, those of a, b, c are to be found the same.  The
+    supercell matrix is always returned as a diagonal matrix.
+
+    """
+
+    dataset = get_symmetry_dataset(cell)
+    spg_num = dataset['number']
+    num_atoms = len(cell.get_numbers())
+    lengths_orig = get_lattice_parameters(cell.get_lattice())
+    lengths = get_lattice_parameters(dataset['brv_lattice'])
+
+    if (np.abs(lengths_orig - lengths) > symprec).any():
+        return np.zeros((3, 3), dtype='intc')
+
+    if spg_num <= 74: # Triclinic, monoclinic, and orthorhombic
+        multi = _get_multiplicity_abc(num_atoms, lengths, max_num_atoms)
+    elif spg_num <= 194: # Tetragonal and hexagonal
+        multi = _get_multiplicity_ac(num_atoms, lengths, max_num_atoms)
+    else: # Cubic
+        multi = _get_multiplicity_a(num_atoms, lengths, max_num_atoms)
+
+    smat = np.eye(3, dtype='intc')
+    for i in range(3):
+        smat[i, i] = multi[i]
+
+    return smat
+
+def _get_multiplicity_abc(num_atoms, lengths, max_num_atoms, max_iter=20):
+    multi = [1, 1, 1]
+
+    for i in range(max_iter):
+        l_super = np.multiply(multi, lengths)
+        min_index = np.argmin(l_super)
+        multi[min_index] += 1
+        if num_atoms * np.prod(multi) > max_num_atoms:
+            multi[min_index] -= 1
+
+    return multi
+
+def _get_multiplicity_ac(num_atoms, lengths, max_num_atoms, max_iter=20):
+    multi = [1, 1]
+    a = lengths[0]
+    c = lengths[2]
+
+    for i in range(max_iter):
+        l_super = np.multiply(multi, [a, c])
+        min_index = np.argmin(l_super)
+        multi[min_index] += 1
+        if num_atoms * multi[0] ** 2 * multi[1] > max_num_atoms:
+            multi[min_index] -= 1
+
+    return [multi[0], multi[0], multi[1]]
+
+def _get_multiplicity_a(num_atoms, lengths, max_num_atoms, max_iter=20):
+    multi = 1
+    a = lengths[0]
+
+    for i in range(max_iter):
+        l_super = multi * a
+        multi += 1
+        if num_atoms * multi ** 3 > max_num_atoms:
+            multi -= 1
+
+    return [multi, multi, multi]
+

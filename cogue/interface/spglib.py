@@ -30,20 +30,23 @@ def get_symmetry_dataset(cell, tolerance=1e-5):
     wyckoffs: Wyckoff letters
 
     """
-    points = np.array(cell.get_points(), dtype='double', order='C')
+    points = np.array(cell.get_points().T, dtype='double', order='C')
     lattice = np.array(cell.get_lattice(), dtype='double', order='C')
     numbers = np.array(cell.get_numbers(), dtype='intc')
     
     keys = ('number',
-            'international',
             'hall_number',
+            'international',
             'hall',
             'transformation_matrix',
             'origin_shift',
             'rotations',
             'translations',
             'wyckoffs',
-            'equivalent_atoms')
+            'equivalent_atoms',
+            'brv_lattice',
+            'brv_types',
+            'brv_positions')
     dataset = {}
     for key, data in zip(keys,
                          spg.get_dataset(lattice, points, numbers, tolerance)):
@@ -52,14 +55,21 @@ def get_symmetry_dataset(cell, tolerance=1e-5):
     dataset['international'] = dataset['international'].strip()
     dataset['hall'] = dataset['hall'].strip()
     dataset['transformation_matrix'] = np.double(
-        dataset['transformation_matrix'])
-    dataset['origin_shift'] = np.double(dataset['origin_shift'])
-    dataset['rotations'] = np.intc(dataset['rotations'])
-    dataset['translations'] = np.double(dataset['translations'])
+        dataset['transformation_matrix'], dtype='double', order='C')
+    dataset['origin_shift'] = np.double(dataset['origin_shift'], dtype='double')
+    dataset['rotations'] = np.intc(dataset['rotations'],
+                                   dtype='intc', order='C')
+    dataset['translations'] = np.double(dataset['translations'],
+                                        dtype='double', order='C')
     letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
     dataset['wyckoffs'] = [letters[x] for x in dataset['wyckoffs']]
     dataset['equivalent_atoms'] = np.intc(dataset['equivalent_atoms'])
-    dataset['international_standard'] =  standard_HM_symbols[dataset['number']]
+    dataset['international_standard'] = standard_HM_symbols[dataset['number']]
+    dataset['brv_lattice'] = np.array(dataset['brv_lattice'],
+                                      dtype='double', order='C')
+    dataset['brv_types'] = np.array(dataset['brv_types'], dtype='intc')
+    dataset['brv_positions'] = np.array(np.transpose(dataset['brv_positions']),
+                                        dtype='double', order='C')
 
     return dataset
 

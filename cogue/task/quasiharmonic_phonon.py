@@ -1,6 +1,7 @@
 from cogue.task import TaskElement
 import numpy as np
 from phonopy import PhonopyQHA
+from cogue.crystal.supercell import estimate_supercell_matrix
 
 class QuasiHarmonicPhononBase(TaskElement):
     """QuasiHarmonicPhonon class
@@ -32,6 +33,7 @@ class QuasiHarmonicPhononBase(TaskElement):
                  max_iteration=None,
                  min_iteration=None,
                  is_cell_relaxed=False,
+                 max_num_atoms=None,
                  traverse=False):
 
         TaskElement.__init__(self)
@@ -74,6 +76,7 @@ class QuasiHarmonicPhononBase(TaskElement):
         self._min_iteration = min_iteration
         self._traverse = traverse
         self._is_cell_relaxed = is_cell_relaxed
+        self._max_num_atoms = max_num_atoms
         
         self._stage = 0
         self._tasks = None
@@ -184,6 +187,12 @@ class QuasiHarmonicPhononBase(TaskElement):
     def _prepare_next(self, cell):
         self._stage = 1
         self._status = "phonons"
+
+        if self._supercell_matrix is None:
+            self._supercell_matrix = estimate_supercell_matrix(
+                cell,
+                max_num_atoms=self._max_num_atoms)
+
         self._qh_tasks += self._get_phonon_tasks(cell)
         self._tasks = self._qh_tasks[1:]
 
@@ -205,8 +214,11 @@ class QuasiHarmonicPhononBase(TaskElement):
             w.write("iteration: %d\n" % self._qh_tasks[0].get_stage())
         w.write("status: %s\n" % self._status)
         w.write("supercell_matrix:\n")
-        for row in self._supercell_matrix:
-            w.write("- [ %3d, %3d, %3d ]\n" % tuple(row))
+        if self._supercell_matrix is None:
+            w.write("- automatic\n")
+        else:
+            for row in self._supercell_matrix:
+                w.write("- [ %3d, %3d, %3d ]\n" % tuple(row))
         w.write("primitive_matrix:\n")
         for row in self._primitive_matrix:
             w.write("- [ %6.3f, %6.3f, %6.3f ]\n" % tuple(row))

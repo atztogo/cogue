@@ -3,6 +3,12 @@
 #include <numpy/arrayobject.h>
 #include <spglib.h>
 
+#if (PY_MAJOR_VERSION < 3) && (PY_MINOR_VERSION < 6)
+#define PYUNICODE_FROMSTRING PyString_FromString
+#else
+#define PYUNICODE_FROMSTRING PyUnicode_FromString
+#endif
+
 static PyObject * get_dataset(PyObject *self, PyObject *args);
 static PyObject * get_crystallographic_cell(PyObject *self, PyObject *args);
 static PyObject * get_primitive(PyObject *self, PyObject *args);
@@ -39,65 +45,62 @@ PyMODINIT_FUNC init_spglib(void)
 
 static PyObject * get_dataset(PyObject *self, PyObject *args)
 {
-  int i, j, k;
+  int i, j, k, n;
   double symprec;
   SpglibDataset *dataset;
-  PyArrayObject* lattice_vectors;
-  PyArrayObject* atomic_positions;
-  PyArrayObject* atom_types;
+  PyArrayObject* lattice;
+  PyArrayObject* position;
+  PyArrayObject* atom_type;
   PyObject* array, *vec, *mat, *rot, *trans, *wyckoffs, *equiv_atoms;
+  PyObject *brv_lattice, *brv_types, *brv_positions;
   
-  double lattice[3][3];
-  double (*positions)[3];
-  int *types;
-
   if (!PyArg_ParseTuple(args, "OOOd",
-			&lattice_vectors,
-			&atomic_positions,
-			&atom_types,
+			&lattice,
+			&position,
+			&atom_type,
 			&symprec)) {
     return NULL;
   }
 
-  const double *p_lattice = (double(*))lattice_vectors->data;
-  const double *p_positions = (double(*))atomic_positions->data;
-  const int num_atom = atom_types->dimensions[0];
-  const int *types_int = (int*)atom_types->data;
-  positions = (double(*)[3]) malloc(sizeof(double[3]) * num_atom);
-  types = (int*) malloc(sizeof(int) * num_atom);
-  set_spglib_cell(lattice, positions, types, num_atom,
-		  p_lattice, p_positions, types_int);
-  dataset = spg_get_dataset(lattice, positions, types, num_atom, symprec);
-  
-  free(types);
-  free(positions);
+  SPGCONST double (*lat)[3] = (double(*)[3])lattice->data;
+  SPGCONST double (*pos)[3] = (double(*)[3])position->data;
+  const int num_atom = position->dimensions[0];
+  const int* typat = (int*)atom_type->data;
 
-  array = PyList_New(10);
+  dataset = spg_get_dataset(lat, pos, typat, num_atom, symprec);
+  
+  array = PyList_New(13);
+  n = 0;
 
   /* Space group number, international symbol, hall symbol */
-  PyList_SetItem(array, 0, PyInt_FromLong((long) dataset->spacegroup_number));
-  PyList_SetItem(array, 1, PyString_FromString(dataset->international_symbol));
-  PyList_SetItem(array, 2, PyInt_FromLong((long) dataset->hall_number));
-  PyList_SetItem(array, 3, PyString_FromString(dataset->hall_symbol));
+  PyList_SetItem(array, n, PyLong_FromLong((long) dataset->spacegroup_number));
+  n++;
+  PyList_SetItem(array, n, PyLong_FromLong((long) dataset->hall_number));
+  n++;
+  PyList_SetItem(array, n, PYUNICODE_FROMSTRING(dataset->international_symbol));
+  n++;
+  PyList_SetItem(array, n, PYUNICODE_FROMSTRING(dataset->hall_symbol));
+  n++;
 
   /* Transformation matrix */
   mat = PyList_New(3);
   for (i = 0; i < 3; i++) {
     vec = PyList_New(3);
     for (j = 0; j < 3; j++) {
-      PyList_SetItem(vec, j,
-		     PyFloat_FromDouble(dataset->transformation_matrix[i][j]));
+      PyList_SetItem(vec, j, PyFloat_FromDouble(dataset->transformation_matrix[i][j]));
     }
     PyList_SetItem(mat, i, vec);
   }
-  PyList_SetItem(array, 4, mat);
+  PyList_SetItem(array, n, mat);
+  n++;
 
   /* Origin shift */
   vec = PyList_New(3);
   for (i = 0; i < 3; i++) {
     PyList_SetItem(vec, i, PyFloat_FromDouble(dataset->origin_shift[i]));
   }
-  PyList_SetItem(array, 5, vec);
+  PyList_SetItem(array, n, vec);
+  n++;
 
   /* Rotation matrices */
   rot = PyList_New(dataset->n_operations);
@@ -106,14 +109,14 @@ static PyObject * get_dataset(PyObject *self, PyObject *args)
     for (j = 0; j < 3; j++) {
       vec = PyList_New(3);
       for (k = 0; k < 3; k++) {
-	PyList_SetItem(vec, k,
-		       PyInt_FromLong((long) dataset->rotations[i][j][k]));
+	PyList_SetItem(vec, k, PyLong_FromLong((long) dataset->rotations[i][j][k]));
       }
       PyList_SetItem(mat, j, vec);
     }
     PyList_SetItem(rot, i, mat);
   }
-  PyList_SetItem(array, 6, rot);
+  PyList_SetItem(array, n, rot);
+  n++;
 
   /* Translation vectors */
   trans = PyList_New(dataset->n_operations);
@@ -124,18 +127,46 @@ static PyObject * get_dataset(PyObject *self, PyObject *args)
     }
     PyList_SetItem(trans, i, vec);
   }
-  PyList_SetItem(array, 7, trans);
+  PyList_SetItem(array, n, trans);
+  n++;
 
   /* Wyckoff letters, Equivalent atoms */
   wyckoffs = PyList_New(dataset->n_atoms);
   equiv_atoms = PyList_New(dataset->n_atoms);
   for (i = 0; i < dataset->n_atoms; i++) {
-    PyList_SetItem(wyckoffs, i, PyInt_FromLong((long) dataset->wyckoffs[i]));
-    PyList_SetItem(equiv_atoms, i,
-		   PyInt_FromLong((long) dataset->equivalent_atoms[i]));
+    PyList_SetItem(wyckoffs, i, PyLong_FromLong((long) dataset->wyckoffs[i]));
+    PyList_SetItem(equiv_atoms, i, PyLong_FromLong((long) dataset->equivalent_atoms[i]));
   }
-  PyList_SetItem(array, 8, wyckoffs);
-  PyList_SetItem(array, 9, equiv_atoms);
+  PyList_SetItem(array, n, wyckoffs);
+  n++;
+  PyList_SetItem(array, n, equiv_atoms);
+  n++;
+
+  brv_lattice = PyList_New(3);
+  for (i = 0; i < 3; i++) {
+    vec = PyList_New(3);
+    for (j = 0; j < 3; j++) {
+      PyList_SetItem(vec, j, PyFloat_FromDouble(dataset->brv_lattice[i][j]));
+    }
+    PyList_SetItem(brv_lattice, i, vec);
+  }
+  PyList_SetItem(array, n, brv_lattice);
+  n++;
+
+  brv_types = PyList_New(dataset->n_brv_atoms);
+  brv_positions = PyList_New(dataset->n_brv_atoms);
+  for (i = 0; i < dataset->n_brv_atoms; i++) {
+    vec = PyList_New(3);
+    for (j = 0; j < 3; j++) {
+      PyList_SetItem(vec, j, PyFloat_FromDouble(dataset->brv_positions[i][j]));
+    }
+    PyList_SetItem(brv_types, i, PyLong_FromLong((long) dataset->brv_types[i]));
+    PyList_SetItem(brv_positions, i, vec);
+  }
+  PyList_SetItem(array, n, brv_types);
+  n++;
+  PyList_SetItem(array, n, brv_positions);
+  n++;
 
   spg_free_dataset(dataset);
 

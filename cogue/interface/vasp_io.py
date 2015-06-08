@@ -554,7 +554,7 @@ def write_kpoints(filename="KPOINTS",
         w.write("1\n")
         w.write("Reciprocal\n")
         w.write("%10.7f %10.7f %10.7f  1\n" % tuple(kpoint))
-    elif not mesh == None:
+    elif mesh is not None:
         w.write("Automatic mesh\n")
         w.write("0\n")
         if gamma:

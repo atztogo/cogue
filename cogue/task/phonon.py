@@ -1,20 +1,16 @@
 from cogue.task import TaskElement
-from phonopy import Phonopy
-from phonopy.structure.atoms import Atoms
-from phonopy.file_IO import write_disp_yaml
-from phonopy.file_IO import write_FORCE_SETS
 from cogue.interface.vasp_io import write_poscar
 from cogue.crystal.cell import Cell
+from cogue.crystal.converter import cell2atoms
+from cogue.crystal.supercell import estimate_supercell_matrix
 
-#########################
-# Cell to Phonopy Atoms #
-#########################
-def cell2atoms(cell):
-    return Atoms(cell=cell.get_lattice().T,
-                 scaled_positions=cell.get_points().T,
-                 masses=cell.get_masses(),
-                 magmoms=cell.get_magnetic_moments(),
-                 symbols=cell.get_symbols())
+try:
+    from phonopy import Phonopy
+    from phonopy.file_IO import write_disp_yaml
+    from phonopy.file_IO import write_FORCE_SETS
+except ImportError:
+    print "You need to install phonopy."
+    exit(1)
 
 class PhononBase(TaskElement):
     """PhononBase class
@@ -39,6 +35,7 @@ class PhononBase(TaskElement):
                  max_iteration=None,
                  min_iteration=None,
                  is_cell_relaxed=False,
+                 max_num_atoms=None,
                  stop_condition=None,
                  traverse=False):
 
@@ -63,6 +60,7 @@ class PhononBase(TaskElement):
         self._max_iteration = max_iteration
         self._min_iteration = min_iteration
         self._is_cell_relaxed = is_cell_relaxed
+        self._max_num_atoms = max_num_atoms
         self._stop_condition = stop_condition
         self._traverse = traverse
 
@@ -204,6 +202,12 @@ class PhononBase(TaskElement):
         
     def _set_phonon(self):
         cell = self.get_cell()
+
+        if self._supercell_matrix is None:
+            self._supercell_matrix = estimate_supercell_matrix(
+                cell,
+                max_num_atoms=self._max_num_atoms)
+
         phonopy_cell = cell2atoms(cell)
         self._phonon = Phonopy(phonopy_cell,
                                self._supercell_matrix,
@@ -224,8 +228,11 @@ class PhononBase(TaskElement):
     def _write_yaml(self):
         w = open("%s.yaml" % self._directory, 'w')
         w.write("supercell_matrix:\n")
-        for row in self._supercell_matrix:
-            w.write("- [ %3d, %3d, %3d ]\n" % tuple(row))
+        if self._supercell_matrix is None:
+            w.write("- automatic\n")
+        else:
+            for row in self._supercell_matrix:
+                w.write("- [ %3d, %3d, %3d ]\n" % tuple(row))
         w.write("primitive_matrix:\n")
         for row in self._primitive_matrix:
             w.write("- [ %6.3f, %6.3f, %6.3f ]\n" % tuple(row))

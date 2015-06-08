@@ -142,7 +142,7 @@ class ElasticConstantsBase(TaskElement):
             for i, v in enumerate(symbols):
                 w.write("- %2s # %d\n" % (v, i + 1))
 
-        if not self._elastic_constants == None:
+        if self._elastic_constants is not None:
             w.write("elastic_constants:\n")
             for v in self._elastic_constants:
                 w.write("- [ %12.4f, %12.4f, %12.4f, %12.4f, %12.4f, %12.4f ]\n" % tuple(v))

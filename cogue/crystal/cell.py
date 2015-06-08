@@ -2,6 +2,17 @@
 import numpy as np
 from cogue.crystal.atom import atomic_symbols, atomic_weights
 
+def symbols2formula(symbols):
+    counts = {}
+    formula = ""
+    for s in set(symbols):
+        counts[s] = 0
+    for s in symbols:
+        counts[s] += 1
+    for s in counts:
+        formula += "%s%d" % (s, counts[s])
+    return formula
+
 class Cell:
     """ """
     def __init__(self,

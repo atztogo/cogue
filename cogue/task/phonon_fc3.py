@@ -1,14 +1,19 @@
 import numpy as np
 from cogue.task import TaskElement
-from phonopy import Phonopy
-from anharmonic.phonon3 import Phono3py
-from phonopy.structure.atoms import Atoms
-from phonopy.file_IO import write_FORCE_SETS
-from phonopy.file_IO import write_disp_yaml
-from anharmonic.file_IO import write_disp_fc3_yaml
-from anharmonic.file_IO import write_FORCES_FC3
 from cogue.interface.vasp_io import write_poscar
-from cogue.task.phonon import cell2atoms
+from cogue.crystal.converter import cell2atoms
+
+try:
+    from phonopy import Phonopy
+    from anharmonic.phonon3 import Phono3py
+    from phonopy.structure.atoms import Atoms
+    from phonopy.file_IO import write_FORCE_SETS
+    from phonopy.file_IO import write_disp_yaml
+    from anharmonic.file_IO import write_disp_fc3_yaml
+    from anharmonic.file_IO import write_FORCES_FC3
+except ImportError:
+    print "You need to install phonopy and phono3py."
+    exit(1)
 
 class PhononFC3Base(TaskElement):
     """PhononFC3Base class

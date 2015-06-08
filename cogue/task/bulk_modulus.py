@@ -103,7 +103,7 @@ class BulkModulusBase(TaskElement):
                 stress_p = self._bm_tasks[1].get_stress()
                 stress_m = self._bm_tasks[2].get_stress()
 
-                if (stress_p == None or stress_m == None):
+                if (stress_p is None or stress_m is None):
                     self._status = "terminate"
                 else:
                     self._calculate_bulk_modulus()

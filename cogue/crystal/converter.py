@@ -158,6 +158,21 @@ def atoms2cell(phonopy_cell):
                 magmoms=phonopy_cell.get_magnetic_moments(),
                 symbols=phonopy_cell.symbols)
 
+#########################
+# Cell to Phonopy Atoms #
+#########################
+def cell2atoms(cell):
+    try:
+        from phonopy.structure.atoms import Atoms
+    except ImportError:
+        print "You need to install phonopy."
+        exit(1)
+    return Atoms(cell=cell.get_lattice().T,
+                 scaled_positions=cell.get_points().T,
+                 masses=cell.get_masses(),
+                 magmoms=cell.get_magnetic_moments(),
+                 symbols=cell.get_symbols())
+
 #######################
 # Writers and readers #
 #######################

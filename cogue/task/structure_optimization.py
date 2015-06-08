@@ -125,11 +125,11 @@ class StructureOptimizationBase(TaskElement):
             stress = task.get_stress()
             forces = task.get_forces()
             energy = task.get_energy()
-            if not stress == None:
+            if stress is not None:
                 self._stress = stress
-            if not forces == None:
+            if forces is not None:
                 self._forces = forces
-            if not energy == None:
+            if energy is not None:
                 self._energy = energy
 
         if self._status == "terminate" and self._traverse == "restart":
@@ -227,16 +227,16 @@ class StructureOptimizationBase(TaskElement):
                 w.write("space_group_number: %d\n" %
                         self._space_group['number'])
 
-        if not self._energy == None:
+        if self._energy is not None:
             w.write("energy: %20.10f\n" % self._energy)
 
-        if not self._forces == None:
+        if self._forces is not None:
             w.write("forces:\n")
             for i, v in enumerate(self._forces):
                 w.write("- [ %15.10f, %15.10f, %15.10f ] # %d\n" %
                         (v[0], v[1], v[2], i + 1))
 
-        if not self._stress == None:
+        if self._stress is not None:
             w.write("stress:\n")
             for x, v in zip(('x', 'y', 'z'), self._stress):
                 w.write("- [ %15.10f, %15.10f, %15.10f ] # %sx %sy %sz\n" % (v[0], v[1], v[2], x, x, x))
