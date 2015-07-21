@@ -1,4 +1,36 @@
-/* niggli.c */
+/* Copyright (C) 2015 Atsushi Togo */
+/* All rights reserved. */
+
+/* This file is part of spglib. */
+
+/* Redistribution and use in source and binary forms, with or without */
+/* modification, are permitted provided that the following conditions */
+/* are met: */
+
+/* * Redistributions of source code must retain the above copyright */
+/*   notice, this list of conditions and the following disclaimer. */
+
+/* * Redistributions in binary form must reproduce the above copyright */
+/*   notice, this list of conditions and the following disclaimer in */
+/*   the documentation and/or other materials provided with the */
+/*   distribution. */
+
+/* * Neither the name of the phonopy project nor the names of its */
+/*   contributors may be used to endorse or promote products derived */
+/*   from this software without specific prior written permission. */
+
+/* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS */
+/* "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT */
+/* LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS */
+/* FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE */
+/* COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, */
+/* INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, */
+/* BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; */
+/* LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER */
+/* CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT */
+/* LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN */
+/* ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE */
+/* POSSIBILITY OF SUCH DAMAGE. */
 
 #include <stdio.h>
 #include <math.h>
@@ -11,7 +43,7 @@ static int l, m, n;
 static double *tmat = NULL;
 static double *lattice = NULL;
 
-static void initialize(const double *lattice_, const double eps_);
+static int initialize(const double *lattice_, const double eps_);
 static void finalize(double *lattice_);
 static void reset(void);
 static void step0(void);
@@ -47,11 +79,22 @@ static void debug_show(void)
 #define debug_show(...)
 #endif
 
-void niggli_reduce(double *lattice_, const double eps_)
+#ifdef NIGGLI_WARNING
+#include <stdio.h>
+#define warning_print(...) fprintf(stderr,__VA_ARGS__)
+#else
+#define warning_print(...)
+#endif
+
+/* return 0 if failed */
+int niggli_reduce(double *lattice_, const double eps_)
 {
   int i;
 
-  initialize(lattice_, eps_);
+  if (! initialize(lattice_, eps_)) {
+    return 0;
+  }
+
   step0();
   
   for (i = 0; i < 10; i++) {
@@ -112,32 +155,49 @@ void niggli_reduce(double *lattice_, const double eps_)
   }
 
   finalize(lattice_);
+  return 1;
 }
 
-static void initialize(const double *lattice_, const double eps_)
+static int initialize(const double *lattice_, const double eps_)
 {
-  tmat = (double*)malloc(sizeof(double) * 9);
+  if ((tmat = (double*)malloc(sizeof(double) * 9)) == NULL) {
+    warning_print("niggli: Memory could not be allocated.");
+    return 0;
+  }
+
   eps = eps_;
-  lattice = (double*)malloc(sizeof(double) * 9);
+  if ((lattice = (double*)malloc(sizeof(double) * 9)) == NULL) {
+    warning_print("niggli: Memory could not be allocated.");
+    free(tmat);
+    tmat = NULL;
+    return 0;
+  }
   memcpy(lattice, lattice_, sizeof(double) * 9);
+
+  return 1;
 }
 
 static void finalize(double *lattice_)
 {
   free(tmat);
+  tmat = NULL;
   memcpy(lattice_, lattice, sizeof(double) * 9);
   free(lattice);
+  lattice = NULL;
 }
 
 static void reset(void)
 {
   double *lat_tmp;
+
+  lat_tmp = NULL;
   
   lat_tmp = multiply_matrices(lattice, tmat);
 
   memcpy(lattice, lat_tmp, sizeof(double) * 9);
   step0();
   free(lat_tmp);
+  lat_tmp = NULL;
 }
 
 static void step0(void)
@@ -287,6 +347,8 @@ static void set_parameters(void)
 {
   double *G;
 
+  G = NULL;
+
   G = get_metric(lattice);
 
   A = G[0];
@@ -297,6 +359,7 @@ static void set_parameters(void)
   zeta = G[1] * 2;
 
   free(G);
+  G = NULL;
 }
 
 static double * get_transpose(const double *M)
@@ -304,7 +367,13 @@ static double * get_transpose(const double *M)
   int i, j;
   double *M_T;
 
-  M_T = (double*)malloc(sizeof(double) * 9);
+  M_T = NULL;
+
+  if ((M_T = (double*)malloc(sizeof(double) * 9)) == NULL) {
+    warning_print("niggli: Memory could not be allocated.");
+    return NULL;
+  }
+
   for (i = 0; i < 3; i++) {
     for (j = 0; j < 3; j++) {
       M_T[i * 3 + j] = M[j * 3 + i];
@@ -317,10 +386,15 @@ static double * get_metric(const double *M)
 {
   double *G, *M_T;
 
+  G = NULL;
+  M_T = NULL;
+
   M_T = get_transpose(M);
 
   G = multiply_matrices(M_T, M);
   free(M_T);
+  M_T = NULL;
+
   return G;
 }
 
@@ -329,7 +403,13 @@ static double * multiply_matrices(const double *L, const double *R)
   int i, j, k;
   double *M;
 
-  M = (double*)malloc(sizeof(double) * 9);
+  M = NULL;
+
+  if ((M = (double*)malloc(sizeof(double) * 9)) == NULL) {
+    warning_print("niggli: Memory could not be allocated.");
+    return NULL;
+  }
+
   for (i = 0; i < 3; i++) {
     for (j = 0; j < 3; j++) {
       M[i * 3 + j] = 0;
