@@ -44,9 +44,9 @@ def get_symmetry_dataset(cell, tolerance=1e-5):
             'translations',
             'wyckoffs',
             'equivalent_atoms',
-            'brv_lattice',
-            'brv_types',
-            'brv_positions')
+            'std_lattice',
+            'std_types',
+            'std_positions')
     dataset = {}
     for key, data in zip(keys,
                          spg.get_dataset(lattice, points, numbers, tolerance)):
@@ -65,10 +65,10 @@ def get_symmetry_dataset(cell, tolerance=1e-5):
     dataset['wyckoffs'] = [letters[x] for x in dataset['wyckoffs']]
     dataset['equivalent_atoms'] = np.intc(dataset['equivalent_atoms'])
     dataset['international_standard'] = standard_HM_symbols[dataset['number']]
-    dataset['brv_lattice'] = np.array(dataset['brv_lattice'],
+    dataset['std_lattice'] = np.array(dataset['std_lattice'],
                                       dtype='double', order='C')
-    dataset['brv_types'] = np.array(dataset['brv_types'], dtype='intc')
-    dataset['brv_positions'] = np.array(np.transpose(dataset['brv_positions']),
+    dataset['std_types'] = np.array(dataset['std_types'], dtype='intc')
+    dataset['std_positions'] = np.array(np.transpose(dataset['std_positions']),
                                         dtype='double', order='C')
 
     return dataset
@@ -77,11 +77,11 @@ def get_crystallographic_cell(cell, tolerance=1e-5):
     points = np.array(cell.get_points(), dtype='double', order='C')
     lattice = np.array(cell.get_lattice(), dtype='double', order='C')
     numbers = np.array(cell.get_numbers(), dtype='intc')
-    brv_lattice, brv_points, brv_numbers = spg.get_crystallographic_cell(
+    std_lattice, std_points, std_numbers = spg.get_crystallographic_cell(
         lattice, points, numbers, tolerance)
-    return Cell(lattice=brv_lattice,
-                points=brv_points,
-                numbers=brv_numbers)
+    return Cell(lattice=std_lattice,
+                points=std_points,
+                numbers=std_numbers)
 
 def get_primitive_cell(cell, tolerance=1e-5):
     points = np.array(cell.get_points(), dtype='double', order='C')

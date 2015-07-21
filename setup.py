@@ -40,8 +40,7 @@ spglib = Extension('cogue._spglib',
                               'ext/spglib/site_symmetry.c',
                               'ext/spglib/sitesym_database.c',
                               'ext/spglib/symmetry.c',
-                              'ext/spglib/tetrahedron_method.c',
-                              'ext/spglib/triplet_kpoint.c'] )
+                              'ext/spglib/tetrahedron_method.c'])
 
 
 xtalcomp = Extension('cogue._xtalcomp',

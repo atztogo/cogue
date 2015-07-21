@@ -25,7 +25,26 @@ static PyObject * set_cell(int num_atom,
 			   double positions[][3],
 			   int types[]);
 
-static PyMethodDef functions[] = {
+struct module_state {
+  PyObject *error;
+};
+
+#if PY_MAJOR_VERSION >= 3
+#define GETSTATE(m) ((struct module_state*)PyModule_GetState(m))
+#else
+#define GETSTATE(m) (&_state)
+static struct module_state _state;
+#endif
+
+static PyObject *
+error_out(PyObject *m) {
+  struct module_state *st = GETSTATE(m);
+  PyErr_SetString(st->error, "something bad happened");
+  return NULL;
+}
+
+static PyMethodDef _spglib_methods[] = {
+  {"error_out", (PyCFunction)error_out, METH_NOARGS, NULL},
   {"get_dataset", get_dataset, METH_VARARGS,
    "Return crystal symmetry dataset"},
   {"get_crystallographic_cell", get_crystallographic_cell, METH_VARARGS,
@@ -37,10 +56,61 @@ static PyMethodDef functions[] = {
   {NULL, NULL, 0, NULL}
 };
 
-PyMODINIT_FUNC init_spglib(void)
+#if PY_MAJOR_VERSION >= 3
+
+static int _spglib_traverse(PyObject *m, visitproc visit, void *arg) {
+  Py_VISIT(GETSTATE(m)->error);
+  return 0;
+}
+
+static int _spglib_clear(PyObject *m) {
+  Py_CLEAR(GETSTATE(m)->error);
+  return 0;
+}
+
+static struct PyModuleDef moduledef = {
+  PyModuleDef_HEAD_INIT,
+  "_spglib",
+  NULL,
+  sizeof(struct module_state),
+  _spglib_methods,
+  NULL,
+  _spglib_traverse,
+  _spglib_clear,
+  NULL
+};
+
+#define INITERROR return NULL
+
+PyObject *
+PyInit__spglib(void)
+
+#else
+#define INITERROR return
+
+  void
+  init_spglib(void)
+#endif
 {
-  Py_InitModule3("_spglib", functions, "C-extension for spglib\n\n...\n");
-  return;
+#if PY_MAJOR_VERSION >= 3
+  PyObject *module = PyModule_Create(&moduledef);
+#else
+  PyObject *module = Py_InitModule("_spglib", _spglib_methods);
+#endif
+
+  if (module == NULL)
+    INITERROR;
+  struct module_state *st = GETSTATE(module);
+
+  st->error = PyErr_NewException("_spglib.Error", NULL, NULL);
+  if (st->error == NULL) {
+    Py_DECREF(module);
+    INITERROR;
+  }
+
+#if PY_MAJOR_VERSION >= 3
+  return module;
+#endif
 }
 
 static PyObject * get_dataset(PyObject *self, PyObject *args)
@@ -52,7 +122,7 @@ static PyObject * get_dataset(PyObject *self, PyObject *args)
   PyArrayObject* position;
   PyArrayObject* atom_type;
   PyObject* array, *vec, *mat, *rot, *trans, *wyckoffs, *equiv_atoms;
-  PyObject *brv_lattice, *brv_types, *brv_positions;
+  PyObject *std_lattice, *std_types, *std_positions;
   
   if (!PyArg_ParseTuple(args, "OOOd",
 			&lattice,
@@ -62,10 +132,10 @@ static PyObject * get_dataset(PyObject *self, PyObject *args)
     return NULL;
   }
 
-  SPGCONST double (*lat)[3] = (double(*)[3])lattice->data;
-  SPGCONST double (*pos)[3] = (double(*)[3])position->data;
-  const int num_atom = position->dimensions[0];
-  const int* typat = (int*)atom_type->data;
+  SPGCONST double (*lat)[3] = (double(*)[3])PyArray_DATA(lattice);
+  SPGCONST double (*pos)[3] = (double(*)[3])PyArray_DATA(position);
+  const int num_atom = PyArray_DIMS(position)[0];
+  const int* typat = (int*)PyArray_DATA(atom_type);
 
   dataset = spg_get_dataset(lat, pos, typat, num_atom, symprec);
   
@@ -142,30 +212,30 @@ static PyObject * get_dataset(PyObject *self, PyObject *args)
   PyList_SetItem(array, n, equiv_atoms);
   n++;
 
-  brv_lattice = PyList_New(3);
+  std_lattice = PyList_New(3);
   for (i = 0; i < 3; i++) {
     vec = PyList_New(3);
     for (j = 0; j < 3; j++) {
-      PyList_SetItem(vec, j, PyFloat_FromDouble(dataset->brv_lattice[i][j]));
+      PyList_SetItem(vec, j, PyFloat_FromDouble(dataset->std_lattice[i][j]));
     }
-    PyList_SetItem(brv_lattice, i, vec);
+    PyList_SetItem(std_lattice, i, vec);
   }
-  PyList_SetItem(array, n, brv_lattice);
+  PyList_SetItem(array, n, std_lattice);
   n++;
 
-  brv_types = PyList_New(dataset->n_brv_atoms);
-  brv_positions = PyList_New(dataset->n_brv_atoms);
-  for (i = 0; i < dataset->n_brv_atoms; i++) {
+  std_types = PyList_New(dataset->n_std_atoms);
+  std_positions = PyList_New(dataset->n_std_atoms);
+  for (i = 0; i < dataset->n_std_atoms; i++) {
     vec = PyList_New(3);
     for (j = 0; j < 3; j++) {
-      PyList_SetItem(vec, j, PyFloat_FromDouble(dataset->brv_positions[i][j]));
+      PyList_SetItem(vec, j, PyFloat_FromDouble(dataset->std_positions[i][j]));
     }
-    PyList_SetItem(brv_types, i, PyLong_FromLong((long) dataset->brv_types[i]));
-    PyList_SetItem(brv_positions, i, vec);
+    PyList_SetItem(std_types, i, PyLong_FromLong((long) dataset->std_types[i]));
+    PyList_SetItem(std_positions, i, vec);
   }
-  PyList_SetItem(array, n, brv_types);
+  PyList_SetItem(array, n, std_types);
   n++;
-  PyList_SetItem(array, n, brv_positions);
+  PyList_SetItem(array, n, std_positions);
   n++;
 
   spg_free_dataset(dataset);
@@ -175,7 +245,7 @@ static PyObject * get_dataset(PyObject *self, PyObject *args)
 
 static PyObject * get_crystallographic_cell(PyObject *self, PyObject *args)
 {
-  int num_atom, num_atom_brv;
+  int num_atom, num_atom_std;
   double symprec;
   PyArrayObject* lattice_vectors;
   PyArrayObject* atomic_positions;
@@ -198,17 +268,17 @@ static PyObject * get_crystallographic_cell(PyObject *self, PyObject *args)
     return NULL;
   }
 
-  p_lattice = (double(*))lattice_vectors->data;
-  p_positions = (double(*))atomic_positions->data;
-  num_atom = atom_types->dimensions[0];
+  p_lattice = (double(*))PyArray_DATA(lattice_vectors);
+  p_positions = (double(*))PyArray_DATA(atomic_positions);
+  num_atom = PyArray_DIMS(atom_types)[0];
   positions = (double(*)[3]) malloc(sizeof(double[3]) * num_atom * 4);
-  types_int = (int*)atom_types->data;
+  types_int = (int*)PyArray_DATA(atom_types);
   types = (int*) malloc(sizeof(int) * num_atom * 4);
 
   set_spglib_cell(lattice, positions, types, num_atom,
 		  p_lattice, p_positions, types_int);
-  num_atom_brv = spg_refine_cell(lattice, positions, types, num_atom, symprec);
-  array = set_cell(num_atom_brv, lattice, positions, types);
+  num_atom_std = spg_refine_cell(lattice, positions, types, num_atom, symprec);
+  array = set_cell(num_atom_std, lattice, positions, types);
 
   free(types);
   free(positions);
@@ -242,11 +312,11 @@ static PyObject * get_primitive(PyObject *self, PyObject *args)
     return NULL;
   }
 
-  p_lattice = (double(*))lattice_vectors->data;
-  p_positions = (double(*))atomic_positions->data;
-  types_int = (int*)atom_types->data;
+  p_lattice = (double(*))PyArray_DATA(lattice_vectors);
+  p_positions = (double(*))PyArray_DATA(atomic_positions);
+  types_int = (int*)PyArray_DATA(atom_types);
 
-  num_atom = atom_types->dimensions[0];
+  num_atom = PyArray_DIMS(atom_types)[0];
   positions = (double(*)[3]) malloc(sizeof(double[3]) * num_atom);
   types = (int*) malloc(sizeof(int) * num_atom);
   set_spglib_cell(lattice, positions, types, num_atom,

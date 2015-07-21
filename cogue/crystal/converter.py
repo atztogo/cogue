@@ -103,20 +103,20 @@ def get_oriented_lattice(lattice):
 
 def get_primitive(cell, tolerance=1e-5):
     # spglib returns R-centred lattice for Rhombohedrals
-    brv_cell = get_crystallographic_cell(cell, tolerance)
-    sym_dataset = get_symmetry_dataset(brv_cell)
+    std_cell = get_crystallographic_cell(cell, tolerance)
+    sym_dataset = get_symmetry_dataset(std_cell)
     spg_symbol = sym_dataset['international'][0]
     if spg_symbol == 'F':
-        brv_cell = _fc2prim(brv_cell)
+        std_cell = _fc2prim(std_cell)
     elif spg_symbol == 'I':
-        brv_cell = _bc2prim(brv_cell)
+        std_cell = _bc2prim(std_cell)
     elif spg_symbol == 'A':
-        brv_cell = _abc2prim(brv_cell)
+        std_cell = _abc2prim(std_cell)
     elif spg_symbol == 'B':
-        brv_cell = _bbc2prim(brv_cell)
+        std_cell = _bbc2prim(std_cell)
     elif spg_symbol == 'C':
-        brv_cell = _cbc2prim(brv_cell)
-    return brv_cell
+        std_cell = _cbc2prim(std_cell)
+    return std_cell
 
 def _fc2prim(cell):
     tmat = [[ 0.0, 0.5, 0.5],
