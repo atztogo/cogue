@@ -6,7 +6,7 @@ import cogue.interface.mayavi2 as mayavi2
 import cogue.crystal.symmetry as symmetry
 import cogue.interface.vasp_io as vasp_io
 import cogue.interface.ui_utils as ui_utils
-from cogue.crystal.converter import frac2val
+from cogue.crystal.utility import frac2val
 
 parser = ui_utils.get_parser()
 parser.set_defaults(symprec=1e-5,

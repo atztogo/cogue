@@ -1,4 +1,4 @@
-from cogue.crystal.converter import get_oriented_lattice
+from cogue.crystal.utility import get_oriented_lattice
 
 #
 # V_sim ascii

@@ -1,7 +1,7 @@
 import numpy as np
 from mayavi import mlab
 from cogue.crystal.atom import atomic_jmol_colors, covalent_radii
-from cogue.crystal.converter import get_lattice_parameters
+from cogue.crystal.utility import get_lattice_parameters
 
 
 def set_figure():

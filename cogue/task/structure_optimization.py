@@ -1,7 +1,6 @@
 import os
 from cogue.task import TaskElement
-from cogue.crystal.symmetry import \
-    get_crystallographic_cell, get_symmetry_dataset
+from cogue.crystal.symmetry import get_crystallographic_cell, get_symmetry_dataset
 from cogue.crystal.converter import get_primitive
 
 class StructureOptimizationBase(TaskElement):

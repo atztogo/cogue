@@ -1,7 +1,8 @@
 import sys
 import os
 import numpy as np
-from cogue.crystal.converter import frac2val, reduce_points
+from cogue.crystal.converter import reduce_points
+from cogue.crystal.utility import frac2val
 from cogue.crystal.supercell import get_supercell
 
 r2h_observe_R3 = [[-1, 1, 1],

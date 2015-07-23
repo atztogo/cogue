@@ -22,15 +22,14 @@
 import os
 import numpy as np
 from cogue.task import TaskElement
-from cogue.crystal.converter import get_lattice_parameters
+from cogue.crystal.utility import get_lattice_parameters
 from cogue.interface.cif import write_cif_P1
 from cogue.interface.v_sim import write_v_sim
 from cogue.interface.vasp_io import write_poscar
 from cogue.crystal.converter import get_primitive
 from cogue.interface.xtalcomp import compare as xtal_compare
 from cogue.phonon.modulation import PhononModulation
-from cogue.crystal.symmetry import \
-     get_symmetry_dataset, get_crystallographic_cell
+from cogue.crystal.symmetry import get_symmetry_dataset, get_crystallographic_cell
 
 CUTOFF_ZERO = 1e-10
 DEGENERACY_TOLERANCE = 1e-3

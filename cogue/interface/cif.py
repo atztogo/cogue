@@ -1,5 +1,5 @@
 import numpy as np
-from cogue.crystal.converter import get_angles, get_lattice_parameters
+from cogue.crystal.utility import get_angles, get_lattice_parameters
 
 #
 # Cif

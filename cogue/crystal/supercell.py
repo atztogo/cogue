@@ -1,6 +1,7 @@
 import numpy as np
 from cogue.crystal.cell import Cell
-from cogue.crystal.converter import reduce_points, get_lattice_parameters
+from cogue.crystal.converter import reduce_points
+from cogue.crystal.utility import get_lattice_parameters
 from cogue.crystal.symmetry import get_symmetry_dataset
 
 def get_supercell(cell, supercell_matrix, tolerance=1e-5):
