@@ -61,3 +61,13 @@ def get_oriented_lattice(lattice):
     lattice[:,2] = np.array([c1, c2, c3]) * c
     return lattice
 
+def klength2mesh(k_length, lattice):
+    """Convert length to mesh in k-point sampling
+
+    This conversion follows VASP manual.
+
+    """
+    rec_lattice = np.linalg.inv(lattice).T
+    rec_lat_lengths = np.sqrt(np.diagonal(np.dot(rec_lattice.T, rec_lattice)))
+    k_mesh = (rec_lat_lengths * k_length + 0.5).astype(int)
+    return np.maximum(k_mesh, [1, 1, 1])

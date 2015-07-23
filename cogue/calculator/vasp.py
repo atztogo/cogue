@@ -8,6 +8,7 @@ import numpy as np
 import shutil
 from cogue.crystal.cell import Cell
 from cogue.crystal.converter import atoms2cell
+from cogue.crystal.utility import klength2mesh
 from cogue.task.oneshot_calculation import *
 from cogue.task.structure_optimization import *
 from cogue.task.bulk_modulus import *
@@ -598,17 +599,6 @@ def phonon_relax(directory="phonon_relax",
     phr.set_job(job)
 
     return phr
-
-def klength2mesh(k_length, lattice):
-    """Convert length to mesh in k-point sampling
-
-    This conversion follows VASP manual.
-
-    """
-    rec_lattice = np.linalg.inv(lattice).T
-    rec_lat_lengths = np.sqrt(np.diagonal(np.dot(rec_lattice.T, rec_lattice)))
-    k_mesh = (rec_lat_lengths * k_length + 0.5).astype(int)
-    return np.maximum(k_mesh, [1, 1, 1])
 
 class TaskVasp:
     def set_configurations(self,
