@@ -84,7 +84,7 @@ class DensityOfStatesBase(TaskElement):
 
         if self._is_cell_relaxed:
             self._dos_tasks = [None]
-            self._set_stage1(self._cell)
+            self._set_stage1()
         else:
             self._status = "equilibrium"
             self._dos_tasks = [self._get_equilibrium_task()]
@@ -111,13 +111,9 @@ class DensityOfStatesBase(TaskElement):
                 self._status = "done"
             elif self._status == "terminate" and self._traverse == "restart":
                 self._traverse = False
-                cell = self._dos_tasks[0].get_cell()
-                properties = self._dos_tasks[1].get_properties()
-                task = self._get_dos_task(cell,
-                                          is_partial_dos=self._is_partial_dos,
-                                          properties=properties)
-                self._tasks = [task]
-                self._status = "dos"
+                if len(self._dos_tasks) > 1:
+                    self._dos_tasks = self._dos_tasks[:2]
+                self._set_stage2()
                 return self._tasks
 
         self._write_yaml()
@@ -127,7 +123,10 @@ class DensityOfStatesBase(TaskElement):
         pass
 
     def _set_stage1(self):
-        cell = self._dos_tasks[0].get_cell()
+        if self._dos_tasks[0] is None:
+            cell = self._cell
+        else:
+            cell = self._dos_tasks[0].get_cell()
         self._stage = 1
         self._status = "charge density"
         task = self._get_charge_density_task(cell)
@@ -135,13 +134,13 @@ class DensityOfStatesBase(TaskElement):
         self._tasks = [task]
 
     def _set_stage2(self):
-        cell = self._dos_tasks[0].get_cell()
+        cell = self._dos_tasks[1].get_cell()
         properties = self._dos_tasks[1].get_properties()
         self._stage = 2
         self._status = "dos"
         task = self._get_dos_task(cell, properties=properties)
-        self._dos_tasks += tasks
-        self._tasks = tasks
+        self._dos_tasks.append(task)
+        self._tasks = [task]
 
     def _write_yaml(self):
         w = open("%s.yaml" % self._directory, 'w')

@@ -1268,6 +1268,7 @@ class DensityOfStates(TaskVasp, DensityOfStatesBase):
     def __init__(self,
                  directory="density_of_states",
                  name=None,
+                 is_partial_dos=False,
                  lattice_tolerance=0.1,
                  force_tolerance=1e-3,
                  pressure_target=0,
@@ -1282,6 +1283,7 @@ class DensityOfStates(TaskVasp, DensityOfStatesBase):
             self,
             directory=directory,
             name=name,
+            is_partial_dos=is_partial_dos,
             lattice_tolerance=lattice_tolerance,
             force_tolerance=force_tolerance,
             pressure_target=pressure_target,
@@ -1294,30 +1296,38 @@ class DensityOfStates(TaskVasp, DensityOfStatesBase):
 
     def _get_dos_task(self,
                       cell,
-                      is_partial_dos=False,
                       properties=None,
                       chgcar_dir="charge_density"):
         directory = "dos"
-        job, incar, kpoints = self._choose_configuration(index=1)
+
+        job, incar, kpoints = self._choose_configuration(index=2)
+        k_mesh = kpoints['mesh']
+        k_shift = kpoints['shift']
+        k_gamma = kpoints['gamma']
+        k_length = kpoints['length']
+
         incar.set_icharg(11)
         incar.set_ibrion(-1)
         incar.set_nsw(None)
         incar.set_isif(None)
         incar.set_ediffg(None)
-        if is_partial_dos:
+        if self._is_partial_dos:
             incar.set_lorbit(12)
         if properties:
             if 'nbands' in properties:
                 incar.set_nbands(2 * properties['nbands'])
-        task = ElectronicStructure(directory=directory + "%04d" % i,
+        task = ElectronicStructure(directory=directory,
                                    traverse=self._traverse)
         task.set_configurations(
             cell=cell,
             pseudo_potential_map=self._pseudo_potential_map,
-            kpoint=kpoint,
+            k_mesh=k_mesh,
+            k_shift=k_shift,
+            k_gamma=k_gamma,
+            k_length=k_length,
             incar=incar)
         task.set_job(
-            job.copy("%s-%s%d" % (job.get_jobname(), directory, i)))
+            job.copy("%s-%s" % (job.get_jobname(), directory)))
         task.set_copy_files([("../%s/CHGCAR" % chgcar_dir, "CHGCAR")])
 
         return task

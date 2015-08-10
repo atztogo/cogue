@@ -84,7 +84,7 @@ class BandStructureBase(TaskElement):
 
         if self._is_cell_relaxed:
             self._bs_tasks = [None]
-            self._set_stage1(self._cell)
+            self._set_stage1()
         else:
             self._status = "equilibrium"
             self._bs_tasks = [self._get_equilibrium_task()]
@@ -140,7 +140,10 @@ class BandStructureBase(TaskElement):
             eigvals.append(eigs_path)
             
         from cogue.electron.band_structure import BandStructure as BS
-        cell = self._bs_tasks[0].get_cell()
+        if self._bs_tasks[0] is None:
+            cell = self._cell
+        else:
+            cell = self._bs_tasks[0].get_cell()
         bs = BS(self._paths,
                 cell,
                 eigvals,
@@ -148,7 +151,10 @@ class BandStructureBase(TaskElement):
         bs.write_yaml()
         
     def _set_stage1(self):
-        cell = self._bs_tasks[0].get_cell()
+        if self._bs_tasks[0] is None:
+            cell = self._cell
+        else:
+            cell = self._bs_tasks[0].get_cell()
         self._stage = 1
         self._status = "charge density"
         task = self._get_charge_density_task(cell)
@@ -156,7 +162,7 @@ class BandStructureBase(TaskElement):
         self._tasks = [task]
 
     def _set_stage2(self):
-        cell = self._bs_tasks[0].get_cell()
+        cell = self._bs_tasks[1].get_cell()
         properties = self._bs_tasks[1].get_properties()
         self._stage = 2
         self._status = "kpoint paths"
