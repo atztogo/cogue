@@ -221,6 +221,51 @@ def band_structure(directory="band_structure",
 
     return bs
 
+def density_of_states(directory="density_of_states",
+                      name=None,
+                      job=None,
+                      is_partial_dos=False,
+                      lattice_tolerance=0.1,
+                      force_tolerance=1e-3,
+                      pressure_target=0,
+                      stress_tolerance=10,
+                      max_increase=None,
+                      max_iteration=4,
+                      min_iteration=1,
+                      is_cell_relaxed=False,
+                      traverse=False,
+                      cell=None,
+                      pseudo_potential_map=None,
+                      k_mesh=None,
+                      k_shift=None,
+                      k_gamma=None,
+                      k_length=None,
+                      incar=None):
+
+    dos = DensityOfStates(directory=directory,
+                          name=name,
+                          is_partial_dos=is_partial_dos,
+                          lattice_tolerance=lattice_tolerance,
+                          force_tolerance=force_tolerance,
+                          pressure_target=pressure_target,
+                          stress_tolerance=stress_tolerance,
+                          max_increase=max_increase,
+                          max_iteration=max_iteration,
+                          min_iteration=min_iteration,
+                          is_cell_relaxed=is_cell_relaxed,
+                          traverse=traverse)
+
+    dos.set_configurations(cell=cell,
+                           pseudo_potential_map=pseudo_potential_map,
+                           k_mesh=k_mesh,
+                           k_shift=k_shift,
+                           k_gamma=k_gamma,
+                           k_length=k_length,
+                           incar=incar)
+    dos.set_job(job)
+
+    return dos
+
 def phonon(directory="phonon",
            name=None,
            job=None,
@@ -1219,7 +1264,7 @@ class BandStructure(TaskVasp, BandStructureBase):
 
 class DensityOfStates(TaskVasp, DensityOfStatesBase):
     """Task to calculate density of states by VASP."""
-    
+
     def __init__(self,
                  directory="density_of_states",
                  name=None,
@@ -1393,7 +1438,7 @@ class TaskVaspQHA:
             incar = self._incar.copy()
             if is_cell_relaxed:
                 incar.set_nsw(1)
-        
+
         task.set_configurations(
             cell=cell,
             pseudo_potential_map=self._pseudo_potential_map,

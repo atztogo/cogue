@@ -8,9 +8,9 @@ class DensityOfStatesBase(TaskElement):
     1. structure optimization of input cell
     2. calculate charge density
     3. calculate density of states
-    
+
     """
-    
+
     def __init__(self,
                  directory=None,
                  name=None,
@@ -43,7 +43,7 @@ class DensityOfStatesBase(TaskElement):
         self._min_iteration = min_iteration
         self._traverse = traverse
         self._is_cell_relaxed = is_cell_relaxed
-        
+
         self._stage = 0
         self._tasks = None
 
@@ -96,7 +96,7 @@ class DensityOfStatesBase(TaskElement):
                 self._status == "max_iteration" or
                 self._status == "next")
 
-    def next(self):    
+    def next(self):
         if self._stage == 0:
             if self._status == "next":
                 self._set_stage1()
@@ -125,7 +125,7 @@ class DensityOfStatesBase(TaskElement):
 
     def _create_density_of_states(self):
         pass
-        
+
     def _set_stage1(self):
         cell = self._dos_tasks[0].get_cell()
         self._stage = 1
@@ -142,7 +142,7 @@ class DensityOfStatesBase(TaskElement):
         task = self._get_dos_task(cell, properties=properties)
         self._dos_tasks += tasks
         self._tasks = tasks
-        
+
     def _write_yaml(self):
         w = open("%s.yaml" % self._directory, 'w')
         if self._dos_tasks[0]:
@@ -169,12 +169,12 @@ class DensityOfStatesBase(TaskElement):
             lattice = cell.get_lattice().T
             points = cell.get_points().T
             symbols = cell.get_symbols()
-        
+
             w.write("lattice:\n")
             for v, a in zip(lattice, ('a', 'b', 'c')) :
                 w.write("- [ %22.16f, %22.16f, %22.16f ] # %s\n" %
                         (v[0], v[1], v[2], a))
-    
+
             w.write("points:\n")
             for i, v in enumerate(points):
                 w.write("- [ %20.16f, %20.16f, %20.16f ] # %d\n" %
