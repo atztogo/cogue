@@ -1,7 +1,7 @@
 __all__ = ['incar', 'electronic_structure', 'structure_optimization',
            'bulk_modulus', 'phonon', 'elastic_constants',
            'mode_gruneisen', 'quasiharmonic_phonon', 'phonon_relax',
-           'band_structure']
+           'band_structure', 'density_of_states']
 
 import os
 import numpy as np
@@ -19,6 +19,7 @@ from cogue.task.phonon_relax import *
 from cogue.task.elastic_constants import *
 from cogue.task.quasiharmonic_phonon import *
 from cogue.task.band_structure import *
+from cogue.task.density_of_states import *
 from cogue.interface.vasp_io import *
 
 def incar(addgrid=None,
@@ -798,6 +799,36 @@ class TaskVasp:
         task.set_job(job.copy("%s-%s" %
                               (job.get_jobname(), directory)))
         return task
+
+    def _get_charge_density_task(self,
+                                 cell,
+                                 index=1,
+                                 directory="charge_density"):
+        job, incar, kpoints = self._choose_configuration(index=index)
+        k_mesh = kpoints['mesh']
+        k_shift = kpoints['shift']
+        k_gamma = kpoints['gamma']
+        k_length = kpoints['length']
+        incar.set_lcharg(True)
+        incar.set_ibrion(-1)
+        incar.set_nsw(None)
+        incar.set_isif(None)
+        incar.set_ediffg(None)
+
+        task = ElectronicStructure(directory=directory,
+                                   traverse=self._traverse)
+        task.set_configurations(
+            cell=cell,
+            pseudo_potential_map=self._pseudo_potential_map,
+            k_mesh=k_mesh,
+            k_shift=k_shift,
+            k_gamma=k_gamma,
+            k_length=k_length,
+            incar=incar)
+        task.set_job(job.copy("%s-%s" % (job.get_jobname(), directory)))
+
+        return task
+
     
 class ElectronicStructure(TaskVasp, ElectronicStructureBase):
     """ """
@@ -1153,35 +1184,10 @@ class BandStructure(TaskVasp, BandStructureBase):
             is_cell_relaxed=is_cell_relaxed,
             traverse=traverse)
 
-    def _get_charge_density_task(self, cell):
-        directory = "charge_density"
-        
-        job, incar, kpoints = self._choose_configuration(index=1)
-        k_mesh = kpoints['mesh']
-        k_shift = kpoints['shift']
-        k_gamma = kpoints['gamma']
-        k_length = kpoints['length']
-        incar.set_lcharg(True)
-        incar.set_ibrion(-1)
-        incar.set_nsw(None)
-        incar.set_isif(None)
-        incar.set_ediffg(None)
-
-        task = ElectronicStructure(directory=directory,
-                                   traverse=self._traverse)
-        task.set_configurations(
-            cell=cell,
-            pseudo_potential_map=self._pseudo_potential_map,
-            k_mesh=k_mesh,
-            k_shift=k_shift,
-            k_gamma=k_gamma,
-            k_length=k_length,
-            incar=incar)
-        task.set_job(job.copy("%s-%s" % (job.get_jobname(), directory)))
-
-        return task
-
-    def _get_band_point_tasks(self, cell, properties=None):
+    def _get_band_point_tasks(self,
+                              cell,
+                              properties=None,
+                              chgcar_dir="charge_density"):
         directory = "path"
         tasks = []
         all_kpoints = []
@@ -1206,10 +1212,70 @@ class BandStructure(TaskVasp, BandStructureBase):
                 incar=incar)
             task.set_job(
                 job.copy("%s-%s%d" % (job.get_jobname(), directory, i)))
-            task.set_copy_files([("../charge_density/CHGCAR", "CHGCAR")])
+            task.set_copy_files([("../%s/CHGCAR" % chgcar_dir, "CHGCAR")])
             tasks.append(task)
 
         return tasks
+
+class DensityOfStates(TaskVasp, DensityOfStatesBase):
+    """Task to calculate density of states by VASP."""
+    
+    def __init__(self,
+                 directory="density_of_states",
+                 name=None,
+                 lattice_tolerance=0.1,
+                 force_tolerance=1e-3,
+                 pressure_target=0,
+                 stress_tolerance=10,
+                 max_increase=None,
+                 max_iteration=3,
+                 min_iteration=1,
+                 is_cell_relaxed=False,
+                 traverse=False):
+
+        DensityOfStatesBase.__init__(
+            self,
+            directory=directory,
+            name=name,
+            lattice_tolerance=lattice_tolerance,
+            force_tolerance=force_tolerance,
+            pressure_target=pressure_target,
+            stress_tolerance=stress_tolerance,
+            max_increase=max_increase,
+            max_iteration=max_iteration,
+            min_iteration=min_iteration,
+            is_cell_relaxed=is_cell_relaxed,
+            traverse=traverse)
+
+    def _get_dos_task(self,
+                      cell,
+                      is_partial_dos=False,
+                      properties=None,
+                      chgcar_dir="charge_density"):
+        directory = "dos"
+        job, incar, kpoints = self._choose_configuration(index=1)
+        incar.set_icharg(11)
+        incar.set_ibrion(-1)
+        incar.set_nsw(None)
+        incar.set_isif(None)
+        incar.set_ediffg(None)
+        if is_partial_dos:
+            incar.set_lorbit(12)
+        if properties:
+            if 'nbands' in properties:
+                incar.set_nbands(2 * properties['nbands'])
+        task = ElectronicStructure(directory=directory + "%04d" % i,
+                                   traverse=self._traverse)
+        task.set_configurations(
+            cell=cell,
+            pseudo_potential_map=self._pseudo_potential_map,
+            kpoint=kpoint,
+            incar=incar)
+        task.set_job(
+            job.copy("%s-%s%d" % (job.get_jobname(), directory, i)))
+        task.set_copy_files([("../%s/CHGCAR" % chgcar_dir, "CHGCAR")])
+
+        return task
         
 class TaskVaspPhonon:
     def _get_vasp_displacement_tasks(self,
@@ -1272,7 +1338,73 @@ class TaskVaspPhonon:
         task.set_job(job.copy("%s-%s" % (job.get_jobname(), directory)))
 
         return task
-    
+
+class TaskVaspQHA:
+    def _get_phonon_task(self, cell, directory, is_cell_relaxed=False):
+        task = Phonon(directory=directory,
+                      supercell_matrix=self._supercell_matrix,
+                      primitive_matrix=self._primitive_matrix,
+                      distance=self._distance,
+                      lattice_tolerance=self._lattice_tolerance,
+                      force_tolerance=self._force_tolerance,
+                      pressure_target=self._pressure_target,
+                      stress_tolerance=self._stress_tolerance,
+                      max_increase=self._max_increase,
+                      max_iteration=1,
+                      min_iteration=1,
+                      traverse=self._traverse)
+
+        if isinstance(self._job, list):
+            job = [j.copy("%s-%s" % (j.get_jobname(), directory))
+                   for j in self._job[1:]]
+        else:
+            job = self._job.copy("%s-%s" % (self._job.get_jobname(), directory))
+
+
+        k_mesh = self._k_mesh
+        if self._k_mesh:
+            if None in self._k_mesh:
+                k_mesh = self._k_mesh[1:]
+            elif np.array(self._k_mesh).ndim > 1:
+                k_mesh = self._k_mesh[1:]
+
+        k_shift = self._k_shift
+        if self._k_shift:
+            if None in self._k_shift:
+                k_shift = self._k_shift[1:]
+            elif np.array(self._k_shift).ndim > 1:
+                k_shift = self._k_shift[1:]
+
+        if isinstance(self._k_gamma, list):
+            k_gamma = self._k_gamma[1:]
+        else:
+            k_gamma = self._k_gamma
+
+        if isinstance(self._k_length, list):
+            k_length = self._k_length[1:]
+        else:
+            k_length = self._k_length
+
+        if isinstance(self._incar, list):
+            incar = [x.copy() for x in self._incar[1:]]
+            if is_cell_relaxed:
+                incar[0].set_nsw(1)
+        else:
+            incar = self._incar.copy()
+            if is_cell_relaxed:
+                incar.set_nsw(1)
+        
+        task.set_configurations(
+            cell=cell,
+            pseudo_potential_map=self._pseudo_potential_map,
+            k_mesh=k_mesh,
+            k_shift=k_shift,
+            k_gamma=k_gamma,
+            k_length=k_length,
+            incar=incar)
+        task.set_job(job)
+
+        return task
     
 class Phonon(TaskVasp, TaskVaspPhonon, PhononBase):
     def __init__(self,
@@ -1455,7 +1587,7 @@ class ElasticConstantsElement(TaskVasp, ElasticConstantsElementBase):
                 self._log += "Failed to parse OUTCAR.\n"
                 self._status = "terminate"
 
-class ModeGruneisen(TaskVasp, ModeGruneisenBase):
+class ModeGruneisen(TaskVasp, TaskVaspQHA, ModeGruneisenBase):
     """Task to calculate mode Gruneisen parameters by VASP."""
     
     def __init__(self,
@@ -1509,88 +1641,26 @@ class ModeGruneisen(TaskVasp, ModeGruneisenBase):
         minus = self._get_phonon_task(cell_minus,
                                       "minus",
                                       is_cell_relaxed=(
-                self._is_cell_relaxed and
-                self._bias is "plus"))
+                                          self._is_cell_relaxed and
+                                          self._bias == "plus"))
 
         orig = self._get_phonon_task(cell_orig,
                                      "orig",
                                      is_cell_relaxed=(
-                    self._is_cell_relaxed and
-                    self._bias is not "plus" and
-                    self._bias is not "minus"))
+                                         self._is_cell_relaxed and
+                                         self._bias != "plus" and
+                                         self._bias != "minus"))
 
         plus = self._get_phonon_task(cell_plus,
                                      "plus",
                                      is_cell_relaxed=(
-                self._is_cell_relaxed and
-                self._bias is "minus"))
+                                         self._is_cell_relaxed and
+                                         self._bias == "minus"))
 
         return orig, plus, minus
 
-    def _get_phonon_task(self, cell, directory, is_cell_relaxed=False):
-        task = Phonon(directory=directory,
-                      supercell_matrix=self._supercell_matrix,
-                      primitive_matrix=self._primitive_matrix,
-                      distance=self._distance,
-                      lattice_tolerance=self._lattice_tolerance,
-                      force_tolerance=self._force_tolerance,
-                      pressure_target=self._pressure_target,
-                      stress_tolerance=self._stress_tolerance,
-                      max_increase=self._max_increase,
-                      max_iteration=1,
-                      min_iteration=1,
-                      traverse=self._traverse,
-                      is_cell_relaxed=is_cell_relaxed)
 
-        if isinstance(self._job, list):
-            job = [j.copy("%s-%s" % (j.get_jobname(), directory))
-                   for j in self._job[1:]]
-        else:
-            job = self._job.copy("%s-%s" % (j.get_jobname(), directory))
-
-
-        k_mesh = self._k_mesh
-        if self._k_mesh:
-            if None in self._k_mesh:
-                k_mesh = self._k_mesh[1:]
-            elif np.array(self._k_mesh).ndim > 1:
-                k_mesh = self._k_mesh[1:]
-
-        k_shift = self._k_shift
-        if self._k_shift:
-            if None in self._k_shift:
-                k_shift = self._k_shift[1:]
-            elif np.array(self._k_shift).ndim > 1:
-                k_shift = self._k_shift[1:]
-
-        if isinstance(self._k_gamma, list):
-            k_gamma = self._k_gamma[1:]
-        else:
-            k_gamma = self._k_gamma
-
-        if isinstance(self._k_length, list):
-            k_length = self._k_length[1:]
-        else:
-            k_length = self._k_length
-
-        if isinstance(self._incar, list):
-            incar = self._incar[1:]
-        else:
-            incar = self._incar
-        
-        task.set_configurations(
-            cell=cell,
-            pseudo_potential_map=self._pseudo_potential_map,
-            k_mesh=k_mesh,
-            k_shift=k_shift,
-            k_gamma=k_gamma,
-            k_length=k_length,
-            incar=incar)
-        task.set_job(job)
-
-        return task
-
-class QuasiHarmonicPhonon(TaskVasp, QuasiHarmonicPhononBase):
+class QuasiHarmonicPhonon(TaskVasp, TaskVaspQHA, QuasiHarmonicPhononBase):
     """Task to calculate quasi-harmonic phonons by VASP."""
     
     def __init__(self,
@@ -1650,71 +1720,6 @@ class QuasiHarmonicPhonon(TaskVasp, QuasiHarmonicPhononBase):
                         (i is 0) and self._is_cell_relaxed)))
         return phonons
 
-    def _get_phonon_task(self, cell, directory, is_cell_relaxed=False):
-        task = Phonon(directory=directory,
-                      supercell_matrix=self._supercell_matrix,
-                      primitive_matrix=self._primitive_matrix,
-                      distance=self._distance,
-                      lattice_tolerance=self._lattice_tolerance,
-                      force_tolerance=self._force_tolerance,
-                      pressure_target=self._pressure_target,
-                      stress_tolerance=self._stress_tolerance,
-                      max_increase=self._max_increase,
-                      max_iteration=1,
-                      min_iteration=1,
-                      traverse=self._traverse)
-
-        if isinstance(self._job, list):
-            job = [j.copy("%s-%s" % (j.get_jobname(), directory))
-                   for j in self._job[1:]]
-        else:
-            job = self._job.copy("%s-%s" % (self._job.get_jobname(), directory))
-
-
-        k_mesh = self._k_mesh
-        if self._k_mesh:
-            if None in self._k_mesh:
-                k_mesh = self._k_mesh[1:]
-            elif np.array(self._k_mesh).ndim > 1:
-                k_mesh = self._k_mesh[1:]
-
-        k_shift = self._k_shift
-        if self._k_shift:
-            if None in self._k_shift:
-                k_shift = self._k_shift[1:]
-            elif np.array(self._k_shift).ndim > 1:
-                k_shift = self._k_shift[1:]
-
-        if isinstance(self._k_gamma, list):
-            k_gamma = self._k_gamma[1:]
-        else:
-            k_gamma = self._k_gamma
-
-        if isinstance(self._k_length, list):
-            k_length = self._k_length[1:]
-        else:
-            k_length = self._k_length
-
-        if isinstance(self._incar, list):
-            incar = [x.copy() for x in self._incar[1:]]
-            if is_cell_relaxed:
-                incar[0].set_nsw(1)
-        else:
-            incar = self._incar.copy()
-            if is_cell_relaxed:
-                incar.set_nsw(1)
-        
-        task.set_configurations(
-            cell=cell,
-            pseudo_potential_map=self._pseudo_potential_map,
-            k_mesh=k_mesh,
-            k_shift=k_shift,
-            k_gamma=k_gamma,
-            k_length=k_length,
-            incar=incar)
-        task.set_job(job)
-
-        return task
 
 class PhononRelax(TaskVasp, PhononRelaxBase):
     def __init__(self,
