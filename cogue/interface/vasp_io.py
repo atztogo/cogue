@@ -163,6 +163,8 @@ class Incar:
                  algo=None,
                  ediff=None,
                  ediffg=None,
+                 emax=None,
+                 emin=None,
                  encut=None,
                  gga=None,
                  ialgo=None,
@@ -196,6 +198,8 @@ class Incar:
             'algo'    : "ALGO",
             'ediff'   : "EDIFF",
             'ediffg'  : "EDIFFG",
+            'emax'    : "EMAX",
+            'emin'    : "EMIN",
             'encut'   : "ENCUT",
             'gga'     : "GGA",
             'ialgo'   : "IALGO",
@@ -229,6 +233,8 @@ class Incar:
             'algo'    : algo,
             'ediff'   : ediff, 
             'ediffg'  : ediffg,
+            'emax'    : emax,
+            'emin'    : emin,
             'encut'   : encut,
             'gga'     : gga,
             'ialgo'   : ialgo,
@@ -277,6 +283,8 @@ class Incar:
                           'ismear',
                           'sigma',
                           'nbands',
+                          'emin',
+                          'emax',
                           'nedos',
                           'pstress',
                           'ialgo',
@@ -327,6 +335,18 @@ class Incar:
 
     def get_ediffg(self):
         return self._tagvals['ediffg']
+
+    def set_emax(self, x):
+        self._tagvals['emax'] = x
+
+    def get_emax(self):
+        return self._tagvals['emax']
+
+    def set_emin(self, x):
+        self._tagvals['emin'] = x
+
+    def get_emin(self):
+        return self._tagvals['emin']
 
     def set_encut(self, x):
         self._tagvals['encut'] = x
