@@ -180,6 +180,7 @@ class Incar:
                  lwave=None,
                  magmom=None,
                  nbands=None,
+                 nedos=None,
                  nelm=None,
                  nelmin=None,
                  npar=None,
@@ -212,6 +213,7 @@ class Incar:
             'lwave'   : "LWAVE",
             'magmom'  : "MAGMOM",
             'nbands'  : "NBANDS",
+            'nedos'   : "NEDOS",
             'nelm'    : "NELM",
             'nelmin'  : "NELMIN",
             'npar'    : "NPAR",
@@ -244,6 +246,7 @@ class Incar:
             'lwave'   : lwave,
             'magmom'  : magmom,
             'nbands'  : nbands,
+            'nedos'   : nedos,
             'nelm'    : nelm,
             'nelmin'  : nelmin,
             'npar'    : npar,
@@ -274,6 +277,7 @@ class Incar:
                           'ismear',
                           'sigma',
                           'nbands',
+                          'nedos',
                           'pstress',
                           'ialgo',
                           'lreal',
@@ -425,6 +429,12 @@ class Incar:
 
     def get_nbands(self):
         return self._tagvals['nbands']
+
+    def set_nedos(self, x):
+        self._tagvals['nedos'] = x
+
+    def get_nedos(self):
+        return self._tagvals['nedos']
 
     def set_nelm(self, x):
         self._tagvals['nelm'] = x
