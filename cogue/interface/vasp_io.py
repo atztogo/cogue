@@ -623,10 +623,16 @@ class Outcar:
                 pos = 8
                 line = outcar.next()
                 for j in range(6):
-                    ec.append(float(line[pos:(pos+12)]))
+                    try:
+                        elem = float(line[pos:(pos+12)])
+                    except ValueError:
+                        return False
+
+                    ec.append(elem)
                     pos += 12
     
-            self._elastic_constants = np.reshape(ec, (6, 6))
+            self._elastic_constants = np.array(np.reshape(ec, (6, 6)),
+                                               dtype='double', order='C')
             return True
         else:
             return False

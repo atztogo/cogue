@@ -92,7 +92,7 @@ def estimate_supercell_matrix(cell,
     spg_num = dataset['number']
     num_atoms = len(cell.get_numbers())
     lengths_orig = get_lattice_parameters(cell.get_lattice())
-    lengths = get_lattice_parameters(dataset['brv_lattice'])
+    lengths = get_lattice_parameters(dataset['std_lattice'])
 
     if (np.abs(lengths_orig - lengths) > symprec).any():
         return np.zeros((3, 3), dtype='intc')

@@ -215,7 +215,7 @@ class ElasticConstantsElementBase(OneShotCalculation):
     def _write_yaml(self):
         w = open("%s.yaml" % self._directory, 'w')
         w.write("status: %s\n" % self._status)
-        if not self._elastic_constants == None:
+        if self._elastic_constants is not None:
             w.write("elastic_constants:\n")
             for v in self._elastic_constants:
                 w.write("- [ %12.4f, %12.4f, %12.4f, %12.4f, %12.4f, %12.4f ]\n" % tuple(v))
