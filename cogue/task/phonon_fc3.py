@@ -261,8 +261,12 @@ class PhononFC3Base(TaskElement):
         write_disp_fc3_yaml(disp_dataset, supercell)
 
     def _exist_imaginary_mode(self):
+        if self._primitive_matrix is None:
+            pmat = np.eye(3)
+        else:
+            pmat = self._primitive_matrix
         exact_point_matrix = np.dot(np.linalg.inv(self._supercell_matrix),
-                                    self._primitive_matrix).T
+                                    pmat).T
         max_integer = np.rint(np.amax(np.abs(np.linalg.inv(exact_point_matrix))))
         q_points = []
         for i in np.arange(-max_integer, max_integer + 1):
@@ -297,9 +301,10 @@ class PhononFC3Base(TaskElement):
             w.write("supercell_matrix:\n")
             for row in self._supercell_matrix:
                 w.write("- [ %3d, %3d, %3d ]\n" % tuple(row))
-            w.write("primitive_matrix:\n")
-            for row in self._primitive_matrix:
-                w.write("- [ %6.3f, %6.3f, %6.3f ]\n" % tuple(row))
+            if self._primitive_matrix is not None:
+                w.write("primitive_matrix:\n")
+                for row in self._primitive_matrix:
+                    w.write("- [ %6.3f, %6.3f, %6.3f ]\n" % tuple(row))
             w.write("distance: %f\n" % self._distance)
             w.write("iteration: %d\n" % self._phonon_fc3_tasks[0].get_stage())
             if self._energy:
