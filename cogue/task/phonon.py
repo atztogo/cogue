@@ -1,8 +1,10 @@
+import numpy as np
 from cogue.task import TaskElement
 from cogue.interface.vasp_io import write_poscar
 from cogue.crystal.cell import Cell
 from cogue.crystal.converter import cell2atoms
 from cogue.crystal.supercell import estimate_supercell_matrix
+from cogue.crystal.symmetry import get_crystallographic_cell
 
 try:
     from phonopy import Phonopy
@@ -48,7 +50,10 @@ class PhononBase(TaskElement):
             self._name = name
         self._task_type = "phonon"
         self._supercell_matrix = supercell_matrix
-        self._primitive_matrix = primitive_matrix
+        if self._supercell_matrix is None:
+            self._primitive_matrix = np.eye(3, dtype='double')
+        else:
+            self._primitive_matrix = primitive_matrix
         self._distance = distance
         self._displace_plusminus = displace_plusminus
         self._displace_diagonal = displace_diagonal
@@ -201,12 +206,13 @@ class PhononBase(TaskElement):
         return False
         
     def _set_phonon(self):
-        cell = self.get_cell()
-
         if self._supercell_matrix is None:
+            cell = get_crystallographic_cell(self.get_cell())
             self._supercell_matrix = estimate_supercell_matrix(
                 cell,
                 max_num_atoms=self._max_num_atoms)
+        else:
+            cell = self.get_cell()
 
         phonopy_cell = cell2atoms(cell)
         self._phonon = Phonopy(phonopy_cell,
