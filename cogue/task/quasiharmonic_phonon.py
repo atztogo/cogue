@@ -219,9 +219,10 @@ class QuasiHarmonicPhononBase(TaskElement):
         else:
             for row in self._supercell_matrix:
                 w.write("- [ %3d, %3d, %3d ]\n" % tuple(row))
-        w.write("primitive_matrix:\n")
-        for row in self._primitive_matrix:
-            w.write("- [ %6.3f, %6.3f, %6.3f ]\n" % tuple(row))
+        if self._primitive_matrix is not None:
+            w.write("primitive_matrix:\n")
+            for row in self._primitive_matrix:
+                w.write("- [ %6.3f, %6.3f, %6.3f ]\n" % tuple(row))
         w.write("distance: %f\n" % self._distance)
         if self._is_cell_relaxed:
             cell = self._cell
