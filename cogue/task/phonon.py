@@ -1,7 +1,6 @@
 import numpy as np
 from cogue.task import TaskElement
-from cogue.interface.vasp_io import write_poscar
-from cogue.crystal.cell import Cell
+from cogue.interface.vasp_io import write_poscar, VaspCell
 from cogue.crystal.converter import cell2atoms
 from cogue.crystal.supercell import estimate_supercell_matrix
 from cogue.crystal.symmetry import get_crystallographic_cell
@@ -228,7 +227,7 @@ class PhononBase(TaskElement):
         supercell = self._phonon.get_supercell()
         displacements = self._phonon.get_displacements()
 
-        write_poscar(cell, "POSCAR-unitcell")
+        write_poscar(VaspCell(cell), "POSCAR-unitcell")
         write_disp_yaml(displacements, supercell)
 
     def _write_yaml(self):

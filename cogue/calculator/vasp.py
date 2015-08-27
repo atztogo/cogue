@@ -9,6 +9,7 @@ import shutil
 from cogue.crystal.cell import Cell
 from cogue.crystal.converter import atoms2cell
 from cogue.crystal.utility import klength2mesh
+from cogue.interface.vasp_io import read_poscar, write_poscar, write_potcar, Incar, write_kpoints, Outcar, Vasprunxml, VasprunxmlExpat, VaspCell
 from cogue.task.oneshot_calculation import *
 from cogue.task.structure_optimization import *
 from cogue.task.bulk_modulus import *
@@ -20,7 +21,6 @@ from cogue.task.elastic_constants import *
 from cogue.task.quasiharmonic_phonon import *
 from cogue.task.band_structure import *
 from cogue.task.density_of_states import *
-from cogue.interface.vasp_io import *
 
 def incar(addgrid=None,
           ediff=None,

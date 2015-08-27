@@ -7,6 +7,94 @@ from cogue.crystal.atom import atomic_symbols, atomic_weights
 from cogue.crystal.cell import Cell
 import StringIO
 
+class VaspCell(Cell):
+    def __init__(self,
+                 cell,
+                 is_vasp4=False,
+                 comment=None):
+        self._is_vasp4 = is_vasp4
+
+        self._set_compressed_symbols(cell.get_symbols())
+        self._set_atom_order(cell.get_symbols())
+        self._set_vasp_cell(cell)
+
+        self._set_comment(comment)
+
+        self._poscar_lines = None
+        self.create_poscar_lines()
+
+    def get_poscar_lines(self):
+        return self._poscar_lines
+
+    def get_atom_order(self):
+        return self._atom_order
+
+    def get_comment(self):
+        return self._comment
+
+    def get_compressed_symbols(self):
+        return self._compressed_symbols
+
+    def create_poscar_lines(self):
+        lines = []
+        lines.append(self._comment)
+        lines.append("   1.0")
+        
+        for v in self._lattice.T:
+            lines.append(" %22.16f%22.16f%22.16f" % tuple(v))
+
+        if not self._is_vasp4:
+            lines.append(' ' + ' '.join(self._compressed_symbols))
+        
+        lines.append(' ' + ' '.join(
+            ["%3d" % self._symbols.count(s)
+             for s in self._compressed_symbols]))
+
+        lines.append("Direct")
+    
+        for v in self._points.T:
+            v16 = (v - np.rint(v).round(decimals=16))
+            for i in range(3):
+                if not v16[i] < 1:
+                    v16[i] -= 1
+            lines.append(" %20.16f%20.16f%20.16f" % tuple(v16))
+
+        self._poscar_lines = lines
+
+    def _set_compressed_symbols(self, symbols):
+        self._compressed_symbols = []
+        for s in symbols:
+            if not s in self._compressed_symbols:
+                self._compressed_symbols.append(s)
+
+    def _set_atom_order(self, symbols):
+        self._atom_order = []
+        for cs in self._compressed_symbols:
+            for i, s in enumerate(symbols):
+                if s == cs:
+                    self._atom_order.append(i)
+
+    def _set_vasp_cell(self, cell):
+        symbols = [cell.get_symbols()[i] for i in self._atom_order]
+        if cell.get_magnetic_moments() is not None:
+            magmoms = cell.get_magnetic_moments()[self._atom_order]
+        else:
+            magmoms = None
+
+        Cell.__init__(self,
+                      lattice=cell.get_lattice(),
+                      points=(cell.get_points().T)[self._atom_order].T,
+                      symbols=symbols,
+                      magmoms=magmoms,
+                      masses=cell.get_masses()[self._atom_order])
+
+    def _set_comment(self, comment):
+        if self._is_vasp4 or comment is None:
+            self._comment = ' ' + ' '.join(self._compressed_symbols)
+        else:
+            self._comment = comment.strip()
+        
+
 def parse_poscar(lines):
     isvasp5 = False
     symbols = []
@@ -64,61 +152,23 @@ def parse_poscar(lines):
                 points=points,
                 symbols=symbols_expanded)
     
-
 def read_poscar(filename="POSCAR"):
     return parse_poscar(open(filename).readlines())
 
-def write_poscar(cell, filename=None, vasp4=False, comment=None):
+def write_poscar(cell, filename=None, is_vasp4=False, comment=None):
     if filename is None:
         w = StringIO.StringIO()
     else:
         w = open(filename, 'w')
     
-    symbols = cell.get_symbols()
-    symbols_compressed = []
-    for s in symbols:
-        if not s in symbols_compressed:
-            symbols_compressed.append(s)
-    
-    if vasp4 or comment is None:
-        for s in symbols_compressed:
-            w.write(" %s" % s)
-        w.write("\n")
-    else:
-        w.write(comment.strip() + "\n")
+    vasp_cell = VaspCell(cell,
+                         is_vasp4=is_vasp4,
+                         comment=comment)
+    poscar_lines = vasp_cell.get_poscar_lines()
 
-    w.write("   1.0\n")
-
-    for v in cell.get_lattice().T:
-        w.write(" %22.16f%22.16f%22.16f\n" % tuple(v))
-
-    if not vasp4:
-        for s in symbols_compressed:
-            w.write(" %s" % s)
-        w.write("\n")
-    
-    for s in symbols_compressed:
-        w.write(" %3d" % symbols.count(s))
-    w.write("\n")
-
-    w.write("Direct\n")
-
-    points = cell.get_points().T
-    count_atoms = 0
-    num_atoms = len(points)
-    for sc in symbols_compressed:
-        for s, v in zip(symbols, points):
-            if s == sc:
-                v16 = v.round(decimals=16)
-                for i in range(3):
-                    if not v16[i] < 1:
-                        v16[i] -= 1
-                w.write(" %20.16f%20.16f%20.16f" % tuple(v16))
-                count_atoms += 1
-                if count_atoms < num_atoms:
-                    w.write("\n")
-                
-                
+    for line in poscar_lines[:-1]:
+        w.write(line + "\n")
+    w.write(poscar_lines[-1])
     
     if filename is None:
         poscar_string = w.getvalue()
