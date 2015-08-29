@@ -1,6 +1,6 @@
 import numpy as np
 from cogue.task import TaskElement
-from cogue.interface.vasp_io import write_poscar, VaspCell
+from cogue.interface.vasp_io import write_poscar, write_poscar_yaml
 from cogue.crystal.converter import cell2atoms
 from cogue.crystal.supercell import estimate_supercell_matrix
 from cogue.crystal.symmetry import get_crystallographic_cell
@@ -156,11 +156,7 @@ class PhononBase(TaskElement):
         else: # task 1..n: displaced supercells
             if self._status == "next":
                 self._status = "done"
-                forces = []
-                for task in self._tasks:
-                    forces.append(task.get_properties()['forces'][-1])
-                self._phonon.produce_force_constants(forces)
-                write_FORCE_SETS(self._phonon.get_displacement_dataset())
+                self._collect_forces()
                 self._tasks = []
             elif self._status == "terminate" and self._traverse == "restart":
                 self._traverse = False
@@ -192,6 +188,14 @@ class PhononBase(TaskElement):
         self._set_phonon()
         self._tasks = self._get_displacement_tasks()
         self._phonon_tasks += self._tasks
+
+    def _collect_forces(self):
+        forces = []
+        for task in self._tasks:
+            forces.append(task.get_properties()['forces'][-1])
+        self._phonon.produce_force_constants(forces)
+        write_FORCE_SETS(self._phonon.get_displacement_dataset())
+
 
     def _evaluate_stop_condition(self):
         if self._stop_condition:
@@ -227,7 +231,8 @@ class PhononBase(TaskElement):
         supercell = self._phonon.get_supercell()
         displacements = self._phonon.get_displacements()
 
-        write_poscar(VaspCell(cell), "POSCAR-unitcell")
+        write_poscar(cell, filename="POSCAR-unitcell")
+        write_poscar_yaml(cell, filename="POSCAR-unitcell.yaml")
         write_disp_yaml(displacements, supercell)
 
     def _write_yaml(self):
