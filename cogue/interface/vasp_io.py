@@ -12,19 +12,43 @@ class VaspCell(Cell):
                  cell,
                  is_vasp4=False,
                  comment=None):
+        self._cell = cell
         self._is_vasp4 = is_vasp4
 
-        self._set_compressed_symbols(cell.get_symbols())
-        self._set_atom_order(cell.get_symbols())
-        self._set_vasp_cell(cell)
+        self._compressed_symbols = None
+        self._set_compressed_symbols()
+        self._atom_order = None
+        self._set_atom_order()
+        self._set_vasp_cell()
 
+        self._comment = None
         self._set_comment(comment)
 
         self._poscar_lines = None
         self.create_poscar_lines()
 
+        self._poscar_yaml_lines = None
+        self.create_poscar_yaml_lines()
+
+    def write(self, filename="POSCAR"):
+        w = open(filename, 'w')
+        for line in self._poscar_lines[:-1]:
+            w.write(line + "\n")
+        w.write(self._poscar_lines[-1])
+        w.close()
+
+    def write_yaml(self, filename="POSCAR.yaml"):
+        w = open(filename, 'w')
+        for line in self._poscar_yaml_lines[:-1]:
+            w.write(line + "\n")
+        w.write(self._poscar_yaml_lines[-1])
+        w.close()
+
     def get_poscar_lines(self):
         return self._poscar_lines
+
+    def get_poscar_yaml_lines(self):
+        return self._poscar_yaml_lines
 
     def get_atom_order(self):
         return self._atom_order
@@ -53,40 +77,65 @@ class VaspCell(Cell):
         lines.append("Direct")
     
         for v in self._points.T:
-            v16 = (v - np.rint(v).round(decimals=16))
+            v16 = (v - np.rint(v)).round(decimals=16)
             for i in range(3):
-                if not v16[i] < 1:
-                    v16[i] -= 1
+                if v16[i] < 0:
+                    v16[i] += 1
             lines.append(" %20.16f%20.16f%20.16f" % tuple(v16))
 
         self._poscar_lines = lines
 
-    def _set_compressed_symbols(self, symbols):
+    def create_poscar_yaml_lines(self):
+        inverse_order = {j: i for i, j in enumerate(self._atom_order)}
+
+        lines = []
+        lines.append("lattice:")
+        for v, a in zip(self._cell.get_lattice().T, ('a', 'b', 'c')):
+            lines.append("- [ %22.16f, %22.16f, %22.16f ] # %s" %
+                         (v[0], v[1], v[2], a))
+    
+        lines.append("points:")
+        for i, (s, v) in enumerate(zip(self._cell.get_symbols(),
+                                       self._cell.get_points().T)):
+            lines.append("- symbol: %-2s # %d -> %d" %
+                         (s, i + 1, inverse_order[i] + 1))
+            lines.append("  coordinates: [ %19.16f, %19.16f, %19.16f ]" %
+                         tuple(v))
+    
+        lines.append("poscar_order:")
+        for i in self._atom_order:
+            lines.append("- %d" % (i + 1))
+
+        self._poscar_yaml_lines = lines
+
+    def _set_compressed_symbols(self):
+        symbols = self._cell.get_symbols()
         self._compressed_symbols = []
         for s in symbols:
             if not s in self._compressed_symbols:
                 self._compressed_symbols.append(s)
 
-    def _set_atom_order(self, symbols):
+    def _set_atom_order(self):
+        symbols = self._cell.get_symbols()
         self._atom_order = []
         for cs in self._compressed_symbols:
             for i, s in enumerate(symbols):
                 if s == cs:
                     self._atom_order.append(i)
 
-    def _set_vasp_cell(self, cell):
-        symbols = [cell.get_symbols()[i] for i in self._atom_order]
-        if cell.get_magnetic_moments() is not None:
-            magmoms = cell.get_magnetic_moments()[self._atom_order]
+    def _set_vasp_cell(self):
+        symbols = [self._cell.get_symbols()[i] for i in self._atom_order]
+        if self._cell.get_magnetic_moments() is not None:
+            magmoms = self._cell.get_magnetic_moments()[self._atom_order]
         else:
             magmoms = None
 
         Cell.__init__(self,
-                      lattice=cell.get_lattice(),
-                      points=(cell.get_points().T)[self._atom_order].T,
+                      lattice=self._cell.get_lattice(),
+                      points=(self._cell.get_points().T)[self._atom_order].T,
                       symbols=symbols,
                       magmoms=magmoms,
-                      masses=cell.get_masses()[self._atom_order])
+                      masses=self._cell.get_masses()[self._atom_order])
 
     def _set_comment(self, comment):
         if self._is_vasp4 or comment is None:
@@ -155,27 +204,26 @@ def parse_poscar(lines):
 def read_poscar(filename="POSCAR"):
     return parse_poscar(open(filename).readlines())
 
-def write_poscar(cell, filename=None, is_vasp4=False, comment=None):
-    if filename is None:
-        w = StringIO.StringIO()
-    else:
-        w = open(filename, 'w')
-    
-    vasp_cell = VaspCell(cell,
-                         is_vasp4=is_vasp4,
-                         comment=comment)
-    poscar_lines = vasp_cell.get_poscar_lines()
+def write_poscar(cell,
+                 filename=None,
+                 is_vasp4=False,
+                 comment=None):
+    vasp_cell = VaspCell(cell, is_vasp4=is_vasp4, comment=comment)
 
-    for line in poscar_lines[:-1]:
-        w.write(line + "\n")
-    w.write(poscar_lines[-1])
-    
     if filename is None:
-        poscar_string = w.getvalue()
-        w.close()
-        return poscar_string
+        poscar_lines = vasp_cell.get_poscar_lines()
+        return "\n".join(poscar_lines)
     else:
-        w.close()
+        vasp_cell.write(filename=filename)
+
+def write_poscar_yaml(cell, filename=None):
+    vasp_cell = VaspCell(cell)
+
+    if filename is None:
+        poscar_yaml_lines = vasp_cell.get_poscar_yaml_lines()
+        return "\n".join(poscar_yaml_lines)
+    else:
+        vasp_cell.write_yaml(filename=filename)
 
 def write_potcar(names, filename="POTCAR"):
     if 'COGUE_POTCAR_PATH' in os.environ:
