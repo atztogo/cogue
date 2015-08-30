@@ -201,23 +201,8 @@ class StructureOptimizationBase(TaskElement):
 
         cell = self._so_tasks[-1].get_current_cell()
         if cell:
-            lattice = cell.get_lattice().T
-            points = cell.get_points().T
-            symbols = cell.get_symbols()
-        
-            w.write("lattice:\n")
-            for v, a in zip(lattice, ('a', 'b', 'c')) :
-                w.write("- [ %22.16f, %22.16f, %22.16f ] # %s\n" %
-                        (v[0], v[1], v[2], a))
-    
-            w.write("points:\n")
-            for i, v in enumerate(points):
-                w.write("- [ %20.16f, %20.16f, %20.16f ] # %d\n" %
-                        (v[0], v[1], v[2], i + 1))
-
-            w.write("symbols:\n")
-            for i, v in enumerate(symbols):
-                w.write("- %2s # %d\n" % (v, i + 1))
+            for line in cell.get_yaml_lines():
+                w.write(line + "\n")
 
             if self._space_group:
                 w.write("symmetry_tolerance: %s\n" % self._symmetry_tolerance)

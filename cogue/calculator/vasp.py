@@ -721,6 +721,7 @@ class TaskVasp:
 
         self._vasp_cell = VaspCell(self._cell)
         self._vasp_cell.write(filename="POSCAR")
+        self._vasp_cell.write_yaml(filename="POSCAR.yaml")
 
         ps_set = [self._pseudo_potential_map[x]
                   for x in self._cell.get_symbols()]

@@ -153,7 +153,7 @@ class Cell:
                     magmoms=self._magmoms,
                     masses=self._masses)
 
-    def __str__(self):
+    def get_yaml_lines(self):
         lines = []
         lines.append("lattice:")
         for v, a in zip(self._lattice.T, ('a', 'b', 'c')):
@@ -169,7 +169,10 @@ class Cell:
                          tuple(v))
             lines.append("  mass: %f" % m)
 
-        return "\n".join(lines)
+        return lines
+
+    def __str__(self):
+        return "\n".join(self.get_yaml_lines())
     
     def _set_numbers_from_symbols(self):
         self._numbers = np.array([atomic_symbols[s] for s in self._symbols],
@@ -181,4 +184,5 @@ class Cell:
     def _set_masses_from_numbers(self):
         self._masses = np.array([atomic_weights[x][3] for x in self._numbers],
                                 dtype='double')
+
 

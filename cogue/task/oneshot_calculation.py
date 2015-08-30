@@ -66,6 +66,9 @@ class ElectronicStructureBase(OneShotCalculation):
     def _write_yaml(self):
         w = open("electronic_structure.yaml", 'w')
         w.write("status: %s\n" % self._status)
+        if self._cell:
+            for line in self._cell.get_yaml_lines():
+                w.write(line + "\n")
         if 'energies' in self._properties:
             w.write("energy: %20.10f\n" % self._properties['energies'][-1])
         if 'forces' in self._properties:
@@ -160,23 +163,8 @@ class StructureOptimizationElementBase(OneShotCalculation):
         w.write("status: %s\n" % self._status)
 
         if self._current_cell:
-            lattice = self._current_cell.get_lattice().T
-            points = self._current_cell.get_points().T
-            symbols = self._current_cell.get_symbols()
-        
-            w.write("lattice:\n")
-            for v, a in zip(lattice, ('a', 'b', 'c')) :
-                w.write("- [ %22.16f, %22.16f, %22.16f ] # %s\n" %
-                        (v[0], v[1], v[2], a))
-    
-            w.write("points:\n")
-            for i, v in enumerate(points):
-                w.write("- [ %20.16f, %20.16f, %20.16f ] # %d\n" %
-                        (v[0], v[1], v[2], i + 1))
-
-            w.write("symbols:\n")
-            for i, v in enumerate(symbols):
-                w.write("- %2s # %d\n" % (v, i + 1))
+            for line in self._current_cell.get_yaml_lines():
+                w.write(line + "\n")
 
         if self._energy is not None:
             w.write("energy: %20.10f\n" % self._energy)
@@ -216,6 +204,10 @@ class ElasticConstantsElementBase(OneShotCalculation):
         w = open("%s.yaml" % self._directory, 'w')
         w.write("status: %s\n" % self._status)
         if self._elastic_constants is not None:
+            if self._cell:
+                for line in self._cell.get_yaml_lines():
+                    w.write(line + "\n")
+
             w.write("elastic_constants:\n")
             for v in self._elastic_constants:
                 w.write("- [ %12.4f, %12.4f, %12.4f, %12.4f, %12.4f, %12.4f ]\n" % tuple(v))
