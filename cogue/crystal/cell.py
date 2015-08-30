@@ -13,6 +13,30 @@ def symbols2formula(symbols):
         formula += "%s%d" % (s, counts[s])
     return formula
 
+def sort_cell_by_symbols(cell):
+    symbols = cell.get_symbols()
+    compressed_symbols = []
+    for s in symbols:
+        if not s in compressed_symbols:
+            compressed_symbols.append(s)
+
+    atom_order = []
+    for cs in compressed_symbols:
+        for i, s in enumerate(symbols):
+            if s == cs:
+                atom_order.append(i)
+
+    if cell.get_magnetic_moments() is not None:
+        magmoms = cell.get_magnetic_moments()[atom_order]
+    else:
+        magmoms = None
+
+    return Cell(lattice=cell.get_lattice(),
+                points=(cell.get_points().T)[atom_order].T,
+                symbols=[symbols[i] for i in atom_order],
+                magmoms=magmoms,
+                masses=cell.get_masses()[atom_order])
+
 class Cell:
     """ """
     def __init__(self,
@@ -61,17 +85,6 @@ class Cell:
 
         if self._masses is None:
             self._set_masses_from_numbers()
-
-    def _set_numbers_from_symbols(self):
-        self._numbers = np.array([atomic_symbols[s] for s in self._symbols],
-                                 dtype='intc')
-
-    def _set_symbols_from_numbers(self):
-        self._symbols = [atomic_weights[x][0] for x in self._numbers]
-
-    def _set_masses_from_numbers(self):
-        self._masses = np.array([atomic_weights[x][3] for x in self._numbers],
-                                dtype='double')
 
     def set_lattice(self, lattice):
         """ """
@@ -139,3 +152,33 @@ class Cell:
                     numbers=self._numbers,
                     magmoms=self._magmoms,
                     masses=self._masses)
+
+    def __str__(self):
+        lines = []
+        lines.append("lattice:")
+        for v, a in zip(self._lattice.T, ('a', 'b', 'c')):
+            lines.append("- [ %22.16f, %22.16f, %22.16f ] # %s" %
+                         (v[0], v[1], v[2], a))
+    
+        lines.append("points:")
+        for i, (s, v, m) in enumerate(zip(self._symbols,
+                                          self._points.T,
+                                          self._masses)):
+            lines.append("- symbol: %-2s # %d" % (s, i + 1))
+            lines.append("  coordinates: [ %19.16f, %19.16f, %19.16f ]" %
+                         tuple(v))
+            lines.append("  mass: %f" % m)
+
+        return "\n".join(lines)
+    
+    def _set_numbers_from_symbols(self):
+        self._numbers = np.array([atomic_symbols[s] for s in self._symbols],
+                                 dtype='intc')
+
+    def _set_symbols_from_numbers(self):
+        self._symbols = [atomic_weights[x][0] for x in self._numbers]
+
+    def _set_masses_from_numbers(self):
+        self._masses = np.array([atomic_weights[x][3] for x in self._numbers],
+                                dtype='double')
+
