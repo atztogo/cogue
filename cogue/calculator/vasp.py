@@ -923,8 +923,7 @@ class ElectronicStructure(TaskVasp, ElectronicStructureBase):
                 vxml.parse_parameters()
                 kpoints, weights = vxml.get_kpoints()
                 if self._atom_order:
-                    force_sets = np.array([forces[self._atom_order]
-                                           for forces in vxml.get_forces()])
+                    force_sets = vxml.get_forces()[:, self._atom_order, :]
                 else:
                     force_sets = vxml.get_forces()
                 self._properties = {'stress': vxml.get_stress(),
@@ -1001,17 +1000,11 @@ class StructureOptimizationElement(TaskVasp,
             vxml = VasprunxmlExpat("vasprun.xml")
             is_success = vxml.parse()
             
-            lattice = vxml.get_lattice()
-            _points = vxml.get_points()
-            _forces = vxml.get_forces()
-            if self._atom_order:
-                points = _points[self._atom_order]
-                forces = _forces[self._atom_order]
-            else:
-                points = _points
-                forces = _forces
-            stress = vxml.get_stress()
-            energies = vxml.get_energies()
+            lattice = vxml.get_lattice()   # [num_geomopt, 3, 3]
+            points = vxml.get_points()     # [num_geomopt, 3, num_atoms]
+            forces = vxml.get_forces()     # [num_geomopt, num_atoms, 3]
+            stress = vxml.get_stress()     # [num_geomopt, 3, 3]
+            energies = vxml.get_energies() # [num_geomopt, 3]
 
             max_iter = len(lattice)
             if len(points) < max_iter:
@@ -1025,15 +1018,25 @@ class StructureOptimizationElement(TaskVasp,
 
             if is_success and max_iter > 0:
                 self._stress = stress[max_iter - 1] / 10
-                self._forces = forces[max_iter - 1]
                 self._energy = energies[max_iter - 1, 1]
-                self._judge(lattice[max_iter - 1], points[max_iter - 1])
+                if self._atom_order:
+                    _points = points[max_iter - 1][: , self._atom_order]
+                    self._forces = forces[max_iter - 1][self._atom_order, :]
+                else:
+                    _points = points[max_iter - 1]
+                    self._forces = forces[max_iter - 1]
+                self._judge(lattice[max_iter - 1], _points)
             elif (not is_success) and max_iter > 2:
                 self._log += "vasprun.xml is not cleanly closed.\n"
                 self._stress = stress[max_iter - 3] / 10
-                self._forces = forces[max_iter - 3]
                 self._energy = energies[max_iter - 3, 1]
-                self._judge(lattice[max_iter - 3], points[max_iter - 3])
+                if self._atom_order:
+                    _points = points[max_iter - 3][: , self._atom_order]
+                    self._forces = forces[max_iter - 3][self._atom_order, :]
+                else:
+                    _points = points[max_iter - 3]
+                    self._forces = forces[max_iter - 3]
+                self._judge(lattice[max_iter - 3], _points)
             else:
                 self._log += "Failed to parse vasprun.xml.\n"
                 self._current_cell = None
