@@ -9,7 +9,7 @@ import shutil
 from cogue.crystal.cell import Cell
 from cogue.crystal.converter import atoms2cell
 from cogue.crystal.utility import klength2mesh
-from cogue.interface.vasp_io import read_poscar, write_poscar, write_potcar, Incar, write_kpoints, Outcar, Vasprunxml, VasprunxmlExpat, VaspCell
+from cogue.interface.vasp_io import change_point_order, read_poscar, get_atom_order_from_poscar_yaml, write_poscar, write_potcar, Incar, write_kpoints, Outcar, Vasprunxml, VasprunxmlExpat, VaspCell
 from cogue.task.oneshot_calculation import *
 from cogue.task.structure_optimization import *
 from cogue.task.bulk_modulus import *
@@ -906,6 +906,11 @@ class ElectronicStructure(TaskVasp, ElectronicStructureBase):
 
         """
         self._log = ""
+        if os.path.exists("POSCAR.yaml"):
+            self._atom_order = get_atom_order_from_poscar_yaml("POSCAR.yaml")
+        else:
+            self._atom_order = None
+
         if not os.path.exists("vasprun.xml"):
             self._log += "vasprun.xml not exists.\n"
             self._status = "terminate"
@@ -916,8 +921,13 @@ class ElectronicStructure(TaskVasp, ElectronicStructureBase):
                 vxml.parse_efermi()
                 vxml.parse_parameters()
                 kpoints, weights = vxml.get_kpoints()
+                if self._atom_order:
+                    force_sets = np.array([forces[self._atom_order]
+                                           for forces in vxml.get_forces()])
+                else:
+                    force_sets = vxml.get_forces()
                 self._properties = {'stress': vxml.get_stress(),
-                                    'forces': vxml.get_forces(),
+                                    'forces': force_sets,
                                     'energies': vxml.get_energies()[:,1],
                                     'eigenvalues': vxml.get_eigenvalues(),
                                     'occupancies': vxml.get_occupancies(),
@@ -959,6 +969,7 @@ class StructureOptimizationElement(TaskVasp,
         self._k_gamma = None
         self._incar = None
         self._copy_files = []
+        self._atom_order = None
 
     def _collect(self):
         """Collect information from output files of VASP.
@@ -970,8 +981,17 @@ class StructureOptimizationElement(TaskVasp,
         """
         self._log = ""
 
+        if os.path.exists("POSCAR.yaml"):
+            self._atom_order = get_atom_order_from_poscar_yaml("POSCAR.yaml")
+        else:
+            self._atom_order = None
+
         if os.path.exists("POSCAR"):
-            self._current_cell = read_poscar("POSCAR")
+            cell = read_poscar("POSCAR")
+            if self._atom_order:
+                self._current_cell = change_point_order(cell, self._atom_order)
+            else:
+                self._current_cell = cell
     
         if not os.path.exists("vasprun.xml"):
             self._log += "vasprun.xml not exists.\n"
@@ -1024,6 +1044,10 @@ class StructureOptimizationElement(TaskVasp,
         if os.path.exists("CONTCAR"):
             try:
                 self._current_cell = read_poscar("CONTCAR")
+                if self._atom_order:
+                    self._current_cell = change_point_order(cell, self._atom_order)
+                else:
+                    self._current_cell = current_cell
             except:
                 self._current_cell = cell
             else:

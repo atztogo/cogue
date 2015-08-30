@@ -201,8 +201,63 @@ def parse_poscar(lines):
                 points=points,
                 symbols=symbols_expanded)
     
-def read_poscar(filename="POSCAR"):
-    return parse_poscar(open(filename).readlines())
+def read_poscar(filename="POSCAR", read_yaml=False):
+    cell = parse_poscar(open(filename).readlines())
+    return cell
+
+def read_poscar_yaml(filename="POSCAR.yaml"):
+    try:
+        import yaml
+    except ImportError:
+        print "You need to install python-yaml."
+        exit(1)
+
+    try:
+        from yaml import CLoader as Loader
+        from yaml import CDumper as Dumper
+    except ImportError:
+        from yaml import Loader, Dumper
+
+    data = yaml.load(open(filename), Loader=Loader)
+    lattice = np.transpose(data['lattice'])
+    points = np.transpose([x['coordinates'] for x in data['points']])
+    symbols = [x['symbol'] for x in data['points']]
+    poscar_order = data['poscar_order']
+
+    return Cell(lattice=lattice,
+                points=points,
+                symbols=symbols), poscar_order
+
+def change_point_order(cell, atom_order):
+    symbols = [cell.get_symbols()[i] for i in atom_order]
+    if cell.get_magnetic_moments() is not None:
+        magmoms = cell.get_magnetic_moments()[atom_order]
+    else:
+        magmoms = None
+
+    return Cell(lattice=cell.get_lattice(),
+                points=(cell.get_points().T)[atom_order].T,
+                symbols=symbols,
+                magmoms=magmoms,
+                masses=cell.get_masses()[atom_order])
+
+def get_atom_order_from_poscar_yaml(filename):
+    try:
+        import yaml
+    except ImportError:
+        print "You need to install python-yaml."
+        exit(1)
+
+    try:
+        from yaml import CLoader as Loader
+        from yaml import CDumper as Dumper
+    except ImportError:
+        from yaml import Loader, Dumper
+
+    data = yaml.load(open(filename), Loader=Loader)
+    poscar_order = data['poscar_order']
+    inverse_order = {(j - 1): i for i, j in enumerate(poscar_order)}
+    return [inverse_order[i] for i in range(len(inverse_order))]
 
 def write_poscar(cell,
                  filename=None,
