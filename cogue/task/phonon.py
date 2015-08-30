@@ -196,7 +196,6 @@ class PhononBase(TaskElement):
         self._phonon.produce_force_constants(forces)
         write_FORCE_SETS(self._phonon.get_displacement_dataset())
 
-
     def _evaluate_stop_condition(self):
         if self._stop_condition:
             if "symmetry_operations" in self._stop_condition:
