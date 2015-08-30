@@ -1002,8 +1002,14 @@ class StructureOptimizationElement(TaskVasp,
             is_success = vxml.parse()
             
             lattice = vxml.get_lattice()
-            points = vxml.get_points()
-            forces = vxml.get_forces()
+            _points = vxml.get_points()
+            _forces = vxml.get_forces()
+            if self._atom_order:
+                points = _points[self._atom_order]
+                forces = _forces[self._atom_order]
+            else:
+                points = _points
+                forces = _forces
             stress = vxml.get_stress()
             energies = vxml.get_energies()
 

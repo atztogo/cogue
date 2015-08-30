@@ -1,6 +1,7 @@
 import numpy as np
 from cogue.task import TaskElement
 from cogue.interface.vasp_io import write_poscar, write_poscar_yaml
+from cogue.crystal.cell import sort_cell_by_symbols
 from cogue.crystal.converter import cell2atoms
 from cogue.crystal.supercell import estimate_supercell_matrix
 from cogue.crystal.symmetry import get_crystallographic_cell
@@ -209,7 +210,8 @@ class PhononBase(TaskElement):
         
     def _set_phonon(self):
         if self._supercell_matrix is None:
-            cell = get_crystallographic_cell(self.get_cell())
+            cell = sort_cell_by_symbols(
+                get_crystallographic_cell(self.get_cell()))
             self._supercell_matrix = estimate_supercell_matrix(
                 cell,
                 max_num_atoms=self._max_num_atoms)
