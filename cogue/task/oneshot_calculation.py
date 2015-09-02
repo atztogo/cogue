@@ -81,23 +81,22 @@ class ElectronicStructureBase(OneShotCalculation):
             for v in self._properties['stress'][-1]:
                 w.write("- [ %15.10f, %15.10f, %15.10f ]\n" %
                         tuple(v))
-        if 'eigenvalues' in self._properties:
-            if len(self._properties['eigenvalues']) == 2:
-                w.write("eigenvalues_spin1:\n")
-            else:
-                w.write("eigenvalues:\n")
-            for i, (eigs, occs) in enumerate(zip(
-                    self._properties['eigenvalues'][0],
-                    self._properties['occupancies'][0])):
-                w.write("- # %d\n" % (i + 1))
-                for eig, occ in zip(eigs, occs):
-                    w.write("  - [ %15.10f, %15.10f ]\n" % (eig, occ))
-            if len(self._properties['eigenvalues']) == 2:
-                w.write("eigenvalues_spin2:\n")
-                for i, (eigs, occs) in enumerate(zip(
-                        self._properties['eigenvalues'][1],
-                        self._properties['occupancies'][1])):
-                    w.write("- # %d\n" % (i + 1))
+        if ('eigenvalues' in self._properties and
+            'occupancies' in self._properties):
+            for i, (e_spin, o_spin) in enumerate(zip(
+                    self._properties['eigenvalues'],
+                    self._properties['occupancies'])):
+
+                if e_spin is None or o_spin is None:
+                    break
+
+                if (len(self._properties['eigenvalues']) == 2 and
+                    len(self._properties['occupancies']) == 2):
+                    w.write("eigenvalues_spin%d:\n" % (i + 1))
+                else:
+                    w.write("eigenvalues:\n")
+                for j, (eigs, occs) in enumerate(zip(e_spin, o_spin)):
+                    w.write("- # %d\n" % (j + 1))
                     for eig, occ in zip(eigs, occs):
                         w.write("  - [ %15.10f, %15.10f ]\n" % (eig, occ))
             
