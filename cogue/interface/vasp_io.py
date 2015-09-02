@@ -201,7 +201,7 @@ def parse_poscar(lines):
                 points=points,
                 symbols=symbols_expanded)
     
-def read_poscar(filename="POSCAR", read_yaml=False):
+def read_poscar(filename="POSCAR"):
     cell = parse_poscar(open(filename).readlines())
     return cell
 
