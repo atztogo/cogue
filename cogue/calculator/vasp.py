@@ -1442,8 +1442,8 @@ class TaskVaspQHA:
                       pressure_target=self._pressure_target,
                       stress_tolerance=self._stress_tolerance,
                       max_increase=self._max_increase,
-                      max_iteration=1,
-                      min_iteration=1,
+                      max_iteration=self._max_iteration,
+                      min_iteration=self._min_iteration,
                       traverse=self._traverse)
 
         if isinstance(self._job, list):
@@ -1479,12 +1479,8 @@ class TaskVaspQHA:
 
         if isinstance(self._incar, list):
             incar = [x.copy() for x in self._incar[1:]]
-            if is_cell_relaxed:
-                incar[0].set_nsw(1)
         else:
             incar = self._incar.copy()
-            if is_cell_relaxed:
-                incar.set_nsw(1)
 
         task.set_configurations(
             cell=cell,
