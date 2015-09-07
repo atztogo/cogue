@@ -144,19 +144,19 @@ class DensityOfStatesBase(TaskElement):
 
     def _write_yaml(self):
         w = open("%s.yaml" % self._directory, 'w')
-        if self._dos_tasks[0]:
-            if self._lattice_tolerance is not None:
-                w.write("lattice_tolerance: %f\n" % self._lattice_tolerance)
-            if self._stress_tolerance is not None:
-                w.write("stress_tolerance: %f\n" % self._stress_tolerance)
-                w.write("pressure_target: %f\n" % self._pressure_target)
-            w.write("force_tolerance: %f\n" % self._force_tolerance)
-            if self._max_increase is None:
-                w.write("max_increase: unset\n")
-            else:
-                w.write("max_increase: %f\n" % self._max_increase)
-            w.write("max_iteration: %d\n" % self._max_iteration)
-            w.write("min_iteration: %d\n" % self._min_iteration)
+        if self._lattice_tolerance is not None:
+            w.write("lattice_tolerance: %f\n" % self._lattice_tolerance)
+        if self._stress_tolerance is not None:
+            w.write("stress_tolerance: %f\n" % self._stress_tolerance)
+            w.write("pressure_target: %f\n" % self._pressure_target)
+        w.write("force_tolerance: %f\n" % self._force_tolerance)
+        if self._max_increase is None:
+            w.write("max_increase: unset\n")
+        else:
+            w.write("max_increase: %f\n" % self._max_increase)
+        w.write("max_iteration: %d\n" % self._max_iteration)
+        w.write("min_iteration: %d\n" % self._min_iteration)
+        if self._dos_tasks[0] is not None:
             w.write("iteration: %d\n" % self._dos_tasks[0].get_stage())
         w.write("status: %s\n" % self._status)
         if self._is_cell_relaxed:

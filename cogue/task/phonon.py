@@ -250,19 +250,19 @@ class PhononBase(TaskElement):
                 w.write("- [ %6.3f, %6.3f, %6.3f ]\n" % tuple(row))
         w.write("distance: %f\n" % self._distance)
         
-        if self._phonon_tasks[0]:
-            if self._lattice_tolerance is not None:
-                w.write("lattice_tolerance: %f\n" % self._lattice_tolerance)
-            if self._stress_tolerance is not None:
-                w.write("stress_tolerance: %f\n" % self._stress_tolerance)
-                w.write("pressure_target: %f\n" % self._pressure_target)
-            w.write("force_tolerance: %f\n" % self._force_tolerance)
-            if self._max_increase is None:
-                w.write("max_increase: unset\n")
-            else:
-                w.write("max_increase: %f\n" % self._max_increase)
-            w.write("max_iteration: %d\n" % self._max_iteration)
-            w.write("min_iteration: %d\n" % self._min_iteration)
+        if self._lattice_tolerance is not None:
+            w.write("lattice_tolerance: %f\n" % self._lattice_tolerance)
+        if self._stress_tolerance is not None:
+            w.write("stress_tolerance: %f\n" % self._stress_tolerance)
+            w.write("pressure_target: %f\n" % self._pressure_target)
+        w.write("force_tolerance: %f\n" % self._force_tolerance)
+        if self._max_increase is None:
+            w.write("max_increase: unset\n")
+        else:
+            w.write("max_increase: %f\n" % self._max_increase)
+        w.write("max_iteration: %d\n" % self._max_iteration)
+        w.write("min_iteration: %d\n" % self._min_iteration)
+        if self._phonon_tasks[0] is not None:
             w.write("iteration: %d\n" % self._phonon_tasks[0].get_stage())
             if self._energy:
                 w.write("electric_total_energy: %20.10f\n" % self._energy)
