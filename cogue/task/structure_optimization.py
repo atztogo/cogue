@@ -1,11 +1,40 @@
 import os
 from cogue.task import TaskElement
+from cogue.task.oneshot_calculation import OneShotCalculationYaml
 from cogue.crystal.symmetry import get_crystallographic_cell, get_symmetry_dataset
 from cogue.crystal.converter import get_primitive
 
-class StructureOptimizationBase(TaskElement):
+class StructureOptimizationYaml(OneShotCalculationYaml):
+    def _get_structopt_yaml_lines(self):
+        lines = []
+        if self._all_tasks:
+            lines.append("tasks:")
+        for task in self._all_tasks:
+            if not task:
+                continue
+            for i, line in enumerate(TaskElement.get_yaml_lines(task)):
+                if i == 0:
+                    lines.append("- " + line)
+                else:
+                    lines.append("  " + line)
+        if self._lattice_tolerance is not None:
+            lines.append("lattice_tolerance: %f" % self._lattice_tolerance)
+        if self._stress_tolerance is not None:
+            lines.append("stress_tolerance: %f" % self._stress_tolerance)
+            lines.append("pressure_target: %f" % self._pressure_target)
+        lines.append("force_tolerance: %f" % self._force_tolerance)
+        if self._max_increase is None:
+            lines.append("max_increase: unset")
+        else:
+            lines.append("max_increase: %f" % self._max_increase)
+        lines.append("max_iteration: %d" % self._max_iteration)
+        lines.append("min_iteration: %d" % self._min_iteration)
+
+        return lines
+
+class StructureOptimizationBase(TaskElement, StructureOptimizationYaml):
     def __init__(self,
-                 directory="structure_optimization",
+                 directory="structopt",
                  name=None,
                  lattice_tolerance=None,
                  force_tolerance=None,
@@ -26,7 +55,7 @@ class StructureOptimizationBase(TaskElement):
             self._name = directory
         else:
             self._name = name
-        self._task_type = "structure_optimization"
+        self._task_type = "structopt"
 
         self._lattice_tolerance = lattice_tolerance
         self._pressure_target = pressure_target
@@ -45,7 +74,7 @@ class StructureOptimizationBase(TaskElement):
 
         self._cell = None
         self._next_cell = None
-        self._so_tasks = None
+        self._all_tasks = None
         self._stress = None
         self._forces = None
         self._energy = None
@@ -102,7 +131,7 @@ class StructureOptimizationBase(TaskElement):
         if self._space_group:
             self._comment = self._space_group['international_standard']
 
-        self._so_tasks = [task]
+        self._all_tasks = [task]
         self._tasks = [task]
         self._write_yaml()
 
@@ -135,11 +164,11 @@ class StructureOptimizationBase(TaskElement):
             self._traverse = False
             if self._stage > 2:
                 self._stage -= 2
-                task = self._so_tasks.pop()
-                task = self._so_tasks.pop()
+                task = self._all_tasks.pop()
+                task = self._all_tasks.pop()
                 self._next_cell = task.get_cell()
             else:
-                self._so_tasks = []
+                self._all_tasks = []
                 self._stage = 0
                 self._next_cell = self._cell
             self._status = "next"
@@ -175,55 +204,25 @@ class StructureOptimizationBase(TaskElement):
             self._tasks = []
             raise StopIteration
 
+    def get_yaml_lines(self):
+        lines = TaskElement.get_yaml_lines(self)
+        lines.append("iteration: %d" % self._stage)
+        lines += self._get_structopt_yaml_lines()
+        cell = self._all_tasks[-1].get_current_cell()
+        lines += self._get_oneshot_yaml_lines(cell)
+        if self._space_group:
+            lines.append("symmetry_tolerance: %s" %
+                         self._symmetry_tolerance)
+            lines.append("space_group_type: %s" %
+                         self._space_group['international_standard'])
+            lines.append("space_group_number: %d" %
+                         self._space_group['number'])
+
+        return lines
+
     def _set_next_task(self):
         self._stage += 1
         self._status = "stage %d" % self._stage
         task = self._get_next_task(self._next_cell)
-        self._so_tasks.append(task)
+        self._all_tasks.append(task)
         self._tasks = [task]
-        
-    def _write_yaml(self):
-        w = open("%s.yaml" % self._directory, 'w')
-        if self._lattice_tolerance is not None:
-            w.write("lattice_tolerance: %f\n" % self._lattice_tolerance)
-        if self._stress_tolerance is not None:
-            w.write("stress_tolerance: %f\n" % self._stress_tolerance)
-            w.write("pressure_target: %f\n" % self._pressure_target)
-        w.write("force_tolerance: %f\n" % self._force_tolerance)
-        if self._max_increase is None:
-            w.write("max_increase: unset\n")
-        else:
-            w.write("max_increase: %f\n" % self._max_increase)
-        w.write("max_iteration: %d\n" % self._max_iteration)
-        w.write("min_iteration: %d\n" % self._min_iteration)
-        w.write("iteration: %d\n" % self._stage)
-        w.write("status: %s\n" % self._status)
-
-        cell = self._so_tasks[-1].get_current_cell()
-        if cell:
-            for line in cell.get_yaml_lines():
-                w.write(line + "\n")
-
-            if self._space_group:
-                w.write("symmetry_tolerance: %s\n" % self._symmetry_tolerance)
-                w.write("space_group_type: %s\n" %
-                        self._space_group['international_standard'])
-                w.write("space_group_number: %d\n" %
-                        self._space_group['number'])
-
-        if self._energy is not None:
-            w.write("energy: %20.10f\n" % self._energy)
-
-        if self._forces is not None:
-            w.write("forces:\n")
-            for i, v in enumerate(self._forces):
-                w.write("- [ %15.10f, %15.10f, %15.10f ] # %d\n" %
-                        (v[0], v[1], v[2], i + 1))
-
-        if self._stress is not None:
-            w.write("stress:\n")
-            for x, v in zip(('x', 'y', 'z'), self._stress):
-                w.write("- [ %15.10f, %15.10f, %15.10f ] # %sx %sy %sz\n" % (v[0], v[1], v[2], x, x, x))
-
-        w.close()
-        

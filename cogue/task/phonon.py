@@ -1,5 +1,6 @@
 import numpy as np
 from cogue.task import TaskElement
+from cogue.task.structure_optimization import StructureOptimizationYaml
 from cogue.interface.vasp_io import write_poscar, write_poscar_yaml
 from cogue.crystal.cell import sort_cell_by_symbols
 from cogue.crystal.converter import cell2atoms
@@ -14,7 +15,26 @@ except ImportError:
     print "You need to install phonopy."
     exit(1)
 
-class PhononBase(TaskElement):
+class PhononYaml(StructureOptimizationYaml):
+    def _get_phonon_yaml_lines(self, cell):
+        lines = self._get_structopt_yaml_lines()
+        lines.append("supercell_matrix:")
+        if self._supercell_matrix is None:
+            lines.append("- automatic")
+        else:
+            for row in self._supercell_matrix:
+                lines.append("- [ %3d, %3d, %3d ]" % tuple(row))
+        if self._primitive_matrix is not None:
+            lines.append("primitive_matrix:")
+            for row in self._primitive_matrix:
+                lines.append("- [ %6.3f, %6.3f, %6.3f ]" % tuple(row))
+        lines.append("distance: %f" % self._distance)
+        if cell:
+            lines += cell.get_yaml_lines()
+    
+        return lines
+
+class PhononBase(TaskElement, PhononYaml):
     """PhononBase class
 
     This is an interface to phonopy.
@@ -76,7 +96,7 @@ class PhononBase(TaskElement):
         self._space_group = None
         self._cell = None
         self._phonon = None # Phonopy object
-        self._phonon_tasks = None # Phonopy object
+        self._all_tasks = None # Phonopy object
 
     def get_phonon(self):
         return self._phonon
@@ -85,7 +105,7 @@ class PhononBase(TaskElement):
         if self._is_cell_relaxed:
             return self._cell
         else:
-            return self._phonon_tasks[0].get_cell()
+            return self._all_tasks[0].get_cell()
 
     def get_energy(self):
         """Return energies at geometry optimization steps"""
@@ -128,7 +148,7 @@ class PhononBase(TaskElement):
         self._overwrite_settings()
 
         if self._is_cell_relaxed:
-            self._phonon_tasks = [None]
+            self._all_tasks = [None]
             self._set_stage1()
         else:
             self._set_stage0()
@@ -169,7 +189,7 @@ class PhononBase(TaskElement):
                 self._tasks = []
                 for i in disp_terminated:
                     self._tasks.append(tasks[i])
-                    self._phonon_tasks[i + 1] = tasks[i]
+                    self._all_tasks[i + 1] = tasks[i]
                 self._status = "displacements"
                 return self._tasks
                 
@@ -180,7 +200,7 @@ class PhononBase(TaskElement):
     def _set_stage0(self):
         self._status = "equilibrium"
         task = self._get_equilibrium_task()
-        self._phonon_tasks = [task]
+        self._all_tasks = [task]
         self._tasks = [task]
         
     def _set_stage1(self):
@@ -188,7 +208,7 @@ class PhononBase(TaskElement):
         self._status = "displacements"
         self._set_phonon()
         self._tasks = self._get_displacement_tasks()
-        self._phonon_tasks += self._tasks
+        self._all_tasks += self._tasks
 
     def _collect_forces(self):
         forces = []
@@ -236,43 +256,17 @@ class PhononBase(TaskElement):
         write_poscar_yaml(cell, filename="POSCAR-unitcell.yaml")
         write_disp_yaml(displacements, supercell)
 
-    def _write_yaml(self):
-        w = open("%s.yaml" % self._directory, 'w')
-        w.write("supercell_matrix:\n")
-        if self._supercell_matrix is None:
-            w.write("- automatic\n")
+    def get_yaml_lines(self):
+        lines = TaskElement.get_yaml_lines(self)
+        if self._is_cell_relaxed:
+            cell = self._cell
         else:
-            for row in self._supercell_matrix:
-                w.write("- [ %3d, %3d, %3d ]\n" % tuple(row))
-        if self._primitive_matrix is not None:
-            w.write("primitive_matrix:\n")
-            for row in self._primitive_matrix:
-                w.write("- [ %6.3f, %6.3f, %6.3f ]\n" % tuple(row))
-        w.write("distance: %f\n" % self._distance)
-        
-        if self._lattice_tolerance is not None:
-            w.write("lattice_tolerance: %f\n" % self._lattice_tolerance)
-        if self._stress_tolerance is not None:
-            w.write("stress_tolerance: %f\n" % self._stress_tolerance)
-            w.write("pressure_target: %f\n" % self._pressure_target)
-        w.write("force_tolerance: %f\n" % self._force_tolerance)
-        if self._max_increase is None:
-            w.write("max_increase: unset\n")
-        else:
-            w.write("max_increase: %f\n" % self._max_increase)
-        w.write("max_iteration: %d\n" % self._max_iteration)
-        w.write("min_iteration: %d\n" % self._min_iteration)
-        if self._phonon_tasks[0] is not None:
-            w.write("iteration: %d\n" % self._phonon_tasks[0].get_stage())
+            cell = self._all_tasks[0].get_cell()
+        lines += self._get_phonon_yaml_lines(cell)
+        if self._all_tasks[0] is not None:
             if self._energy:
-                w.write("electric_total_energy: %20.10f\n" % self._energy)
-                
-        w.write("status: %s\n" % self._status)
-        w.write("tasks:\n")
-        for task in self._phonon_tasks:
-            if task and task.get_status():
-                w.write("- name:   %s\n" % task.get_name())
-                w.write("  status: %s\n" % task.get_status())
-        w.close()
+                lines.append("electric_total_energy: %20.10f" % self._energy)
 
+        return lines
 
+        

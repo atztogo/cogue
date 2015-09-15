@@ -50,10 +50,33 @@ class TaskBase:
     def get_tid(self):
         return self._tid
 
+    def get_yaml_lines(self):
+        lines = []
+        if self._name:
+            lines.append("name:      %s" % self._name)
+        if self._task_type:
+            lines.append("type:      %s" % self._task_type)
+        if self._tid:
+            lines.append("id:        %s" % self._tid)
+        if self._status:
+            lines.append("status:    %s" % self._status)
+        if self._directory:
+            lines.append("directory: %s" % self._directory)
+        return lines
+
+    def __str__(self):
+        return "\n".join(self.get_yaml_lines())
+
+    def _write_yaml(self, filename=None):
+        if filename:
+            w = open(filename)
+        else:
+            w = open("%s.yaml" % self._task_type, 'w')
+        w.write("\n".join(self.get_yaml_lines()))
+        w.close()
 
 class TaskElement(TaskBase):
     def __init__(self):
-
         TaskBase.__init__(self)
         self._job = None
         self._traverse = False # Do submit job
@@ -73,6 +96,14 @@ class TaskElement(TaskBase):
 
     def get_traverse(self):
         return self._traverse
+
+    def get_yaml_lines(self):
+        lines = TaskBase.get_yaml_lines(self)
+        if self._traverse is True:
+            lines.append("traverse:  Ture")
+        elif self._traverse is not False:
+            lines.append("traverse:  %s" % self._traverse)
+        return lines
 
     def _overwrite_settings(self):
         if os.path.exists(".coguerc"):
@@ -105,25 +136,38 @@ class TaskSet(TaskBase):
 
     def set_status(self):
         done = True
+        terminate = False
         for task in self._tasks:
             done &= task.done()
+            if task.get_status() == "terminate":
+                terminate = True
         if done:
-            self._status = "done"
+            if terminate:
+                self._status = "terminate"
+            else:
+                self._status = "done"
         self._write_yaml()
 
     def done(self):
-        return (self._status == "done")
+        return (self._status == "done" or
+                self._status == "terminate")
 
     def begin(self):
         self._status = "begin"
 
-    def _write_yaml(self):
-        if self._directory:
-            w = open("%s.yaml" % self._directory, 'w')
-            w.write("status: %s\n" % self._status)
-            w.write("tasks:\n")
-            for task in self._tasks:
-                if task.get_status():
-                    w.write("- name:   %s\n" % task.get_name())
-                    w.write("  status: %s\n" % task.get_status())
-            w.close()
+    def get_yaml_lines(self):
+        lines = TaskBase.get_yaml_lines(self)
+        if self._tasks:
+            lines.append("tasks:")
+        for task in self._tasks:
+            if not task:
+                continue
+            for i, line in enumerate(TaskBase.get_yaml_lines(task)):
+                if i == 0:
+                    lines.append("- " + line)
+                else:
+                    lines.append("  " + line)
+
+        return lines
+
+        
