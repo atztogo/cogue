@@ -1,9 +1,10 @@
 from cogue.task import TaskElement
+from cogue.task.phonon import PhononYaml
+from cogue.crystal.supercell import estimate_supercell_matrix
 import numpy as np
 from phonopy import PhonopyQHA
-from cogue.crystal.supercell import estimate_supercell_matrix
 
-class QuasiHarmonicPhononBase(TaskElement):
+class QuasiHarmonicPhononBase(TaskElement, PhononYaml):
     """QuasiHarmonicPhonon class
 
     Three stages:
@@ -82,7 +83,7 @@ class QuasiHarmonicPhononBase(TaskElement):
         self._tasks = None
 
         self._cell = None
-        self._qh_tasks = None
+        self._all_tasks = None
 
     def set_status(self):
         done = True
@@ -97,18 +98,20 @@ class QuasiHarmonicPhononBase(TaskElement):
             else:
                 self._status = "next"
 
+        self._write_yaml()
+
     def begin(self):
         if not self._job:
             print "set_job has to be executed."
             raise
 
         if self._is_cell_relaxed:
-            self._qh_tasks = [None]
+            self._all_tasks = [None]
             self._prepare_next(self._cell)
         else:
             self._status = "equilibrium"
-            self._qh_tasks = [self._get_equilibrium_task()]
-            self._tasks = [self._qh_tasks[0]]
+            self._all_tasks = [self._get_equilibrium_task()]
+            self._tasks = [self._all_tasks[0]]
 
     def done(self):
         return (self._status == "done" or
@@ -118,7 +121,7 @@ class QuasiHarmonicPhononBase(TaskElement):
     def next(self):    
         if self._stage == 0:
             if self._status == "next":
-                self._prepare_next(self._qh_tasks[0].get_cell())
+                self._prepare_next(self._all_tasks[0].get_cell())
                 return self._tasks
         else:
             if self._status == "next":
@@ -193,59 +196,16 @@ class QuasiHarmonicPhononBase(TaskElement):
                 cell,
                 max_num_atoms=self._max_num_atoms)
 
-        self._qh_tasks += self._get_phonon_tasks(cell)
-        self._tasks = self._qh_tasks[1:]
+        self._all_tasks += self._get_phonon_tasks(cell)
+        self._tasks = self._all_tasks[1:]
 
-    def _write_yaml(self):
-        w = open("%s.yaml" % self._directory, 'w')
-        if self._lattice_tolerance is not None:
-            w.write("lattice_tolerance: %f\n" % self._lattice_tolerance)
-        if self._stress_tolerance is not None:
-            w.write("stress_tolerance: %f\n" % self._stress_tolerance)
-            w.write("pressure_target: %f\n" % self._pressure_target)
-        w.write("force_tolerance: %f\n" % self._force_tolerance)
-        if self._max_increase is None:
-            w.write("max_increase: unset\n")
-        else:
-            w.write("max_increase: %f\n" % self._max_increase)
-        w.write("max_iteration: %d\n" % self._max_iteration)
-        w.write("min_iteration: %d\n" % self._min_iteration)
-        if self._qh_tasks[0] is not None:
-            w.write("iteration: %d\n" % self._qh_tasks[0].get_stage())
-        w.write("status: %s\n" % self._status)
-        w.write("supercell_matrix:\n")
-        if self._supercell_matrix is None:
-            w.write("- automatic\n")
-        else:
-            for row in self._supercell_matrix:
-                w.write("- [ %3d, %3d, %3d ]\n" % tuple(row))
-        if self._primitive_matrix is not None:
-            w.write("primitive_matrix:\n")
-            for row in self._primitive_matrix:
-                w.write("- [ %6.3f, %6.3f, %6.3f ]\n" % tuple(row))
-        w.write("distance: %f\n" % self._distance)
+    def get_yaml_lines(self):
+        lines = TaskElement.get_yaml_lines(self)
         if self._is_cell_relaxed:
             cell = self._cell
         else:
-            cell = self._qh_tasks[0].get_cell()
+            cell = self._all_tasks[0].get_cell()
+        lines += self._get_phonon_yaml_lines(cell)
 
-        if cell:
-            lattice = cell.get_lattice().T
-            points = cell.get_points().T
-            symbols = cell.get_symbols()
-        
-            w.write("lattice:\n")
-            for v, a in zip(lattice, ('a', 'b', 'c')) :
-                w.write("- [ %22.16f, %22.16f, %22.16f ] # %s\n" %
-                        (v[0], v[1], v[2], a))
-    
-            w.write("points:\n")
-            for i, v in enumerate(points):
-                w.write("- [ %20.16f, %20.16f, %20.16f ] # %d\n" %
-                        (v[0], v[1], v[2], i + 1))
+        return lines
 
-            w.write("symbols:\n")
-            for i, v in enumerate(symbols):
-                w.write("- %2s # %d\n" % (v, i + 1))
-
-        w.close()
