@@ -37,6 +37,20 @@ def sort_cell_by_symbols(cell):
                 magmoms=magmoms,
                 masses=cell.get_masses()[atom_order])
 
+def get_strained_cells(cell_orig, strains):
+    cells = []
+    lattice = cell_orig.get_lattice()
+    for strain in strains:
+        cell = cell_orig.copy()
+        if isinstance(strain, int) or isinstance(strain, float):
+            cell.set_lattice(lattice * (1 + strain) ** (1.0 / 3))
+        else:
+            cell.set_lattice(
+                np.dot(lattice, np.eye(3) + np.array(strain)))
+        cells.append(cell)
+
+    return cells
+
 class Cell:
     """ """
     def __init__(self,
