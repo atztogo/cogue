@@ -109,6 +109,8 @@ class StructureOptimizationBase(TaskElement, StructureOptimizationYaml):
         if task.done():
             self._status = task.get_status()
 
+        self._write_yaml()
+
     def begin(self):
         if not self._job:
             print "set_job has to be executed."
