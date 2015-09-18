@@ -1,7 +1,8 @@
 from cogue.task import TaskElement
 from cogue.crystal.cell import get_strained_cells
 from cogue.task.structure_optimization import StructureOptimizationYaml
-
+from phonopy.qha import BulkModulus as PhonopyBulkModulus
+from phonopy.units import EVAngstromToGPa
 
 class BulkModulusBase(TaskElement, StructureOptimizationYaml):
     """BulkModulus class
@@ -13,7 +14,7 @@ class BulkModulusBase(TaskElement, StructureOptimizationYaml):
     or 
     1. Structure optimization of input cell
     2. Total energy calculations at strains specified
-    3. Calculate bulk modulus by fitting EOS (not yet implemented)
+    3. Calculate bulk modulus by fitting EOS
     
     """
     
@@ -59,8 +60,13 @@ class BulkModulusBase(TaskElement, StructureOptimizationYaml):
         self._bulk_modulus = None
         self._all_tasks = None
 
+        self._eos = None # Energy function of V, only for strains mode
+
     def get_bulk_modulus(self):
         return self._bulk_modulus
+
+    def get_equation_of_state(self):
+        return self._eos
 
     def set_status(self):
         done = True
@@ -120,15 +126,20 @@ class BulkModulusBase(TaskElement, StructureOptimizationYaml):
                     if (stress_p is None or stress_m is None):
                         self._status = "terminate"
                     else:
-                        self._calculate_bulk_modulus()
+                        self._calculate_bulk_modulus_from_plus_minus()
                         self._status = "done"
                 else:
-                    self._status = "done"
+                    if "terminate" in [task.get_status()
+                                       for task in self._tasks]:
+                        self._status = "terminate"
+                    else:                        
+                        self._calculate_bulk_modulus_by_fit_to_vinet()
+                        self._status = "done"
 
         self._write_yaml()
         raise StopIteration
 
-    def _calculate_bulk_modulus(self):
+    def _calculate_bulk_modulus_from_plus_minus(self):
         if self._is_cell_relaxed:
             V = self._cell.get_volume()
         else:
@@ -139,6 +150,28 @@ class BulkModulusBase(TaskElement, StructureOptimizationYaml):
         s_m = self._all_tasks[2].get_stress()
 
         self._bulk_modulus = - (s_p - s_m).trace() / 3 * V / (V_p - V_m)
+
+    def _calculate_bulk_modulus_by_fit_to_vinet(self):
+        energies = [task.get_energy()
+                    for task in self._all_tasks[1:]]
+        volumes = [task.get_cell().get_volume()
+                   for task in self._all_tasks[1:]]
+
+        phonopy_bulk_modulus = PhonopyBulkModulus(volumes, energies)
+        self._bulk_modulus = phonopy_bulk_modulus.get_bulk_modulus()
+        self._bulk_modulus *= EVAngstromToGPa
+        params = phonopy_bulk_modulus.get_parameters()
+
+        def eos(v):
+            return phonopy_bulk_modulus.get_eos()(params, v)
+
+        self._eos = eos
+
+        with open("e-v.dat", 'w') as w:
+            w.write("#   cell volume        energy of cell "
+                    "other than phonon\n")
+            for e, v in zip(energies, volumes):
+                w.write("%20.13f %20.13f\n" % (v, e))
         
     def _prepare_next(self):
         if self._is_cell_relaxed:
@@ -179,7 +212,7 @@ class BulkModulusBase(TaskElement, StructureOptimizationYaml):
                                            cell=cell,
                                            max_iteration=3,
                                            min_iteration=1,
-                                           directory="strain-%d" % (i + 1)))
+                                           directory="strain-%02d" % i))
         return tasks
 
     def get_yaml_lines(self):
@@ -189,7 +222,8 @@ class BulkModulusBase(TaskElement, StructureOptimizationYaml):
             cell = self._cell
         else:
             cell = self._all_tasks[0].get_cell()
-        lines += cell.get_yaml_lines()
+        if cell:
+            lines += cell.get_yaml_lines()
 
         if self._bulk_modulus:
             lines.append("bulk_modulus: %f\n" % self._bulk_modulus)
