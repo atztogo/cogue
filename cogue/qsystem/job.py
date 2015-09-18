@@ -1,4 +1,8 @@
 class JobBase:
+    def __init__(self):
+        self._jobname = None
+        self._status = None
+
     def set_jobname(self, jobname):
         self._jobname = jobname
 

@@ -79,7 +79,7 @@ class Qstat:
                     elif s == 'qw':
                         self._qstatus[jobid] = 'Pending'
         
-def _get_jobid(qsub_out):
+def _parse_jobid(qsub_out):
     return int(qsub_out.split()[2])
                     
 class LocalQueue(LocalQueueBase,Qstat):
@@ -91,7 +91,7 @@ class LocalQueue(LocalQueueBase,Qstat):
                                 qsub_command=qsub_command)
 
     def _get_jobid(self, qsub_out):
-        return _get_jobid(qsub_out)
+        return _parse_jobid(qsub_out)
 
 class RemoteQueue(RemoteQueueBase,Qstat):
     def __init__(self,
@@ -108,7 +108,7 @@ class RemoteQueue(RemoteQueueBase,Qstat):
                                  qsub_command=qsub_command)
 
     def _get_jobid(self, qsub_out):
-        return _get_jobid(qsub_out)
+        return _parse_jobid(qsub_out)
 
 class Job(JobBase):
     def __init__(self,
@@ -121,6 +121,8 @@ class Job(JobBase):
                  pe=None,
                  stdout=None,
                  stderr=None):
+
+        JobBase.__init__(self)
 
         if not script:
             print "Queue script not found"
