@@ -1,18 +1,26 @@
 from cogue.task import TaskElement
+from cogue.crystal.cell import get_strained_cells
+from cogue.task.structure_optimization import StructureOptimizationYaml
 
-class BulkModulusBase(TaskElement):
+
+class BulkModulusBase(TaskElement, StructureOptimizationYaml):
     """BulkModulus class
 
     Three stages:
-    1. structure optimization of input cell
-    2. create cells with +1% and -1% volume and optimize them
-    3. calculate bulk modulus from stress of two cells
+    1. Structure optimization of input cell
+    2. Total energiy calculations with +1 and -1 % volumes
+    3. Calculate bulk modulus from stress of two cells
+    or 
+    1. Structure optimization of input cell
+    2. Total energy calculations at strains specified
+    3. Calculate bulk modulus by fitting EOS (not yet implemented)
     
     """
     
     def __init__(self,
                  directory=None,
                  name=None,
+                 strains=None,
                  lattice_tolerance=None,
                  force_tolerance=None,
                  pressure_target=None,
@@ -31,6 +39,9 @@ class BulkModulusBase(TaskElement):
         else:
             self._name = name
         self._task_type = "bulk_modulus"
+
+        self._strains = strains
+
         self._lattice_tolerance = lattice_tolerance
         self._pressure_target = pressure_target
         self._stress_tolerance = stress_tolerance
@@ -46,7 +57,7 @@ class BulkModulusBase(TaskElement):
 
         self._cell = None
         self._bulk_modulus = None
-        self._bm_tasks = None
+        self._all_tasks = None
 
     def get_bulk_modulus(self):
         return self._bulk_modulus
@@ -73,6 +84,8 @@ class BulkModulusBase(TaskElement):
                     self._status = "terminate"
                 else:
                     self._status = "next"
+
+        self._write_yaml()
         
     def begin(self):
         if not self._job:
@@ -80,12 +93,12 @@ class BulkModulusBase(TaskElement):
             raise
 
         if self._is_cell_relaxed:
-            self._bm_tasks = [None]
-            self._prepare_next(self._cell)
+            self._all_tasks = [None]
+            self._prepare_next()
         else:
             self._status = "equilibrium"
-            self._bm_tasks = [self._get_equilibrium_task()]
-            self._tasks = [self._bm_tasks[0]]
+            self._all_tasks = [self._get_equilibrium_task()]
+            self._tasks = [self._all_tasks[0]]
 
     def done(self):
         return (self._status == "done" or
@@ -96,17 +109,20 @@ class BulkModulusBase(TaskElement):
     def next(self):    
         if self._stage == 0:
             if self._status == "next":
-                self._prepare_next(self._bm_tasks[0].get_cell())
+                self._prepare_next()
                 return self._tasks
         else:
             if self._status == "next":
-                stress_p = self._bm_tasks[1].get_stress()
-                stress_m = self._bm_tasks[2].get_stress()
-
-                if (stress_p is None or stress_m is None):
-                    self._status = "terminate"
+                if self._strains is None:
+                    stress_p = self._all_tasks[1].get_stress()
+                    stress_m = self._all_tasks[2].get_stress()
+    
+                    if (stress_p is None or stress_m is None):
+                        self._status = "terminate"
+                    else:
+                        self._calculate_bulk_modulus()
+                        self._status = "done"
                 else:
-                    self._calculate_bulk_modulus()
                     self._status = "done"
 
         self._write_yaml()
@@ -116,63 +132,66 @@ class BulkModulusBase(TaskElement):
         if self._is_cell_relaxed:
             V = self._cell.get_volume()
         else:
-            V = self._bm_tasks[0].get_cell().get_volume()
-        V_p = self._bm_tasks[1].get_cell().get_volume()
-        V_m = self._bm_tasks[2].get_cell().get_volume()
-        s_p = self._bm_tasks[1].get_stress()
-        s_m = self._bm_tasks[2].get_stress()
+            V = self._all_tasks[0].get_cell().get_volume()
+        V_p = self._all_tasks[1].get_cell().get_volume()
+        V_m = self._all_tasks[2].get_cell().get_volume()
+        s_p = self._all_tasks[1].get_stress()
+        s_m = self._all_tasks[2].get_stress()
 
         self._bulk_modulus = - (s_p - s_m).trace() / 3 * V / (V_p - V_m)
         
-    def _prepare_next(self, cell):
-        self._stage = 1
-        self._status = "plus minus"
-        plus, minus = self._get_plus_minus_tasks(cell)
-        self._bm_tasks.append(plus)
-        self._bm_tasks.append(minus)
-        self._tasks = self._bm_tasks[1:]
-
-    def _write_yaml(self):
-        w = open("%s.yaml" % self._directory, 'w')
-        if self._lattice_tolerance is not None:
-            w.write("lattice_tolerance: %f\n" % self._lattice_tolerance)
-        if self._stress_tolerance is not None:
-            w.write("stress_tolerance: %f\n" % self._stress_tolerance)
-            w.write("pressure_target: %f\n" % self._pressure_target)
-        w.write("force_tolerance: %f\n" % self._force_tolerance)
-        if self._max_increase is None:
-            w.write("max_increase: unset\n")
-        else:
-            w.write("max_increase: %f\n" % self._max_increase)
-        w.write("max_iteration: %d\n" % self._max_iteration)
-        w.write("min_iteration: %d\n" % self._min_iteration)
-        if self._bm_tasks[0] is not None:
-            w.write("iteration: %d\n" % self._bm_tasks[0].get_stage())
-        w.write("status: %s\n" % self._status)
+    def _prepare_next(self):
         if self._is_cell_relaxed:
             cell = self._cell
         else:
-            cell = self._bm_tasks[0].get_cell()
+            cell = self._all_tasks[0].get_cell()
 
-        if cell:
-            lattice = cell.get_lattice().T
-            points = cell.get_points().T
-            symbols = cell.get_symbols()
-        
-            w.write("lattice:\n")
-            for v, a in zip(lattice, ('a', 'b', 'c')) :
-                w.write("- [ %22.16f, %22.16f, %22.16f ] # %s\n" %
-                        (v[0], v[1], v[2], a))
-    
-            w.write("points:\n")
-            for i, v in enumerate(points):
-                w.write("- [ %20.16f, %20.16f, %20.16f ] # %d\n" %
-                        (v[0], v[1], v[2], i + 1))
+        self._stage = 1
+        self._status = "strains"
 
-            w.write("symbols:\n")
-            for i, v in enumerate(symbols):
-                w.write("- %2s # %d\n" % (v, i + 1))
+        if self._strains is None:
+            tasks = self._get_plus_minus_tasks(cell)
+        else:
+            tasks = self._get_strained_cell_tasks(cell)
+
+        self._all_tasks += tasks
+        self._tasks = self._all_tasks[1:]
+
+    def _get_plus_minus_tasks(self, cell):
+        cell_plus, cell_minus = get_strained_cells(cell, [0.01, -0.01])
+        plus = self._get_equilibrium_task(index=1,
+                                          cell=cell_plus,
+                                          max_iteration=3,
+                                          min_iteration=1,
+                                          directory="plus")
+        minus = self._get_equilibrium_task(index=1,
+                                           cell=cell_minus,
+                                           max_iteration=3,
+                                           min_iteration=1,
+                                           directory="minus")
+        return plus, minus
+
+    def _get_strained_cell_tasks(self, cell_orig):
+        tasks = []
+        for i, cell in enumerate(get_strained_cells(cell_orig, self._strains)):
+            tasks.append(
+                self._get_equilibrium_task(index=1,
+                                           cell=cell,
+                                           max_iteration=3,
+                                           min_iteration=1,
+                                           directory="strain-%d" % (i + 1)))
+        return tasks
+
+    def get_yaml_lines(self):
+        lines = TaskElement.get_yaml_lines(self)
+        lines += self._get_structopt_yaml_lines()
+        if self._is_cell_relaxed:
+            cell = self._cell
+        else:
+            cell = self._all_tasks[0].get_cell()
+        lines += cell.get_yaml_lines()
 
         if self._bulk_modulus:
-            w.write("bulk_modulus: %f\n" % self._bulk_modulus)
-        w.close()
+            lines.append("bulk_modulus: %f\n" % self._bulk_modulus)
+
+        return lines
