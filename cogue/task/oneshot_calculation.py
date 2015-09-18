@@ -67,6 +67,8 @@ class OneShotCalculation(TaskElement, OneShotCalculationYaml):
         else:
             self._status = "done"
 
+        self._write_yaml()
+
     def begin(self):
         if self._traverse is False:
             if self._job is None:
