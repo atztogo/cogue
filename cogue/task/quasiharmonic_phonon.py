@@ -89,6 +89,8 @@ class QuasiHarmonicPhononBase(TaskElement, PhononYaml):
         self._cell = None
         self._all_tasks = None
 
+        self._imaginary_ratio = None
+
     def get_cell(self):
         if self._is_cell_relaxed:
             return self._cell
@@ -128,6 +130,7 @@ class QuasiHarmonicPhononBase(TaskElement, PhononYaml):
     def done(self):
         return (self._status == "done" or
                 self._status == "terminate" or
+                self._status == "imaginary_modes" or
                 self._status == "next")
 
     def next(self):
@@ -155,7 +158,10 @@ class QuasiHarmonicPhononBase(TaskElement, PhononYaml):
         elif self._stage == 2:
             if self._status == "next":
                 self._prepare_phonons()
-                return self._tasks
+                if self._tasks:
+                    return self._tasks
+                else:
+                    self._status = "imaginary_modes"
             elif (self._status == "terminate" and self._traverse == "restart"):
                 self._traverse = False
                 terminated = []
@@ -163,7 +169,7 @@ class QuasiHarmonicPhononBase(TaskElement, PhononYaml):
                     if task.get_status() == "terminate":
                         terminated.append(i)
                 cells = [task.get_cell()
-                         for task in self._all_tasks[1].get_all_tasks()[2:4]]
+                         for task in self._all_tasks[1].get_all_tasks()[2:5]]
                 tasks = self._get_phonon_tasks(cells, is_cell_relaxed=True)
                 self._tasks = []
                 for i in terminated:
@@ -173,6 +179,7 @@ class QuasiHarmonicPhononBase(TaskElement, PhononYaml):
                 return self._tasks
         else:
             if self._status == "next":
+                self._tasks = []
                 self._calculate_quasiharmonic_phonon()
                 self._status = "done"
             elif (self._status == "terminate" and self._traverse == "restart"):
@@ -191,7 +198,7 @@ class QuasiHarmonicPhononBase(TaskElement, PhononYaml):
                 for i in terminated:
                     self._tasks.append(tasks[i])
                     if self._strains is None:
-                        self._all_tasks[i + 4] = tasks[i]
+                        self._all_tasks[i + 5] = tasks[i]
                     else:
                         self._all_tasks[i + 2] = tasks[i]
                 self._status = "phonons"
@@ -206,14 +213,9 @@ class QuasiHarmonicPhononBase(TaskElement, PhononYaml):
         phonons = []
 
         if self._strains is None:
-            phonon_tasks = self._all_tasks[4:]
-            # energies += [task.get_energy()
-            #              for task in self._all_tasks[1].get_all_tasks()[2:4]]
-            # volumes += [task.get_cell().get_volume()
-            #             for task in self._all_tasks[2:4]]
-            # phonons += [task.get_phonon() for task in self._all_tasks[2:4]]
+            phonon_tasks = self._all_tasks[5:]
         else:
-            phonon_tasks = self._all_tasks[1:]
+            phonon_tasks = self._all_tasks[2:]
 
         for task in phonon_tasks:
             energies.append(task.get_energy())
@@ -312,7 +314,7 @@ class QuasiHarmonicPhononBase(TaskElement, PhononYaml):
                 max_num_atoms=self._max_num_atoms)
 
         cells = [task.get_cell()
-                 for task in self._all_tasks[1].get_all_tasks()[2:4]]
+                 for task in self._all_tasks[1].get_all_tasks()[2:5]]
         tasks = self._get_phonon_tasks(cells,
                                        is_cell_relaxed=True,
                                        directory="gruneisen")
@@ -357,15 +359,30 @@ class QuasiHarmonicPhononBase(TaskElement, PhononYaml):
         cell = self.get_cell()
         return get_strained_cells(cell, strains)
 
+    def _check_imaginary(self, phonon, distance, lattice):
+        sampling_mesh = klength2mesh(distance, lattice)
+        phonon.set_mesh(sampling_mesh, is_gamma_center=True)
+        _, weights, freqs, _ = phonon.get_mesh()
+        ratio = (float(np.extract(freqs[:, 0] < 0, weights).sum()) /
+                 np.prod(sampling_mesh))
+        return ratio
+
     def _get_estimated_strains(self, distance=200):
         t_max = 1500
         t_step = 10
         t_min = 0
 
-        phonons = [task.get_phonon() for task in self._all_tasks[-2:]]
-        gruneisen = PhonopyGruneisen(phonons[0], phonons[0], phonons[1])
+        phonons = [task.get_phonon() for task in self._all_tasks[-3:]]
         cell = self.get_cell()
         lattice = cell.get_lattice()
+        self._imaginary_ratio = self._check_imaginary(phonons[0],
+                                                      distance,
+                                                      lattice)
+
+        if self._imaginary_ratio > 0.01:
+            return []
+
+        gruneisen = PhonopyGruneisen(phonons[1], phonons[0], phonons[2])
 
         if self._sampling_mesh is None:
             self._sampling_mesh = klength2mesh(distance, lattice)
@@ -412,6 +429,8 @@ class QuasiHarmonicPhononBase(TaskElement, PhononYaml):
                 lines.append("is_gamma_center: True")
             else:
                 lines.append("is_gamma_center: False")
+        if self._imaginary_ratio is not None:
+            lines.append("imaginary_ratio: %f" % self._imaginary_ratio)
         if self._is_cell_relaxed:
             cell = self._cell
         else:
