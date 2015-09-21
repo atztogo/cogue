@@ -100,7 +100,7 @@ class TaskElement(TaskBase):
     def get_yaml_lines(self):
         lines = TaskBase.get_yaml_lines(self)
         if self._traverse is True:
-            lines.append("traverse:  Ture")
+            lines.append("traverse:  True")
         elif self._traverse is not False:
             lines.append("traverse:  %s" % self._traverse)
         return lines
