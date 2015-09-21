@@ -68,6 +68,15 @@ class BulkModulusBase(TaskElement, StructureOptimizationYaml):
     def get_equation_of_state(self):
         return self._eos
 
+    def get_cell(self):
+        if self._is_cell_relaxed:
+            return self._cell
+        else:
+            return self._all_tasks[0].get_cell()
+
+    def get_all_tasks(self):
+        return self._all_tasks
+
     def set_status(self):
         done = True
         terminate = False
@@ -102,9 +111,7 @@ class BulkModulusBase(TaskElement, StructureOptimizationYaml):
             self._all_tasks = [None]
             self._prepare_next()
         else:
-            self._status = "equilibrium"
-            self._all_tasks = [self._get_equilibrium_task()]
-            self._tasks = [self._all_tasks[0]]
+            self._set_stage0()
 
     def done(self):
         return (self._status == "done" or
@@ -117,24 +124,34 @@ class BulkModulusBase(TaskElement, StructureOptimizationYaml):
             if self._status == "next":
                 self._prepare_next()
                 return self._tasks
+            elif (self._status == "terminate" and self._traverse == "restart"):
+                self._traverse = False
+                self._set_stage0()
+                return self._tasks
         else:
             if self._status == "next":
+                self._status = "done"
+                self._tasks = []
                 if self._strains is None:
-                    stress_p = self._all_tasks[1].get_stress()
-                    stress_m = self._all_tasks[2].get_stress()
-    
-                    if (stress_p is None or stress_m is None):
-                        self._status = "terminate"
-                    else:
-                        self._calculate_bulk_modulus_from_plus_minus()
-                        self._status = "done"
+                    self._calculate_bulk_modulus_from_plus_minus()
                 else:
-                    if "terminate" in [task.get_status()
-                                       for task in self._tasks]:
-                        self._status = "terminate"
-                    else:                        
-                        self._calculate_bulk_modulus_by_fit_to_vinet()
-                        self._status = "done"
+                    self._calculate_bulk_modulus_by_fit_to_vinet()
+            elif (self._status == "terminate" and self._traverse == "restart"):
+                self._traverse = False
+                terminated = []
+                for i, task in enumerate(self._tasks):
+                    if task.get_status() == "terminate":
+                        terminated.append(i)
+                if self._strains is None:
+                    tasks = self._get_plus_minus_tasks(cell)
+                else:
+                    tasks = self._get_strained_cell_tasks(cell)
+                self._tasks = []
+                for i in terminated:
+                    self._tasks.append(tasks[i])
+                    self._all_tasks[i + 1] = tasks[i]
+                self._status = "strains"
+                return self._tasks
 
         self._write_yaml()
         raise StopIteration
@@ -143,7 +160,7 @@ class BulkModulusBase(TaskElement, StructureOptimizationYaml):
         if self._is_cell_relaxed:
             V = self._cell.get_volume()
         else:
-            V = self._all_tasks[0].get_cell().get_volume()
+            V = self.get_cell().get_volume()
         V_p = self._all_tasks[1].get_cell().get_volume()
         V_m = self._all_tasks[2].get_cell().get_volume()
         s_p = self._all_tasks[1].get_stress()
@@ -173,11 +190,15 @@ class BulkModulusBase(TaskElement, StructureOptimizationYaml):
             for e, v in zip(energies, volumes):
                 w.write("%20.13f %20.13f\n" % (v, e))
         
+    def _set_stage0(self):
+        self._stage = 0
+        self._status = "equilibrium"
+        task = self._get_equilibrium_task()
+        self._all_tasks = [task]
+        self._tasks = [task]
+        
     def _prepare_next(self):
-        if self._is_cell_relaxed:
-            cell = self._cell
-        else:
-            cell = self._all_tasks[0].get_cell()
+        cell = self.get_cell()
 
         self._stage = 1
         self._status = "strains"
@@ -188,7 +209,7 @@ class BulkModulusBase(TaskElement, StructureOptimizationYaml):
             tasks = self._get_strained_cell_tasks(cell)
 
         self._all_tasks += tasks
-        self._tasks = self._all_tasks[1:]
+        self._tasks = tasks
 
     def _get_plus_minus_tasks(self, cell):
         cell_plus, cell_minus = get_strained_cells(cell, [0.01, -0.01])
@@ -221,7 +242,7 @@ class BulkModulusBase(TaskElement, StructureOptimizationYaml):
         if self._is_cell_relaxed:
             cell = self._cell
         else:
-            cell = self._all_tasks[0].get_cell()
+            cell = self.get_cell()
         if cell:
             lines += cell.get_yaml_lines()
 
