@@ -119,6 +119,19 @@ class ModeGruneisenBase(TaskElement, PhononYaml):
             if self._status == "next":
                 self._calculate_mode_gruneisen()
                 self._status = "done"
+            elif self._status == "terminate" and self._traverse == "restart":
+                self._traverse = False
+                terminated = []
+                for i, task in enumerate(self._tasks):
+                    if task.get_status() == "terminate":
+                        terminated.append(i)
+                tasks = self._get_phonon_tasks(cell)
+                self._tasks = []
+                for i in terminated:
+                    self._tasks.append(tasks[i])
+                    self._all_tasks[i + 1] = tasks[i]
+                self._status = "phonons"
+                return self._tasks
 
         self._write_yaml()
         raise StopIteration
@@ -139,8 +152,9 @@ class ModeGruneisenBase(TaskElement, PhononYaml):
     def _prepare_next(self, cell):
         self._stage = 1
         self._status = "phonons"
-        self._all_tasks += self._get_phonon_tasks(cell)
-        self._tasks = self._all_tasks[1:]
+        tasks = self._get_phonon_tasks(cell)
+        self._tasks = tasks
+        self._all_tasks += tasks
 
     def _get_delta_strains(self):
         if self._bias is "plus":
@@ -161,3 +175,33 @@ class ModeGruneisenBase(TaskElement, PhononYaml):
             return (1 + factor * strain) ** (1.0 / 3) * np.eye(3)
         else:
             return np.eye(3) + factor * np.array(strain)
+
+    def _get_phonon_tasks(self, cell):
+        lattice = np.dot(self._strain, cell.get_lattice())
+        cell_orig = cell.copy()
+        cell_orig.set_lattice(np.dot(self._delta_strain_orig, lattice))
+        cell_minus = cell.copy()
+        cell_minus.set_lattice(np.dot(self._delta_strain_minus, lattice))
+        cell_plus = cell.copy()
+        cell_plus.set_lattice(np.dot(self._delta_strain_plus, lattice))
+
+        minus = self._get_phonon_task(cell_minus,
+                                      "minus",
+                                      is_cell_relaxed=(
+                                          self._is_cell_relaxed and
+                                          self._bias == "plus"))
+
+        orig = self._get_phonon_task(cell_orig,
+                                     "orig",
+                                     is_cell_relaxed=(
+                                         self._is_cell_relaxed and
+                                         self._bias != "plus" and
+                                         self._bias != "minus"))
+
+        plus = self._get_phonon_task(cell_plus,
+                                     "plus",
+                                     is_cell_relaxed=(
+                                         self._is_cell_relaxed and
+                                         self._bias == "minus"))
+
+        return orig, plus, minus
