@@ -136,6 +136,7 @@ def structure_optimization(directory="structure_optimization",
 def bulk_modulus(directory="bulk_modulus",
                  name=None,
                  job=None,
+                 strains=None,
                  lattice_tolerance=0.1,
                  force_tolerance=1e-3,
                  pressure_target=0,
@@ -155,6 +156,7 @@ def bulk_modulus(directory="bulk_modulus",
 
     bk = BulkModulus(directory=directory,
                      name=name,
+                     strains=strains,
                      lattice_tolerance=lattice_tolerance,
                      force_tolerance=force_tolerance,
                      pressure_target=pressure_target,
@@ -478,7 +480,7 @@ def mode_gruneisen(directory="mode_gruneisen",
 def quasiharmonic_phonon(directory="quasiharmonic_phonon",
                          name=None,
                          job=None,
-                         strains=[-0.04, -0.02, 0.02, 0.04, 0.06, 0.08],
+                         strains=None,
                          sampling_mesh=None,
                          t_step=None,
                          t_max=None,
@@ -803,6 +805,8 @@ class TaskVasp:
                               cell=None,
                               impose_symmetry=False,
                               symmetry_tolerance=None,
+                              max_iteration=None,
+                              min_iteration=None,
                               directory="equilibrium"):
         if not cell:
             cell = self._cell
@@ -812,6 +816,15 @@ class TaskVasp:
         k_gamma = kpoints['gamma']
         k_length = kpoints['length']
 
+        if max_iteration is None:
+            _max_iteration = self._max_iteration
+        else:
+            _max_iteration = max_iteration
+        if min_iteration is None:
+            _min_iteration = self._min_iteration
+        else:
+            _min_iteration = min_iteration
+
         if symmetry_tolerance:
             task = StructureOptimization(
                 directory=directory,
@@ -820,8 +833,8 @@ class TaskVasp:
                 pressure_target=self._pressure_target,
                 stress_tolerance=self._stress_tolerance,
                 max_increase=self._max_increase,
-                max_iteration=self._max_iteration,
-                min_iteration=self._min_iteration,
+                max_iteration=_max_iteration,
+                min_iteration=_min_iteration,
                 impose_symmetry=impose_symmetry,
                 symmetry_tolerance=symmetry_tolerance,
                 traverse=self._traverse)
@@ -833,8 +846,8 @@ class TaskVasp:
                 pressure_target=self._pressure_target,
                 stress_tolerance=self._stress_tolerance,
                 max_increase=self._max_increase,
-                max_iteration=self._max_iteration,
-                min_iteration=self._min_iteration,
+                max_iteration=_max_iteration,
+                min_iteration=_min_iteration,
                 impose_symmetry=impose_symmetry,
                 traverse=self._traverse)
         task.set_configurations(
@@ -845,8 +858,7 @@ class TaskVasp:
             k_gamma=k_gamma,
             k_length=k_length,
             incar=incar)
-        task.set_job(job.copy("%s-%s" %
-                              (job.get_jobname(), directory)))
+        task.set_job(job.copy("%s-%s" % (job.get_jobname(), directory)))
         return task
 
     def _get_charge_density_task(self,
@@ -1166,6 +1178,7 @@ class BulkModulus(TaskVasp, BulkModulusBase):
     def __init__(self,
                  directory="bulk_modulus",
                  name=None,
+                 strains=None,
                  lattice_tolerance=0.1,
                  force_tolerance=1e-3,
                  pressure_target=0,
@@ -1180,6 +1193,7 @@ class BulkModulus(TaskVasp, BulkModulusBase):
             self,
             directory=directory,
             name=name,
+            strains=strains,
             lattice_tolerance=lattice_tolerance,
             force_tolerance=force_tolerance,
             pressure_target=pressure_target,
@@ -1189,19 +1203,6 @@ class BulkModulus(TaskVasp, BulkModulusBase):
             min_iteration=min_iteration,
             is_cell_relaxed=is_cell_relaxed,
             traverse=traverse)
-
-    def _get_plus_minus_tasks(self, cell):
-        lattice = cell.get_lattice()
-
-        cell_plus = cell.copy()
-        cell_plus.set_lattice(lattice * 1.01 ** (1.0/3))
-        plus = self._get_bm_task(cell_plus, "plus")
-
-        cell_minus = cell.copy()
-        cell_minus.set_lattice(lattice * 0.99 ** (1.0/3))
-        minus = self._get_bm_task(cell_minus, "minus")
-
-        return plus, minus
 
     def _get_bm_task(self, cell, directory):
         job, incar, kpoints = self._choose_configuration(index=1)
@@ -1230,8 +1231,8 @@ class BulkModulus(TaskVasp, BulkModulusBase):
             k_gamma=k_gamma,
             k_length=k_length,
             incar=incar)
-        task.set_job(job.copy("%s-%s" %
-                              (job.get_jobname(), directory)))
+        task.set_job(job.copy("%s-%s" % (job.get_jobname(), directory)))
+
         return task
 
 class BandStructure(TaskVasp, BandStructureBase):
@@ -1444,6 +1445,7 @@ class TaskVaspQHA:
                       max_increase=self._max_increase,
                       max_iteration=self._max_iteration,
                       min_iteration=self._min_iteration,
+                      is_cell_relaxed=is_cell_relaxed,
                       traverse=self._traverse)
 
         if isinstance(self._job, list):
@@ -1717,44 +1719,13 @@ class ModeGruneisen(TaskVasp, TaskVaspQHA, ModeGruneisenBase):
             is_cell_relaxed=is_cell_relaxed,
             traverse=traverse)
 
-    def _get_phonon_tasks(self, cell):
-        lattice = np.dot(self._strain, cell.get_lattice())
-        cell_orig = cell.copy()
-        cell_orig.set_lattice(np.dot(self._delta_strain_orig, lattice))
-        cell_minus = cell.copy()
-        cell_minus.set_lattice(np.dot(self._delta_strain_minus, lattice))
-        cell_plus = cell.copy()
-        cell_plus.set_lattice(np.dot(self._delta_strain_plus, lattice))
-        
-        minus = self._get_phonon_task(cell_minus,
-                                      "minus",
-                                      is_cell_relaxed=(
-                                          self._is_cell_relaxed and
-                                          self._bias == "plus"))
-
-        orig = self._get_phonon_task(cell_orig,
-                                     "orig",
-                                     is_cell_relaxed=(
-                                         self._is_cell_relaxed and
-                                         self._bias != "plus" and
-                                         self._bias != "minus"))
-
-        plus = self._get_phonon_task(cell_plus,
-                                     "plus",
-                                     is_cell_relaxed=(
-                                         self._is_cell_relaxed and
-                                         self._bias == "minus"))
-
-        return orig, plus, minus
-
-
 class QuasiHarmonicPhonon(TaskVasp, TaskVaspQHA, QuasiHarmonicPhononBase):
     """Task to calculate quasi-harmonic phonons by VASP."""
     
     def __init__(self,
                  directory="quasiharmonic_phonon",
                  name=None,
-                 strains=[-0.04, -0.02, 0.02, 0.04, 0.06, 0.08],
+                 strains=None,
                  sampling_mesh=None,
                  t_step=None,
                  t_max=None,
@@ -1796,18 +1767,71 @@ class QuasiHarmonicPhonon(TaskVasp, TaskVaspQHA, QuasiHarmonicPhononBase):
             max_num_atoms=max_num_atoms,
             traverse=traverse)
 
-    def _get_phonon_tasks(self, cell):
-        lattice_orig = cell.get_lattice()
-        phonons = []
-        for i, lattice in enumerate(self._lattices):
-            cell_tmp = cell.copy()
-            cell_tmp.set_lattice(np.dot(lattice, lattice_orig))
-            phonons.append(self._get_phonon_task(cell_tmp,
-                                                 "phonon-%02d" % i,
-                                                 is_cell_relaxed=(
-                        (i is 0) and self._is_cell_relaxed)))
-        return phonons
+    def _get_bulk_modulus_task(self,
+                               cell,
+                               strains,
+                               is_cell_relaxed=True,
+                               max_iteration=3,
+                               min_iteration=1,
+                               directory="eos"):
+        task = BulkModulus(directory=directory,
+                           strains=strains,
+                           lattice_tolerance=self._lattice_tolerance,
+                           force_tolerance=self._force_tolerance,
+                           pressure_target=self._pressure_target,
+                           stress_tolerance=self._stress_tolerance,
+                           max_increase=self._max_increase,
+                           max_iteration=max_iteration,
+                           min_iteration=min_iteration,
+                           is_cell_relaxed=is_cell_relaxed,
+                           traverse=self._traverse)
 
+        if isinstance(self._job, list):
+            job = [j.copy("%s-%s" % (j.get_jobname(), directory))
+                   for j in self._job[:2]]
+        else:
+            job = self._job.copy("%s-%s" % (self._job.get_jobname(), directory))
+
+        k_mesh = self._k_mesh
+        if self._k_mesh:
+            if None in self._k_mesh:
+                k_mesh = self._k_mesh[:2]
+            elif np.array(self._k_mesh).ndim > 1:
+                k_mesh = self._k_mesh[:2]
+
+        k_shift = self._k_shift
+        if self._k_shift:
+            if None in self._k_shift:
+                k_shift = self._k_shift[:2]
+            elif np.array(self._k_shift).ndim > 1:
+                k_shift = self._k_shift[:2]
+
+        if isinstance(self._k_gamma, list):
+            k_gamma = self._k_gamma[:2]
+        else:
+            k_gamma = self._k_gamma
+
+        if isinstance(self._k_length, list):
+            k_length = self._k_length[:2]
+        else:
+            k_length = self._k_length
+
+        if isinstance(self._incar, list):
+            incar = [x.copy() for x in self._incar[:2]]
+        else:
+            incar = self._incar.copy()
+
+        task.set_configurations(
+            cell=cell,
+            pseudo_potential_map=self._pseudo_potential_map,
+            k_mesh=k_mesh,
+            k_shift=k_shift,
+            k_gamma=k_gamma,
+            k_length=k_length,
+            incar=incar)
+        task.set_job(job)
+
+        return task
 
 class PhononRelax(TaskVasp, PhononRelaxBase):
     def __init__(self,
