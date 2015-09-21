@@ -261,7 +261,7 @@ class PhononBase(TaskElement, PhononYaml):
         if self._is_cell_relaxed:
             cell = self._cell
         else:
-            cell = self._all_tasks[0].get_cell()
+            cell = self.get_cell()
         lines += self._get_phonon_yaml_lines(cell)
         if self._all_tasks[0] is not None:
             if self._energy:
