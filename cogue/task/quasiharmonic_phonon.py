@@ -102,7 +102,8 @@ class QuasiHarmonicPhononBase(TaskElement, PhononYaml):
         terminate = False
         for task in self._tasks:
             done &= task.done()
-            if task.get_status() == "terminate":
+            if (task.get_status() == "terminate" or
+                task.get_status() == "max_iteration"):
                 terminate = True
         if done:
             if terminate:
@@ -266,19 +267,32 @@ class QuasiHarmonicPhononBase(TaskElement, PhononYaml):
         F = []
         S = []
         Cv = []
+        V = []
+        U = []
 
-        for tp in thermal_properties:
+        for tp, v, u in zip(thermal_properties,
+                            volumes,
+                            energies):
             (temperatures,
              free_energies,
              entropies,
              heat_capacities) = tp
+
+            if (np.isnan(free_energies).any() or
+                np.isnan(entropies).any() or
+                np.isnan(heat_capacities).any()):
+                print "nan is found in thermal property."
+                continue
+
             T.append(temperatures)
             F.append(free_energies)
             S.append(entropies)
             Cv.append(heat_capacities)
+            V.append(v)
+            U.append(u)
 
-        qha = PhonopyQHA(volumes,
-                         energies,
+        qha = PhonopyQHA(V,
+                         U,
                          temperatures=T[0],
                          free_energy=np.transpose(F),
                          cv=np.transpose(Cv),
@@ -394,6 +408,13 @@ class QuasiHarmonicPhononBase(TaskElement, PhononYaml):
         volumes = [vol * (1 + strain) for strain in _eos_strains]
         eos = self._all_tasks[1].get_equation_of_state()
         energies = [eos(v) for v in volumes]
+
+        with open("estimated_e-v.dat", 'w') as w:
+            w.write("#   cell volume        energy of cell "
+                    "other than phonon\n")
+            for e, v in zip(energies, volumes):
+                w.write("%20.13f %20.13f\n" % (v, e))
+
         gruneisen.set_thermal_properties(volumes,
                                          t_step=t_step,
                                          t_max=t_max + t_step * 3.5,
