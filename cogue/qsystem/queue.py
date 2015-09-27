@@ -32,9 +32,10 @@ class QueueBase:
         self._shell_type = None
 
     def register(self, task):
-        self._tid_queue.append(task.get_tid())
-        job = task.get_job()
-        job.set_status("preparing")
+        if task.get_traverse() is False:
+            self._tid_queue.append(task.get_tid())
+            job = task.get_job()
+            job.set_status("preparing")
 
     def write_qstatus(self, name):
         f_qstat = open("%s.qstat" % name, 'w')
@@ -89,6 +90,9 @@ class LocalQueueBase(QueueBase):
         self._shell = spur.LocalShell()
 
     def submit(self, task):
+        if task.get_traverse() is not False:
+            return
+
         job = task.get_job()
         tid = task.get_tid()
         self._set_job_status(job, tid)
@@ -129,6 +133,9 @@ class RemoteQueueBase(QueueBase):
             self._working_dir = "%s" % temporary_dir
 
     def submit(self, task):
+        if task.get_traverse() is not False:
+            return
+
         job = task.get_job()
         tid = task.get_tid()
         remote_dir = "%s/c%05d" % (self._working_dir, tid)
