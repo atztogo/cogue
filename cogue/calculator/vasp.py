@@ -1433,7 +1433,11 @@ class TaskVaspPhonon:
         return task
 
 class TaskVaspQHA:
-    def _get_phonon_task(self, cell, directory, is_cell_relaxed=False):
+    def _get_phonon_task(self,
+                         cell,
+                         directory,
+                         stress_tolerance=None,
+                         is_cell_relaxed=False):
         task = Phonon(directory=directory,
                       supercell_matrix=self._supercell_matrix,
                       primitive_matrix=self._primitive_matrix,
@@ -1441,7 +1445,7 @@ class TaskVaspQHA:
                       lattice_tolerance=self._lattice_tolerance,
                       force_tolerance=self._force_tolerance,
                       pressure_target=self._pressure_target,
-                      stress_tolerance=self._stress_tolerance,
+                      stress_tolerance=stress_tolerance,
                       max_increase=self._max_increase,
                       max_iteration=self._max_iteration,
                       min_iteration=self._min_iteration,
