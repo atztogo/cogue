@@ -142,6 +142,7 @@ class BulkModulusBase(TaskElement, StructureOptimizationYaml):
                 for i, task in enumerate(self._tasks):
                     if task.get_status() == "terminate":
                         terminated.append(i)
+                cell = self.get_cell()
                 if self._strains is None:
                     tasks = self._get_plus_minus_tasks(cell)
                 else:
@@ -157,10 +158,7 @@ class BulkModulusBase(TaskElement, StructureOptimizationYaml):
         raise StopIteration
 
     def _calculate_bulk_modulus_from_plus_minus(self):
-        if self._is_cell_relaxed:
-            V = self._cell.get_volume()
-        else:
-            V = self.get_cell().get_volume()
+        V = self.get_cell().get_volume()
         V_p = self._all_tasks[1].get_cell().get_volume()
         V_m = self._all_tasks[2].get_cell().get_volume()
         s_p = self._all_tasks[1].get_stress()
@@ -239,10 +237,7 @@ class BulkModulusBase(TaskElement, StructureOptimizationYaml):
     def get_yaml_lines(self):
         lines = TaskElement.get_yaml_lines(self)
         lines += self._get_structopt_yaml_lines()
-        if self._is_cell_relaxed:
-            cell = self._cell
-        else:
-            cell = self.get_cell()
+        cell = self.get_cell()
         if cell:
             lines += cell.get_yaml_lines()
 
