@@ -43,12 +43,12 @@ class AutoCalc:
         self._begin()
 
         while True:
+            self._queue.qstat()
             time.sleep(check_period)
             self._write_log("-" * 40 + "> %s\n" % date())
-            self._queue.qstat()
             self._deep_run(self._taskset)
-            self._overwrite_settings()
             self._write_log("<" + "-" * 40 + "\n")
+            self._overwrite_settings()
             self._write_dot()
             self._write_qstatus()
             if self._taskset.done():
