@@ -918,7 +918,7 @@ class ElectronicStructure(TaskVasp, ElectronicStructureBase):
         self._log: Terminate log is stored.
 
         """
-        self._log = ""
+
         if os.path.exists("POSCAR.yaml"):
             self._atom_order = get_atom_order_from_poscar_yaml("POSCAR.yaml")
         else:
@@ -929,10 +929,10 @@ class ElectronicStructure(TaskVasp, ElectronicStructureBase):
             self._status = "terminate"
         else:
             vxml = Vasprunxml("vasprun.xml")
-            if vxml.parse_calculation():
-                vxml.parse_eigenvalues()
-                vxml.parse_efermi()
-                vxml.parse_parameters()
+            if (vxml.parse_calculation() and 
+                vxml.parse_eigenvalues() and
+                vxml.parse_efermi() and
+                vxml.parse_parameters()):
                 kpoints, weights = vxml.get_kpoints()
                 if self._atom_order:
                     force_sets = vxml.get_forces()[:, self._atom_order, :]
@@ -991,7 +991,6 @@ class StructureOptimizationElement(TaskVasp,
         self._log: Logs
 
         """
-        self._log = ""
 
         if os.path.exists("POSCAR.yaml"):
             self._atom_order = get_atom_order_from_poscar_yaml("POSCAR.yaml")
@@ -1667,7 +1666,7 @@ class ElasticConstantsElement(TaskVasp, ElasticConstantsElementBase):
         self._log: Terminate log is stored.
 
         """
-        self._log = ""
+
         if not os.path.exists("OUTCAR"):
             self._log += "OUTCAR not exists.\n"
             self._status = "terminate"

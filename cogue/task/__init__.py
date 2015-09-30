@@ -32,6 +32,9 @@ class TaskBase:
     def get_directory(self):
         return self._directory
 
+    def set_log(self, log):
+        self._log = log
+
     def get_log(self):
         return self._log
 

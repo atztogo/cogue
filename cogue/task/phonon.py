@@ -98,6 +98,8 @@ class PhononBase(TaskElement, PhononYaml):
         self._phonon = None # Phonopy object
         self._all_tasks = None # Phonopy object
 
+        self._try_collect_forces = True
+
     def get_phonon(self):
         return self._phonon
 
@@ -176,9 +178,17 @@ class PhononBase(TaskElement, PhononYaml):
                 
         else: # task 1..n: displaced supercells
             if self._status == "next":
-                self._status = "done"
-                self._collect_forces()
-                self._tasks = []
+                if self._collect_forces():
+                    self._status = "done"
+                    self._tasks = []
+                else:
+                    if self._try_collect_forces:
+                        self._log += ("Collection of forces failed. "
+                                      "Try once more.\n")
+                        self._try_collect_forces = False
+                    else:
+                        self._status = "terminate"
+                        self._tasks = []
             elif self._status == "terminate" and self._traverse == "restart":
                 self._traverse = False
                 disp_terminated = []
@@ -214,8 +224,12 @@ class PhononBase(TaskElement, PhononYaml):
         forces = []
         for task in self._tasks:
             forces.append(task.get_properties()['forces'][-1])
-        self._phonon.produce_force_constants(forces)
-        write_FORCE_SETS(self._phonon.get_displacement_dataset())
+        if self._phonon.produce_force_constants(forces=forces):
+            write_FORCE_SETS(self._phonon.get_displacement_dataset())
+            return True
+        else:
+            # This can be due to delay of writting file to file system.
+            return False
 
     def _evaluate_stop_condition(self):
         if self._stop_condition:

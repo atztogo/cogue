@@ -12,13 +12,12 @@ _eos_strains = [-0.02, -0.01, 0, 0.01, 0.02, 0.03, 0.04]
 class QuasiHarmonicPhononBase(TaskElement, PhononYaml):
     """QuasiHarmonicPhonon class
 
-    Three stages:
+    Four stages:
     0. Structure optimization of input cell
     1. (optional) Equation of state calculation, i.e.,
        total energy calculations with  -2, -1, 0, +1, +2, +3, +4% volumes
     2. (optional) Mode Gruneisen parameter calculations with 0, +1% volumes
     3. Phonon calculations at specified strains or estimated volumes
-    4. Calculate thermal properties
     
     """
     
@@ -90,6 +89,7 @@ class QuasiHarmonicPhononBase(TaskElement, PhononYaml):
         self._all_tasks = None
 
         self._imaginary_ratio = None
+        self._grid_spacing = 200
 
     def get_cell(self):
         if self._is_cell_relaxed:
@@ -132,10 +132,12 @@ class QuasiHarmonicPhononBase(TaskElement, PhononYaml):
         return (self._status == "done" or
                 self._status == "terminate" or
                 self._status == "imaginary_modes" or
+                self._status == "phonon_for_gruneisen_failed" or
+                self._status == "strain_estimation_difficulty" or
                 self._status == "next")
 
     def next(self):
-        if self._stage == 0:
+        if self._stage == 0: # Equilibrium
             if self._status == "next":
                 if self._strains is None:
                     self._prepare_electric_eos()
@@ -147,7 +149,7 @@ class QuasiHarmonicPhononBase(TaskElement, PhononYaml):
                 self._traverse = False
                 self._set_stage0()
                 return self._tasks
-        elif self._stage == 1:
+        elif self._stage == 1: # EoS
             if self._status == "next":
                 if self._strains is None:
                     self._prepare_mode_gruneisen()
@@ -156,13 +158,11 @@ class QuasiHarmonicPhononBase(TaskElement, PhononYaml):
                 self._traverse = False
                 self._prepare_electric_eos()
                 return self._tasks
-        elif self._stage == 2:
+        elif self._stage == 2: # Mode Gruneisen
             if self._status == "next":
                 self._prepare_phonons()
                 if self._tasks:
                     return self._tasks
-                else:
-                    self._status = "imaginary_modes"
             elif (self._status == "terminate" and self._traverse == "restart"):
                 self._traverse = False
                 terminated = []
@@ -178,11 +178,13 @@ class QuasiHarmonicPhononBase(TaskElement, PhononYaml):
                     self._all_tasks[i + 2] = tasks[i]
                 self._status = "mode_gruneisen"
                 return self._tasks
-        else:
+        else: # QHA
             if self._status == "next":
                 self._tasks = []
-                self._calculate_quasiharmonic_phonon()
-                self._status = "done"
+                if self._calculate_quasiharmonic_phonon():
+                    self._status = "done"
+                else:
+                    self._status = "terminate"
             elif (self._status == "terminate" and self._traverse == "restart"):
                 self._traverse = False
                 terminated = []
@@ -223,6 +225,11 @@ class QuasiHarmonicPhononBase(TaskElement, PhononYaml):
             volumes.append(task.get_cell().get_volume())
             phonons.append(task.get_phonon())
 
+        with open("e-v.dat", 'w') as w:
+            w.write("#   cell volume        energy of cell other than phonon\n")
+            for e, v in zip(energies, volumes):
+                w.write("%20.13f %20.13f\n" % (v, e))
+
         if self._sampling_mesh is not None:
             thermal_properties = []
             for i, phonon in enumerate(phonons):
@@ -241,22 +248,19 @@ class QuasiHarmonicPhononBase(TaskElement, PhononYaml):
                                                  thermal_properties,
                                                  self._t_max)
 
-            qha.write_helmholtz_volume()
-            qha.write_volume_temperature()
-            qha.write_thermal_expansion()
-            qha.write_volume_expansion()
-            qha.write_gibbs_temperature()
-            qha.write_bulk_modulus_temperature()
-            qha.write_heat_capacity_P_numerical()
-            qha.write_heat_capacity_P_polyfit()
-            qha.write_gruneisen_temperature()
-
-        with open("e-v.dat", 'w') as w:
-            w.write("#   cell volume        energy of cell other than phonon\n")
-            for e, v in zip(energies, volumes):
-                w.write("%20.13f %20.13f\n" % (v, e))
-            
-        self._quasiharmonic_phonon = None
+            if qha is None:
+                return False
+            else:
+                qha.write_helmholtz_volume()
+                qha.write_volume_temperature()
+                qha.write_thermal_expansion()
+                qha.write_volume_expansion()
+                qha.write_gibbs_temperature()
+                qha.write_bulk_modulus_temperature()
+                qha.write_heat_capacity_P_numerical()
+                qha.write_heat_capacity_P_polyfit()
+                qha.write_gruneisen_temperature()
+                return True
 
     def _get_quasiharmonic_phonon(self,
                                   energies,
@@ -281,7 +285,7 @@ class QuasiHarmonicPhononBase(TaskElement, PhononYaml):
             if (np.isnan(free_energies).any() or
                 np.isnan(entropies).any() or
                 np.isnan(heat_capacities).any()):
-                print "nan is found in thermal property."
+                self._log += "nan is found in thermal property.\n"
                 continue
 
             T.append(temperatures)
@@ -291,15 +295,20 @@ class QuasiHarmonicPhononBase(TaskElement, PhononYaml):
             V.append(v)
             U.append(u)
 
-        qha = PhonopyQHA(V,
-                         U,
-                         temperatures=T[0],
-                         free_energy=np.transpose(F),
-                         cv=np.transpose(Cv),
-                         entropy=np.transpose(S),
-                         t_max=t_max,
-                         verbose=False)
-        return qha
+        self._log += "Number of QHA volume points is %d.\n" % len(U)
+
+        if len(U) > 4:
+            qha = PhonopyQHA(V,
+                             U,
+                             temperatures=T[0],
+                             free_energy=np.transpose(F),
+                             cv=np.transpose(Cv),
+                             entropy=np.transpose(S),
+                             t_max=t_max,
+                             verbose=False)
+            return qha
+        else:
+            return None
 
     def _set_stage0(self):
         self._stage = 0
@@ -373,33 +382,40 @@ class QuasiHarmonicPhononBase(TaskElement, PhononYaml):
         cell = self.get_cell()
         return get_strained_cells(cell, strains)
 
-    def _check_imaginary(self, phonon, distance, lattice):
-        sampling_mesh = klength2mesh(distance, lattice)
+    def _check_imaginary(self, phonon, lattice):
+        sampling_mesh = klength2mesh(self._grid_spacing, lattice)
         phonon.set_mesh(sampling_mesh, is_gamma_center=True)
         _, weights, freqs, _ = phonon.get_mesh()
         ratio = (float(np.extract(freqs[:, 0] < 0, weights).sum()) /
                  np.prod(sampling_mesh))
         return ratio
 
-    def _get_estimated_strains(self, distance=200):
+    def _get_estimated_strains(self):
         t_max = 1500
         t_step = 10
         t_min = 0
 
         phonons = [task.get_phonon() for task in self._all_tasks[-3:]]
+        if None in phonons:
+            self._log += ("Phonon calculation failed in mode Gruneisen "
+                          "parameter calculation.\n")
+            self._status = "phonon_for_gruneisen_failed"
+            return []
+
         cell = self.get_cell()
         lattice = cell.get_lattice()
-        self._imaginary_ratio = self._check_imaginary(phonons[0],
-                                                      distance,
-                                                      lattice)
+        self._imaginary_ratio = self._check_imaginary(phonons[0], lattice)
 
         if self._imaginary_ratio > 0.01:
+            self._log += ("Imaginary modes are found in one point phonon "
+                          "calculation.\n")
+            self._status = "imaginary_modes"
             return []
 
         gruneisen = PhonopyGruneisen(phonons[1], phonons[0], phonons[2])
 
         if self._sampling_mesh is None:
-            self._sampling_mesh = klength2mesh(distance, lattice)
+            self._sampling_mesh = klength2mesh(self._grid_spacing, lattice)
             self._is_gamma_center = True
 
         gruneisen.set_mesh(self._sampling_mesh,
@@ -429,6 +445,12 @@ class QuasiHarmonicPhononBase(TaskElement, PhononYaml):
                                              volumes,
                                              thermal_properties,
                                              t_max)
+
+        if qha is None:
+            self._log += ("Approximated QHA from mode Grunsein parameter "
+                          "failed.\n")
+            self._status = "strain_estimation_difficulty"
+            return []
 
         equi_volumes = qha.get_volume_temperature()
         #           0K 1000K

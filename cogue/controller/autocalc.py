@@ -100,17 +100,16 @@ class AutoCalc:
             
         task.set_status()
         if task.done():
-            try:
-                for next_subtask in task.next():
-                    self._deep_begin(next_subtask)
-            except StopIteration:
-                pass
+            for next_taskset in task:
+                for next_task in next_taskset:
+                    self._deep_begin(next_task)
+                break
 
         log = task.get_log()
         if log:
             self._write_log(log)
-            with open("task.log", 'w') as w:
-                w.write(log)
+            self._f_log.flush()
+            task.set_log("")
 
         self._chdir_out(orig_cwd, task.get_status())
 

@@ -11,7 +11,7 @@ class JobBase:
 
     def set_status(self, status, jobid=None):
         if jobid:
-            self._status = "%s (id:%d)" % (status, jobid)
+            self._status = "%s (job-id:%d)" % (status, jobid)
         else:
             self._status = status
     

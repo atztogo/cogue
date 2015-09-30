@@ -1,7 +1,9 @@
 import os
+import time
 import shlex
 import shutil
 import tarfile
+from subprocess import check_output
 
 class EmptyQueue:
     def __init__(self):
@@ -138,43 +140,95 @@ class RemoteQueueBase(QueueBase):
 
         job = task.get_job()
         tid = task.get_tid()
-        remote_dir = "%s/c%05d" % (self._working_dir, tid)
         self._set_job_status(job, tid)
+
         if "ready" in job.get_status():
-            job.write_script()
-            self._shell.run(["mkdir", "-p", remote_dir])
-            tar = tarfile.open("cogue.tar", "w")
+            self._submit(task)
+        elif "done" in job.get_status():
+            self._collect(task)
+
+
+    def _submit(self, task):
+        job = task.get_job()
+        tid = task.get_tid()
+        remote_dir = "%s/c%05d" % (self._working_dir, tid)
+        task_log = task.get_log()
+
+        job.write_script()
+        self._shell.run(["mkdir", "-p", remote_dir])
+        with tarfile.open("cogue.tar", "w") as tar:
             for name in os.listdir("."):
                 tar.add(name)
-            tar.close()
-            with open("cogue.tar", "rb") as local_file:
-                with self._shell.open("%s/%s" % (remote_dir, "cogue.tar"),
-                                      "wb") as remote_file:
-                    shutil.copyfileobj(local_file, remote_file)
-                    os.remove("cogue.tar")
-                    self._shell.run(["tar", "xvf", "cogue.tar"], cwd=remote_dir)
-                    self._shell.run(["rm", "cogue.tar"], cwd=remote_dir)
-            if task.get_traverse():
-                jobid = None
-            else:
-                qsub_out = self._shell.run(
-                    shlex.split(self._qsub_command + " " + "job.sh"),
-                    cwd=remote_dir).output
-                jobid = self._get_jobid(qsub_out)
-            self._tid2jobid[tid] = jobid
-            self._tid_queue.pop(0)
-            job.set_status("submitted", jobid)
 
-        elif "done" in job.get_status():
-            names = self._shell.run(["/bin/ls"], cwd=remote_dir).output.split()
-            self._shell.run(["tar", "cvf", "cogue.tar"] + names, cwd=remote_dir)
-            with self._shell.open("%s/%s" % (remote_dir, "cogue.tar"),
+        for i in range(20):
+            with open("cogue.tar", "rb") as local_file, \
+                 self._shell.open("%s/%s" % (remote_dir, "cogue.tar"),
+                                  "wb") as remote_file:
+                shutil.copyfileobj(local_file, remote_file)
+
+            shasum_l = check_output(["shasum", "cogue.tar"]).split()[0]
+            shasum_r = self._shell.run(["shasum", "cogue.tar"],
+                                       cwd=remote_dir).output.split()[0]
+            task_log += ("[task-id %05d] local %s.. -> remote %s..\n" %
+                         (tid, shasum_l[:8], shasum_r[:8]))
+            if shasum_r == shasum_l:
+                break
+            else:
+                task_log += ("[task-id %05d] copying to remote, "
+                             "waiting for 10s...\n" % tid)
+                time.sleep(10)
+
+        os.remove("cogue.tar")
+        self._shell.run(["tar", "xvf", "cogue.tar"], cwd=remote_dir)
+        self._shell.run(["rm", "cogue.tar"], cwd=remote_dir)
+
+        if task.get_traverse():
+            jobid = None
+        else:
+            qsub_out = self._shell.run(
+                shlex.split(self._qsub_command + " " + "job.sh"),
+                cwd=remote_dir).output
+            jobid = self._get_jobid(qsub_out)
+        self._tid2jobid[tid] = jobid
+        self._tid_queue.pop(0)
+        job.set_status("submitted", jobid)
+
+        task.set_log(task_log)
+
+    def _collect(self, task):
+        job = task.get_job()
+        tid = task.get_tid()
+        remote_dir = "%s/c%05d" % (self._working_dir, tid)
+        task_log = task.get_log()
+
+        names = self._shell.run(["/bin/ls"], cwd=remote_dir).output.split()
+        self._shell.run(["tar", "cvf", "cogue.tar"] + names, cwd=remote_dir)
+
+        for i in range(20):
+            with open("cogue.tar", "wb") as local_file, \
+                 self._shell.open("%s/%s" % (remote_dir, "cogue.tar"),
                                   "rb") as remote_file:
-                with open("cogue.tar", "wb") as local_file:
-                    shutil.copyfileobj(remote_file, local_file)
-                    tar = tarfile.open("cogue.tar")
-                    tar.extractall()
-                    tar.close()
-                    os.remove("cogue.tar")
-                    self._shell.run(["rm", "cogue.tar"], cwd=remote_dir)
+                shutil.copyfileobj(remote_file, local_file)
+
+            shasum_r = self._shell.run(["shasum", "cogue.tar"],
+                                       cwd=remote_dir).output.split()[0]
+
+            shasum_l = check_output(["shasum", "cogue.tar"]).split()[0]
+            task_log += ("[task-id %05d] local %s.. <- remote %s..\n" %
+                         (tid, shasum_l[:8], shasum_r[:8]))
+
+            if shasum_r == shasum_l:
+                break
+            else:
+                task_log += ("[task-id %05d] copying from remote, "
+                             "waiting for 10s...\n" % tid)
+                time.sleep(10)
+
+        with tarfile.open("cogue.tar") as tar:
+            tar.extractall()
+
+        os.remove("cogue.tar")
+        self._shell.run(["rm", "cogue.tar"], cwd=remote_dir)
+
+        task.set_log(task_log)
 
