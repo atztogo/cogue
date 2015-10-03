@@ -77,22 +77,35 @@ def get_crystallographic_cell(cell, tolerance=1e-5):
     points = np.array(cell.get_points(), dtype='double', order='C')
     lattice = np.array(cell.get_lattice(), dtype='double', order='C')
     numbers = np.array(cell.get_numbers(), dtype='intc')
+    masses = cell.get_masses()
     std_lattice, std_points, std_numbers = spg.get_crystallographic_cell(
         lattice, points, numbers, tolerance)
+    std_masses = _transfer_masses_by_numbers(std_numbers, numbers, masses)
+    print std_masses
     return Cell(lattice=std_lattice,
                 points=std_points,
-                numbers=std_numbers)
+                numbers=std_numbers,
+                masses=std_masses)
 
 def get_primitive_cell(cell, tolerance=1e-5):
     points = np.array(cell.get_points(), dtype='double', order='C')
     lattice = np.array(cell.get_lattice(), dtype='double', order='C')
     numbers = np.array(cell.get_numbers(), dtype='intc')
+    masses = cell.get_masses()
     (prim_lattice,
      prim_points,
      prim_numbers) = spg.get_primitive_cell(lattice, points, numbers, tolerance)
+    prim_masses = _transfer_masses_by_numbers(prim_numbers, numbers, masses)
     return Cell(lattice=prim_lattice,
                 points=prim_points,
-                numbers=prim_numbers)
+                numbers=prim_numbers,
+                masses=prim_masses)
+
+def _transfer_masses_by_numbers(numbers_new, numbers, masses):
+    masses_new = []
+    for n in numbers_new:
+        masses_new.append(masses[list(numbers).index(n)])
+    return masses_new
 
 standard_HM_symbols = [
     "",
