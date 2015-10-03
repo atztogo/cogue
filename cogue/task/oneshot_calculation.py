@@ -167,7 +167,10 @@ class StructureOptimizationElementBase(OneShotCalculation):
         self._current_cell = None
 
     def get_current_cell(self): # cell under structure optimization
-        return self._current_cell
+        if self._current_cell is None:
+            return self._cell
+        else:
+            return self._current_cell
 
     def done(self):
         return (self._status == "terminate" or

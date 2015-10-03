@@ -86,7 +86,7 @@ class AutoCalc:
             self._queue.register(task)
 
         self._chdir_out(cwd, task.get_status())
-        
+
     def _deep_run(self, task):
         orig_cwd = self._chdir_in(task.get_directory())
 
@@ -97,7 +97,7 @@ class AutoCalc:
                     self._deep_run(subtask)
         else: # Execution task
             self._queue.submit(task)
-            
+
         task.set_status()
         if task.done():
             for next_taskset in task:

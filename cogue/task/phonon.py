@@ -160,6 +160,7 @@ class PhononBase(TaskElement, PhononYaml):
                 self._status == "done" or
                 self._status == "max_iteration" or
                 self._status == "low_symmetry" or
+                self._status == "force_collection_failure" or
                 self._status == "next")
 
     def next(self):
@@ -180,15 +181,15 @@ class PhononBase(TaskElement, PhononYaml):
             if self._status == "next":
                 if self._collect_forces():
                     self._status = "done"
-                    self._tasks = []
                 else:
                     if self._try_collect_forces:
+                        self._status = "displacements"
                         self._log += ("Collection of forces failed. "
                                       "Try once more.\n")
                         self._try_collect_forces = False
+                        raise StopIteration
                     else:
-                        self._status = "terminate"
-                        self._tasks = []
+                        self._status = "force_collection_failure"
             elif self._status == "terminate" and self._traverse == "restart":
                 self._traverse = False
                 disp_terminated = []
@@ -202,9 +203,9 @@ class PhononBase(TaskElement, PhononYaml):
                     self._all_tasks[i + 1] = tasks[i]
                 self._status = "displacements"
                 return self._tasks
-                
+
+        self._tasks = []
         self._write_yaml()
-            
         raise StopIteration
 
     def _set_stage0(self):

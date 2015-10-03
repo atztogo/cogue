@@ -27,14 +27,16 @@ from cogue.qsystem.job import JobBase
 def queue(max_jobs=None,
           ssh_shell=None,
           temporary_dir=None,
-          name=None):
+          name=None,
+          sleep_time=None):
     if ssh_shell is None:
         return LocalQueue(max_jobs=max_jobs)
     elif temporary_dir is not None:
         return RemoteQueue(ssh_shell,
                            temporary_dir,
                            max_jobs=max_jobs,
-                           name=name)
+                           name=name,
+                           sleep_time=sleep_time)
 
 def job(script=None,
         shell=None,
@@ -99,12 +101,14 @@ class RemoteQueue(RemoteQueueBase,Qstat):
                  temporary_dir,
                  max_jobs=None,
                  name=None,
+                 sleep_time=None,
                  qsub_command="qsub"):
         RemoteQueueBase.__init__(self,
                                  ssh_shell,
                                  temporary_dir,
                                  max_jobs=max_jobs,
                                  name=name,
+                                 sleep_time=sleep_time,
                                  qsub_command=qsub_command)
 
     def _get_jobid(self, qsub_out):

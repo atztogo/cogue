@@ -118,19 +118,26 @@ class RemoteQueueBase(QueueBase):
                  temporary_dir,
                  max_jobs=None,
                  name=None,
+                 sleep_time=None,
                  qsub_command="qsub"):
         QueueBase.__init__(self, max_jobs=max_jobs)
         self._qsub_command = qsub_command
         self._shell = ssh_shell
         self._name = name
+        if sleep_time is None:
+            self._sleep_time = 0.1
+        else:
+            self._sleep_time = sleep_time
 
         if not os.path.exists(temporary_dir):
             self._shell.run(["mkdir", "-p", temporary_dir])
+            time.sleep(self._sleep_time)
         
         if self._name is not None:
             self._working_dir = "%s/%s" % (temporary_dir, self._name)
             if not os.path.exists(self._working_dir):
                 self._shell.run(["mkdir", "-p", self._working_dir])
+                time.sleep(self._sleep_time)
         else:
             self._working_dir = "%s" % temporary_dir
 
@@ -156,6 +163,8 @@ class RemoteQueueBase(QueueBase):
 
         job.write_script()
         self._shell.run(["mkdir", "-p", remote_dir])
+        time.sleep(self._sleep_time)
+
         with tarfile.open("cogue.tar", "w") as tar:
             for name in os.listdir("."):
                 tar.add(name)
@@ -165,10 +174,12 @@ class RemoteQueueBase(QueueBase):
                  self._shell.open("%s/%s" % (remote_dir, "cogue.tar"),
                                   "wb") as remote_file:
                 shutil.copyfileobj(local_file, remote_file)
+                time.sleep(self._sleep_time)
 
             shasum_l = check_output(["shasum", "cogue.tar"]).split()[0]
             shasum_r = self._shell.run(["shasum", "cogue.tar"],
                                        cwd=remote_dir).output.split()[0]
+            time.sleep(self._sleep_time)
             task_log += ("[task-id %05d] local %s.. -> remote %s..\n" %
                          (tid, shasum_l[:8], shasum_r[:8]))
             if shasum_r == shasum_l:
@@ -180,7 +191,9 @@ class RemoteQueueBase(QueueBase):
 
         os.remove("cogue.tar")
         self._shell.run(["tar", "xvf", "cogue.tar"], cwd=remote_dir)
+        time.sleep(self._sleep_time)
         self._shell.run(["rm", "cogue.tar"], cwd=remote_dir)
+        time.sleep(self._sleep_time)
 
         if task.get_traverse():
             jobid = None
@@ -188,6 +201,7 @@ class RemoteQueueBase(QueueBase):
             qsub_out = self._shell.run(
                 shlex.split(self._qsub_command + " " + "job.sh"),
                 cwd=remote_dir).output
+            time.sleep(self._sleep_time)
             jobid = self._get_jobid(qsub_out)
         self._tid2jobid[tid] = jobid
         self._tid_queue.pop(0)
@@ -202,16 +216,20 @@ class RemoteQueueBase(QueueBase):
         task_log = task.get_log()
 
         names = self._shell.run(["/bin/ls"], cwd=remote_dir).output.split()
+        time.sleep(self._sleep_time)
         self._shell.run(["tar", "cvf", "cogue.tar"] + names, cwd=remote_dir)
+        time.sleep(self._sleep_time)
 
         for i in range(20):
             with open("cogue.tar", "wb") as local_file, \
                  self._shell.open("%s/%s" % (remote_dir, "cogue.tar"),
                                   "rb") as remote_file:
                 shutil.copyfileobj(remote_file, local_file)
+                time.sleep(self._sleep_time)
 
             shasum_r = self._shell.run(["shasum", "cogue.tar"],
                                        cwd=remote_dir).output.split()[0]
+            time.sleep(self._sleep_time)
 
             shasum_l = check_output(["shasum", "cogue.tar"]).split()[0]
             task_log += ("[task-id %05d] local %s.. <- remote %s..\n" %
@@ -229,6 +247,7 @@ class RemoteQueueBase(QueueBase):
 
         os.remove("cogue.tar")
         self._shell.run(["rm", "cogue.tar"], cwd=remote_dir)
+        time.sleep(self._sleep_time)
 
         task.set_log(task_log)
 
