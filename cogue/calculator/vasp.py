@@ -9,7 +9,11 @@ import shutil
 from cogue.crystal.cell import Cell
 from cogue.crystal.converter import atoms2cell
 from cogue.crystal.utility import klength2mesh
-from cogue.interface.vasp_io import change_point_order, read_poscar, get_atom_order_from_poscar_yaml, write_poscar, write_potcar, Incar, write_kpoints, Outcar, Vasprunxml, VasprunxmlExpat, VaspCell
+from cogue.interface.vasp_io import (change_point_order, read_poscar,
+                                     get_atom_order_from_poscar_yaml,
+                                     write_poscar, write_potcar, Incar,
+                                     write_kpoints, Outcar, Vasprunxml,
+                                     VasprunxmlExpat, VaspCell)
 from cogue.task.oneshot_calculation import *
 from cogue.task.structure_optimization import *
 from cogue.task.bulk_modulus import *
@@ -998,7 +1002,9 @@ class StructureOptimizationElement(TaskVasp,
             self._atom_order = None
 
         if os.path.exists("POSCAR"):
+            masses = self.get_current_cell().get_masses()
             cell = read_poscar("POSCAR")
+            cell.set_masses(masses)
             if self._atom_order:
                 self._current_cell = change_point_order(cell, self._atom_order)
             else:
@@ -1059,12 +1065,16 @@ class StructureOptimizationElement(TaskVasp,
         vecs2_last = np.diag(np.dot(lattice_last.T, lattice_last))
         d_vecs2_ratio = (vecs2_last - vecs2_init) / vecs2_init
 
+        masses = self._current_cell.get_masses()
         cell = Cell(lattice=lattice_last,
                     points=points,
-                    symbols=self._current_cell.get_symbols())
+                    symbols=self._current_cell.get_symbols(),
+                    masses=masses)
+
         if os.path.exists("CONTCAR"):
             try:
                 self._current_cell = read_poscar("CONTCAR")
+                self._current_cell.set_masses(masses)
                 if self._atom_order:
                     self._current_cell = change_point_order(cell, self._atom_order)
                 else:

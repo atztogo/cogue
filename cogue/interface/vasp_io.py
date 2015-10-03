@@ -221,12 +221,24 @@ def read_poscar_yaml(filename="POSCAR.yaml"):
     data = yaml.load(open(filename), Loader=Loader)
     lattice = np.transpose(data['lattice'])
     points = np.transpose([x['coordinates'] for x in data['points']])
-    symbols = [x['symbol'] for x in data['points']]
+    symbols = []
+    masses = []
+    for point in data['points']:
+        if 'mass' in point:
+            masses.append(point['mass'])
+        if 'symbol' in point:
+            symbols.append(point['symbol'])
+    if len(masses) != len(data['points']):
+        masses = None
+    if len(symbols) != len(data['points']):
+        symbols = None
+
     poscar_order = data['poscar_order']
 
     return Cell(lattice=lattice,
                 points=points,
-                symbols=symbols), poscar_order
+                symbols=symbols,
+                masses=masses), poscar_order
 
 def change_point_order(cell, atom_order):
     symbols = [cell.get_symbols()[i] for i in atom_order]
