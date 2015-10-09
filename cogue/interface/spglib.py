@@ -81,7 +81,6 @@ def get_crystallographic_cell(cell, tolerance=1e-5):
     std_lattice, std_points, std_numbers = spg.get_crystallographic_cell(
         lattice, points, numbers, tolerance)
     std_masses = _transfer_masses_by_numbers(std_numbers, numbers, masses)
-    print std_masses
     return Cell(lattice=std_lattice,
                 points=std_points,
                 numbers=std_numbers,
