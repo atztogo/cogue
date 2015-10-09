@@ -1004,11 +1004,11 @@ class StructureOptimizationElement(TaskVasp,
         if os.path.exists("POSCAR"):
             masses = self.get_current_cell().get_masses()
             cell = read_poscar("POSCAR")
-            cell.set_masses(masses)
             if self._atom_order:
                 self._current_cell = change_point_order(cell, self._atom_order)
             else:
                 self._current_cell = cell
+            self._current_cell.set_masses(masses)
     
         if not os.path.exists("vasprun.xml"):
             self._log += "vasprun.xml not exists.\n"
@@ -1074,11 +1074,11 @@ class StructureOptimizationElement(TaskVasp,
         if os.path.exists("CONTCAR"):
             try:
                 self._current_cell = read_poscar("CONTCAR")
-                self._current_cell.set_masses(masses)
                 if self._atom_order:
                     self._current_cell = change_point_order(cell, self._atom_order)
                 else:
                     self._current_cell = current_cell
+                self._current_cell.set_masses(masses)
             except:
                 self._current_cell = cell
             else:
