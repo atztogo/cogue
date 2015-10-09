@@ -195,17 +195,18 @@ class QuasiHarmonicPhononBase(TaskElement, PhononYaml):
                     if task.get_status() == "terminate":
                         terminated.append(i)
 
-                cells = get_strained_cells(self.get_cell(), self._strains)
-                tasks = self._get_phonon_tasks(cells)
-                self._tasks = []
-                for i in terminated:
-                    self._tasks.append(tasks[i])
-                    if self._estimate_strain:
-                        self._all_tasks[i + 5] = tasks[i]
-                    else:
-                        self._all_tasks[i + 2] = tasks[i]
-                self._status = "phonons"
-                return self._tasks
+                if len(terminated) > 0:
+                    self._tasks = []
+                    cells = get_strained_cells(self.get_cell(), self._strains)
+                    tasks = self._get_phonon_tasks(cells)
+                    for i in terminated:
+                        self._tasks.append(tasks[i])
+                        if self._estimate_strain:
+                            self._all_tasks[i + 5] = tasks[i]
+                        else:
+                            self._all_tasks[i + 2] = tasks[i]
+                    self._status = "phonons"
+                    return self._tasks
                 
         self._tasks = []
         self._write_yaml()

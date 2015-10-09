@@ -132,8 +132,9 @@ class PhononBase(TaskElement, PhononYaml):
             terminate = False
             for i, task in enumerate(self._tasks):
                 done &= task.done()
-                terminate |= (task.get_status() == "terminate")
-
+                if (task.get_status() == "terminate" or
+                    task.get_status() == "max_iteration"):
+                    terminate = True
             if done:
                 if terminate:
                     self._status = "terminate"
