@@ -1,5 +1,6 @@
 import os
 import time
+import yaml
 import datetime
 from cogue.task import TaskSet
 from cogue.qsystem.queue import EmptyQueue
@@ -23,10 +24,10 @@ class AutoCalc:
 
         self._queue = EmptyQueue()
         self._tid_count = 0
-        self._f_log = None
         self._cwd = None
         self._verbose = verbose
         self._dot_count = 1
+        self._log = []
 
     def set_queue(self, queue):
         self._queue = queue
@@ -45,10 +46,11 @@ class AutoCalc:
         while True:
             self._queue.qstat()
             time.sleep(check_period)
-            self._write_log("-" * 40 + "> %s\n" % date())
+            self._log.append("-" * 40 + "> %s" % date())
             self._deep_run(self._taskset)
-            self._write_log("<" + "-" * 40 + "\n")
+            self._log.append("<" + "-" * 40)
             self._overwrite_settings()
+            self._write_log()
             self._write_dot()
             self._write_qstatus()
             if self._taskset.done():
@@ -57,14 +59,10 @@ class AutoCalc:
         self._end()
 
     def _begin(self):
-        if self._verbose:
-            self._f_log = open("%s.log" % self._log_name, 'w')
         self._cwd = os.getcwd()
         self._deep_begin(self._taskset)
 
     def _end(self):
-        if self._verbose:
-            self._f_log.close()
         os.chdir(self._cwd)
 
     def _deep_begin(self, task):
@@ -105,10 +103,9 @@ class AutoCalc:
                     self._deep_begin(next_task)
                 break
 
-        log = task.get_log()
+        log = task.get_log().rstrip()
         if log:
-            self._write_log(log)
-            self._f_log.flush()
+            self._log.append(log)
             task.set_log("")
 
         self._chdir_out(orig_cwd, task.get_status())
@@ -119,50 +116,53 @@ class AutoCalc:
         else:
             cwd = os.getcwd()
             os.chdir(directory_in)
-            self._write_log("--> %s\n" %
-                            os.getcwd().replace(self._cwd, '').lstrip('/'))
+            self._log.append("--> %s" %
+                             os.getcwd().replace(self._cwd, '').lstrip('/'))
             return cwd
 
     def _chdir_out(self, cwd, status): 
        if cwd is not None:
-           self._write_log("        [ %s ]\n" % status)
+           self._log.append("        [ %s ]" % status)
            directory = cwd.replace(self._cwd, '').lstrip('/')
            if directory == "":
                directory = '.'
-           self._write_log("    %s <--\n" % directory)
+           self._log.append("    %s <--" % directory)
            os.chdir(cwd)
 
     def _overwrite_settings(self):
         filename = "%s.cogue" % self._name
         if os.path.exists(filename):
             print "%s is found." % filename
-            import yaml
-            data = yaml.load(open(filename))
-            if 'max_jobs' in data:
-                self._queue.set_max_jobs(data['max_jobs'])
-                print "Overwrite max number of jobs by %d." % data['max_jobs']
+
+            with open(filename) as f:
+                data = yaml.load(f)
+                if 'max_jobs' in data:
+                    max_jobs = data['max_jobs']
+                    self._queue.set_max_jobs(max_jobs)
+                    print "Overwrite max number of jobs by %d." % max_jobs
 
             print "File %s was renamed to %s.done." % (filename, filename)
             if os.path.exists("%s.done" % filename):
                 os.remove("%s.done" % filename)
             os.rename("%s" % filename, "%s.done" % filename)
 
-    def _write_log(self, log):
+    def _write_log(self):
         if self._verbose > 1:
-            self._f_log.write(log)
+            with open("%s.log" % self._log_name, 'a') as w:
+                w.write("\n".join(self._log))
+                self._log = []
 
     def _write_dot(self):
         if self._verbose:
-            f_dot = open("%s.dot" % self._log_name, 'w')
-            self._dot_count += 1
-            f_dot.write("digraph %s {\n" %
-                        self._name.replace('-', '_').replace('.', '_'))
-            f_dot.write("graph [ rankdir = \"LR\" ] ;\n")
-            for task in self._taskset.get_tasks():
-                self._write_dot_labels(task, f_dot)
-                self._write_dot_tids(task, f_dot)
-            f_dot.write("}\n")
-            f_dot.close()
+            with open("%s.dot" % self._log_name, 'w') as f_dot:
+                self._dot_count += 1
+                f_dot.write("digraph %s {\n" %
+                            self._name.replace('-', '_').replace('.', '_'))
+                f_dot.write("graph [ rankdir = \"LR\" ] ;\n")
+                for task in self._taskset.get_tasks():
+                    self._write_dot_labels(task, f_dot)
+                    self._write_dot_tids(task, f_dot)
+                f_dot.write("}\n")
 
     def _write_dot_labels(self, task, f_dot):
         tid = task.get_tid()
