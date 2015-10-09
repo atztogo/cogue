@@ -38,11 +38,10 @@ class VaspCell(Cell):
         w.close()
 
     def write_yaml(self, filename="POSCAR.yaml"):
-        w = open(filename, 'w')
-        for line in self._poscar_yaml_lines[:-1]:
-            w.write(line + "\n")
-        w.write(self._poscar_yaml_lines[-1])
-        w.close()
+        with open(filename, 'w') as w:
+            for line in self._poscar_yaml_lines[:-1]:
+                w.write(line + "\n")
+            w.write(self._poscar_yaml_lines[-1])
 
     def get_poscar_lines(self):
         return self._poscar_lines
@@ -88,20 +87,7 @@ class VaspCell(Cell):
     def create_poscar_yaml_lines(self):
         inverse_order = {j: i for i, j in enumerate(self._atom_order)}
 
-        lines = []
-        lines.append("lattice:")
-        for v, a in zip(self._cell.get_lattice().T, ('a', 'b', 'c')):
-            lines.append("- [ %22.16f, %22.16f, %22.16f ] # %s" %
-                         (v[0], v[1], v[2], a))
-    
-        lines.append("points:")
-        for i, (s, v) in enumerate(zip(self._cell.get_symbols(),
-                                       self._cell.get_points().T)):
-            lines.append("- symbol: %-2s # %d -> %d" %
-                         (s, i + 1, inverse_order[i] + 1))
-            lines.append("  coordinates: [ %19.16f, %19.16f, %19.16f ]" %
-                         tuple(v))
-    
+        lines = self._cell.get_yaml_lines()
         lines.append("poscar_order:")
         for i in self._atom_order:
             lines.append("- %d" % (i + 1))
