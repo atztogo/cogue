@@ -178,7 +178,7 @@ class BulkModulusBase(TaskElement, StructureOptimizationYaml):
         params = phonopy_bulk_modulus.get_parameters()
 
         def eos(v):
-            return phonopy_bulk_modulus.get_eos()(params, v)
+            return phonopy_bulk_modulus.get_eos()(v, *params)
 
         self._eos = eos
 
