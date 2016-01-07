@@ -5,7 +5,7 @@ from cogue.crystal.utility import get_lattice_parameters
 
 
 def set_figure():
-    mlab.figure(bgcolor=(1,1,1))
+    mlab.figure(bgcolor=(1, 1, 1))
 
 def show():
     mlab.show()
@@ -64,7 +64,10 @@ def _plot_axes(lattice, color=(1, 0, 0)):
                   scale_factor=1)
 
     for c, v in zip(('a','b','c'), (lat * 1.3).T):
-        mlab.text3d(v[0]+0.15, v[1], v[2], c, color=color, scale=0.3)
+        t = mlab.text3d(v[0] + 0.15, v[1], v[2], c, color=color, scale=0.3)
+        # Workaround the bug
+        #   https://github.com/enthought/mayavi/issues/169
+        t.vector_text.update() 
 
 def _plot_lattice_points(lattice, dim):
     lat_points = []
