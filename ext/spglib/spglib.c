@@ -49,6 +49,7 @@
 #include "spg_database.h"
 #include "spin.h"
 #include "symmetry.h"
+#include "version.h"
 
 #define REDUCE_RATE 0.95
 
@@ -159,6 +160,24 @@ static int get_stabilized_reciprocal_mesh(int grid_address[][3],
 /*========*/
 /* global */
 /*========*/
+
+/*--------------------------------------------*/
+/* Version: spglib-[major].[minor].[micro] */
+/*--------------------------------------------*/
+int spg_get_major_version(void)
+{
+  return SPGLIB_MAJOR_VERSION;
+}
+
+int spg_get_minor_version(void)
+{
+  return SPGLIB_MINOR_VERSION;
+}
+
+int spg_get_micro_version(void)
+{
+  return SPGLIB_MICRO_VERSION;
+}
 
 /*---------*/
 /* general */
@@ -955,6 +974,7 @@ static SpglibDataset * get_dataset(SPGCONST double lattice[3][3],
   }
 
   dataset->spacegroup_number = 0;
+  dataset->hall_number = 0;
   strcpy(dataset->international_symbol, "");
   strcpy(dataset->hall_symbol, "");
   strcpy(dataset->setting, "");
@@ -1668,7 +1688,6 @@ static int get_ir_reciprocal_mesh(int grid_address[][3],
   SpglibDataset *dataset;
   int num_ir, i;
   MatINT *rotations, *rot_reciprocal;
-
 
   dataset = get_dataset(lattice,
 			position,
