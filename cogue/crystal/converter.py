@@ -1,5 +1,7 @@
 import numpy as np
 from cogue.crystal.cell import Cell
+from cogue.crystal.symmetry import (get_symmetry_dataset,
+                                    get_crystallographic_cell)
 
 ##############################
 # Generally usable functions #

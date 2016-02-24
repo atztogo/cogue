@@ -26,10 +26,11 @@ from cogue.crystal.utility import get_lattice_parameters
 from cogue.interface.cif import write_cif_P1
 from cogue.interface.v_sim import write_v_sim
 from cogue.interface.vasp_io import write_poscar
-from cogue.crystal.converter import get_primitive
 from cogue.interface.xtalcomp import compare as xtal_compare
 from cogue.phonon.modulation import PhononModulation
-from cogue.crystal.symmetry import get_symmetry_dataset, get_crystallographic_cell
+from cogue.crystal.symmetry import (get_symmetry_dataset,
+                                    get_crystallographic_cell,
+                                    get_primitive_cell)
 
 CUTOFF_ZERO = 1e-10
 DEGENERACY_TOLERANCE = 1e-3
@@ -441,7 +442,7 @@ class PhononRelaxElementBase(TaskElement):
         self._tasks = [task]
 
     def _set_stage1(self, cell):
-        prim_cell = get_primitive(cell, tolerance=self._symmetry_tolerance)
+        prim_cell = get_primitive_cell(cell, tolerance=self._symmetry_tolerance)
         sym_dataset = get_symmetry_dataset(prim_cell)
         self._space_group_type = sym_dataset['international_standard']
         spg_number = sym_dataset['number']

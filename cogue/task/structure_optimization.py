@@ -1,8 +1,9 @@
 import os
 from cogue.task import TaskElement
 from cogue.task.oneshot_calculation import OneShotCalculationYaml
-from cogue.crystal.symmetry import get_crystallographic_cell, get_symmetry_dataset
-from cogue.crystal.converter import get_primitive
+from cogue.crystal.symmetry import (get_crystallographic_cell,
+                                    get_symmetry_dataset,
+                                    get_primitive_cell)
 
 class StructureOptimizationYaml(OneShotCalculationYaml):
     def _get_structopt_yaml_lines(self):
@@ -120,8 +121,8 @@ class StructureOptimizationBase(TaskElement, StructureOptimizationYaml):
 
         self._status = "stage 1"
         if self._impose_symmetry:
-            prim_cell = get_primitive(self._cell,
-                                      tolerance=self._symmetry_tolerance)
+            prim_cell = get_primitive_cell(self._cell,
+                                           tolerance=self._symmetry_tolerance)
             self._space_group = get_symmetry_dataset(prim_cell)
             task = self._get_next_task(prim_cell)
         else:
@@ -177,7 +178,7 @@ class StructureOptimizationBase(TaskElement, StructureOptimizationYaml):
                 
         if self._next_cell:
             if self._impose_symmetry:
-                self._next_cell = get_primitive(
+                self._next_cell = get_primitive_cell(
                     self._next_cell,
                     tolerance=self._symmetry_tolerance)
                 self._space_group = get_symmetry_dataset(self._next_cell)
