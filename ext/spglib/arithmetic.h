@@ -1,7 +1,7 @@
-/* Copyright (C) 2015 Atsushi Togo */
+/* Copyright (C) 2016 Atsushi Togo */
 /* All rights reserved. */
 
-/* This file is part of niggli. */
+/* This file is part of spglib. */
 
 /* Redistribution and use in source and binary forms, with or without */
 /* modification, are permitted provided that the following conditions */
@@ -32,16 +32,7 @@
 /* ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE */
 /* POSSIBILITY OF SUCH DAMAGE. */
 
-#ifndef __NIGGLI_H__
-#define __NIGGLI_H__
-
-#define NIGGLI_MAJOR_VERSION 0
-#define NIGGLI_MINOR_VERSION 1
-#define NIGGLI_MICRO_VERSION 2
-
-int niggli_get_major_version(void);
-int niggli_get_minor_version(void);
-int niggli_get_micro_version(void);
-int niggli_reduce(double *lattice_, const double eps_);
+#ifndef __arithmetic_H__
+#define __arithmetic_H__
 
 #endif
