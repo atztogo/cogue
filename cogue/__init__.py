@@ -10,11 +10,11 @@ def cell(lattice=None,
           masses=None,
           numbers=None):
     """ """
-    return Cell(lattice,
-                points,
-                symbols,
-                masses,
-                numbers)
+    return Cell(lattice=lattice,
+                points=points,
+                symbols=symbols,
+                masses=masses,
+                numbers=numbers)
 
 def symmetry(cell, tolerance=1e-5):
     """ """

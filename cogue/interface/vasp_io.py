@@ -31,11 +31,10 @@ class VaspCell(Cell):
         self.create_poscar_yaml_lines()
 
     def write(self, filename="POSCAR"):
-        w = open(filename, 'w')
-        for line in self._poscar_lines[:-1]:
-            w.write(line + "\n")
-        w.write(self._poscar_lines[-1])
-        w.close()
+        with open(filename, 'w') as w:
+            for line in self._poscar_lines[:-1]:
+                w.write(line + "\n")
+            w.write(self._poscar_lines[-1])
 
     def write_yaml(self, filename="POSCAR.yaml"):
         with open(filename, 'w') as w:
@@ -188,15 +187,17 @@ def parse_poscar(lines):
                 symbols=symbols_expanded)
     
 def read_poscar(filename="POSCAR"):
-    cell = parse_poscar(open(filename).readlines())
-    return cell
+    with open(filename) as f:
+        cell = parse_poscar(f.readlines())
+        return cell
+    return None
 
 def read_poscar_yaml(filename="POSCAR.yaml"):
     try:
         import yaml
     except ImportError:
         print "You need to install python-yaml."
-        exit(1)
+        sys.exit(1)
 
     try:
         from yaml import CLoader as Loader
@@ -244,7 +245,7 @@ def get_atom_order_from_poscar_yaml(filename):
         import yaml
     except ImportError:
         print "You need to install python-yaml."
-        exit(1)
+        sys.exit(1)
 
     try:
         from yaml import CLoader as Loader

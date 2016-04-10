@@ -76,7 +76,7 @@ class Cell:
         else:
             self._magmoms = np.array(mogmoms, dtype='double')
 
-        if not symbols:
+        if symbols is None:
             self._symbols = None
         else:
             self._symbols = symbols[:]
@@ -91,10 +91,10 @@ class Cell:
         else:
             self._numbers = np.array(numbers, dtype='intc')
 
-        if self._numbers is None and self._symbols:
+        if self._numbers is None and self._symbols is not None:
             self._set_numbers_from_symbols()
             
-        if not self._symbols and self._numbers is not None:
+        if self._symbols is None and self._numbers is not None:
             self._set_symbols_from_numbers()
 
         if self._masses is None:
