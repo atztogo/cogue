@@ -1,11 +1,10 @@
+import sys
+import numpy as np
 from tvtk.api import tvtk
 from mayavi.sources.vtk_data_source import VTKDataSource
 from mayavi.modules.surface import Surface
 from mayavi import mlab
-
 from scipy.spatial import Voronoi
-import numpy as np
-import sys
 
 class VisualizeBrillouinZone:
     def __init__(self, lattice, magnitude=10):
@@ -20,6 +19,15 @@ class VisualizeBrillouinZone:
             return True
         else:
             return False
+
+    def get_voronoi_vertices(self):
+        return self._vertices
+
+    def get_BZ_faces(self):
+        return self._faces
+
+    def get_lattice(self):
+        return self._lattice
 
     def _plot_axes(self, color=(1, 0, 0)):
         shortest = min(np.linalg.norm(self._lattice, axis=1))
@@ -60,9 +68,14 @@ class VisualizeBrillouinZone:
         faces = [edge for edge in voronoi.ridge_vertices if -1 not in edge]
         BZ_faces = [face for face in faces
                     if np.all([x in BZ_cell for x in face])]
-    
-        self._vertices = voronoi.vertices
-        self._faces = BZ_faces
+ 
+        unique_points = np.unique([v for face in BZ_faces for v in face])
+        unique_vertices = np.array(voronoi.vertices[unique_points])
+        indices = {up: i for i, up in enumerate(unique_points)}
+        new_BZ_faces = [[indices[x] for x in one_face] for one_face in BZ_faces]
+
+        self._vertices = unique_vertices
+        self._faces = new_BZ_faces
 
         return True
     
