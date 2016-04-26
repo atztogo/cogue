@@ -2,6 +2,7 @@
 Symmetry functions
 """
 
+import numpy as np
 import spglib
 from cogue.crystal.cell import Cell
 
@@ -9,18 +10,21 @@ def get_symmetry_dataset(cell, tolerance=1e-5):
     lattice = cell.get_lattice().T
     positions = cell.get_points().T
     numbers = cell.get_numbers()
-    return spglib.get_symmetry_dataset((lattice, positions, numbers),
-                                       symprec=tolerance)
+    dataset = spglib.get_symmetry_dataset((lattice, positions, numbers),
+                                          symprec=tolerance)
+    dataset['std_points'] = np.array(dataset['std_positions'].T,
+                                     dtype='double', order='C')
+    dataset['std_lattice'] = np.array(dataset['std_lattice'].T,
+                                      dtype='double', order='C')
+    return dataset
 
 def get_crystallographic_cell(cell, tolerance=1e-5):
-    lattice = cell.get_lattice().T
-    positions = cell.get_points().T
-    numbers = cell.get_numbers()
-    masses = cell.get_masses()
     (std_lattice,
      std_positions,
-     std_numbers) = spglib.refine_cell((lattice, positions, numbers),
-                                       symprec=tolerance)
+     std_numbers) = spglib.refine_cell(
+         (cell.get_lattice().T, cell.get_points().T, cell.get_numbers()),
+         symprec=tolerance)
+    masses = cell.get_masses()
     std_masses = _transfer_masses_by_numbers(std_numbers, numbers, masses)
     return Cell(lattice=std_lattice.T,
                 points=std_positions.T,
@@ -28,14 +32,12 @@ def get_crystallographic_cell(cell, tolerance=1e-5):
                 masses=std_masses)
 
 def get_primitive_cell(cell, tolerance=1e-5):
-    lattice = cell.get_lattice().T
-    positions = cell.get_points().T
-    numbers = cell.get_numbers()
-    masses = cell.get_masses()
     (prim_lattice,
      prim_positions,
-     prim_numbers) = spglib.find_primitive((lattice, positions, numbers),
-                                           symprec=tolerance)
+     prim_numbers) = spglib.find_primitive(
+         (cell.get_lattice().T, cell.get_points().T, cell.get_numbers()),
+         symprec=tolerance)
+    masses = cell.get_masses()
     prim_masses = _transfer_masses_by_numbers(prim_numbers, numbers, masses)
     return Cell(lattice=prim_lattice.T,
                 points=prim_positions.T,
