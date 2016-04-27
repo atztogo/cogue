@@ -19,10 +19,11 @@ def get_symmetry_dataset(cell, tolerance=1e-5):
     return dataset
 
 def get_crystallographic_cell(cell, tolerance=1e-5):
+    numbers = cell.get_numbers()
     (std_lattice,
      std_positions,
      std_numbers) = spglib.refine_cell(
-         (cell.get_lattice().T, cell.get_points().T, cell.get_numbers()),
+         (cell.get_lattice().T, cell.get_points().T, numbers),
          symprec=tolerance)
     masses = cell.get_masses()
     std_masses = _transfer_masses_by_numbers(std_numbers, numbers, masses)
@@ -32,10 +33,11 @@ def get_crystallographic_cell(cell, tolerance=1e-5):
                 masses=std_masses)
 
 def get_primitive_cell(cell, tolerance=1e-5):
+    numbers = cell.get_numbers()
     (prim_lattice,
      prim_positions,
      prim_numbers) = spglib.find_primitive(
-         (cell.get_lattice().T, cell.get_points().T, cell.get_numbers()),
+         (cell.get_lattice().T, cell.get_points().T, numbers),
          symprec=tolerance)
     masses = cell.get_masses()
     prim_masses = _transfer_masses_by_numbers(prim_numbers, numbers, masses)
