@@ -19,7 +19,7 @@ def reduce_points(tmat, cell, tolerance=1e-5):
         magmoms_prim = None
     else:
         magmoms_prim = []
-    
+
     for i, p in enumerate(np.dot(np.linalg.inv(tmat), points).T):
         is_different = True
         for p_prim in points_prim:
@@ -132,12 +132,12 @@ def read_yaml(filename):
             lattice = np.transpose(data['lattice'])
             points = np.transpose(data['points'])
             symbols = data['symbols']
-            return Cell(lattice = lattice,
-                        points = points,
-                        symbols = symbols)
+            return Cell(lattice=lattice,
+                        points=points,
+                        symbols=symbols)
     return None
 
-            
-                                                                        
+
+
 if __name__ == '__main__':
     pass

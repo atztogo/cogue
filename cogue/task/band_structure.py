@@ -8,9 +8,9 @@ class BandStructureBase(TaskElement):
     1. structure optimization of input cell
     2. calculate charge density
     3. calculate eigenvalues at k-points
-    
+
     """
-    
+
     def __init__(self,
                  directory=None,
                  name=None,
@@ -43,7 +43,7 @@ class BandStructureBase(TaskElement):
         self._min_iteration = min_iteration
         self._traverse = traverse
         self._is_cell_relaxed = is_cell_relaxed
-        
+
         self._stage = 0
         self._tasks = None
 
@@ -79,7 +79,7 @@ class BandStructureBase(TaskElement):
 
     def begin(self):
         if not self._job:
-            print "set_job has to be executed."
+            print("set_job has to be executed.")
             raise
 
         if self._is_cell_relaxed:
@@ -96,7 +96,7 @@ class BandStructureBase(TaskElement):
                 self._status == "max_iteration" or
                 self._status == "next")
 
-    def next(self):    
+    def next(self):
         if self._stage == 0:
             if self._status == "next":
                 self._set_stage1()
@@ -138,7 +138,7 @@ class BandStructureBase(TaskElement):
                 eigs_path.append(task.get_properties()['eigenvalues'][0][0])
                 count += 1
             eigvals.append(eigs_path)
-            
+
         from cogue.electron.band_structure import BandStructure as BS
         if self._bs_tasks[0] is None:
             cell = self._cell
@@ -149,7 +149,7 @@ class BandStructureBase(TaskElement):
                 eigvals,
                 fermi_energy=self._bs_tasks[1].get_properties()['fermi-energy'])
         bs.write_yaml()
-        
+
     def _set_stage1(self):
         if self._bs_tasks[0] is None:
             cell = self._cell
@@ -169,7 +169,7 @@ class BandStructureBase(TaskElement):
         tasks = self._get_band_point_tasks(cell, properties=properties)
         self._bs_tasks += tasks
         self._tasks = tasks
-        
+
     def _write_yaml(self):
         w = open("%s.yaml" % self._directory, 'w')
         if self._lattice_tolerance is not None:
@@ -196,12 +196,12 @@ class BandStructureBase(TaskElement):
             lattice = cell.get_lattice().T
             points = cell.get_points().T
             symbols = cell.get_symbols()
-        
+
             w.write("lattice:\n")
             for v, a in zip(lattice, ('a', 'b', 'c')) :
                 w.write("- [ %22.16f, %22.16f, %22.16f ] # %s\n" %
                         (v[0], v[1], v[2], a))
-    
+
             w.write("points:\n")
             for i, v in enumerate(points):
                 w.write("- [ %20.16f, %20.16f, %20.16f ] # %d\n" %

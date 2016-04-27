@@ -1,15 +1,16 @@
 import unittest
 
-from cogue.interface.vasp_io import write_poscar, read_poscar_yaml, VasprunxmlExpat, Vasprunxml
+from cogue.interface.vasp_io import (write_poscar, read_poscar_yaml,
+                                     VasprunxmlExpat, Vasprunxml)
 
 class TestVASPIO(unittest.TestCase):
 
     def setUp(self):
         pass
-    
+
     def tearDown(self):
         pass
-    
+
     def test_read_poscar_yaml(self):
         filename = "POSCAR.yaml"
         cell, poscar_order = read_poscar_yaml(filename)
@@ -21,7 +22,7 @@ class TestVASPIO(unittest.TestCase):
     def test_VasprunxmlExpat(self):
         vxml = VasprunxmlExpat("vasprun-stropt.xml")
         vxml.parse()
-        
+
         print "VasprunxmlExpat"
         print "Forces:"
         print vxml.get_forces()
@@ -33,7 +34,7 @@ class TestVASPIO(unittest.TestCase):
         print vxml.get_lattice()
         print "Energy:"
         print vxml.get_energies()
-        
+
     def test_Vasprunxml(self):
         vxml = Vasprunxml("vasprun-energy.xml")
         vxml.parse_calculation()

@@ -37,7 +37,7 @@ def _plot_lattice(lattice, color=None):
           lat[0] + lat[1] + lat[2]]
 
     pt = np.array(pt)
-    
+
     _line_plot(0, 1, pt, color)
     _line_plot(0, 2, pt, color)
     _line_plot(0, 3, pt, color)
@@ -67,7 +67,7 @@ def _plot_axes(lattice, color=(1, 0, 0)):
         t = mlab.text3d(v[0] + 0.15, v[1], v[2], c, color=color, scale=0.3)
         # Workaround the bug
         #   https://github.com/enthought/mayavi/issues/169
-        t.vector_text.update() 
+        t.vector_text.update()
 
 def _plot_lattice_points(lattice, dim):
     lat_points = []
@@ -78,14 +78,14 @@ def _plot_lattice_points(lattice, dim):
 
     lp = np.dot(lattice, np.transpose(lat_points))
     mlab.points3d(lp[0], lp[1], lp[2],
-                  scale_factor=0.2, opacity=0.2, color=(0,0,0))              
+                  scale_factor=0.2, opacity=0.2, color=(0,0,0))
 
 def _plot_atoms(cell, margin=1e-5, shift=[0,0,0], atom_scale=0.4):
     points = cell.get_points()
     points += np.reshape(shift, (3, 1))
     points -= np.floor(points)
     points, symbols = _get_points_with_margin(cell, margin)
-    
+
     xs, ys, zs = np.dot(cell.get_lattice(), points)
     for x, y, z, s in zip(xs, ys, zs, symbols):
         color = tuple(np.array(atomic_jmol_colors[s], dtype=float) / 256)

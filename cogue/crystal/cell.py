@@ -118,7 +118,7 @@ class Cell:
 
     def get_points(self):
         """ """
-        return self._points
+        return self._points.copy()
 
     def set_symbols(self, symbols):
         """ """
