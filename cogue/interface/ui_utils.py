@@ -53,22 +53,22 @@ def get_parser():
     parser.add_option("--tmat",
                       dest="t_mat",
                       action="store",
-                      type="string",                      
+                      type="string",
                       help="Multiply transformation matrix. Absolute value of determinant has to be 1 or less than 1.")
     parser.add_option("--dim",
                       dest="s_mat",
                       action="store",
-                      type="string",                      
+                      type="string",
                       help="Supercell matrix")
     parser.add_option("--shift",
                       dest="shift",
                       action="store",
-                      type="string",                      
+                      type="string",
                       help="Origin shift")
     parser.add_option("-o",
                       dest="output_filename",
                       action="store",
-                      type="string",                      
+                      type="string",
                       help="Output filename")
     parser.add_option("-v",
                       dest="is_verbose",
@@ -95,22 +95,25 @@ def set_shift(cell, options):
     if len(shift) == 3:
         points = cell.get_points()
         points += shift.reshape(3, 1)
+        cell.set_points(points)
     else:
         sys.stderr.write("Atomic position shift is not correctly set.\n")
 
-def transform_cell(cell, options, is_shift=True):
+def transform_cell(cell_orig, options, is_shift=True):
+    cell = cell_orig.copy()
     if options.shift and is_shift:
         set_shift(cell, options)
     if options.t_mat:
         cell = _get_tmat_cell(cell, options)
     if options.is_r2h:
         if options.is_verbose:
-            print "Transform cell by transformation matrix of rhombohedral to hexagonal:"
-            print np.array(r2h)
+            print("Transform cell by transformation matrix of rhombohedral "
+                  "to hexagonal:")
+            print(np.array(r2h))
         cell = get_supercell(cell, r2h)
     if options.s_mat:
         cell = _get_smat_cell(cell, options)
-            
+
     return cell
 
 def write_cells(write_func, cells,
@@ -163,5 +166,3 @@ def _get_smat_cell(cell, options):
             print "Transform cell using supercell matrix:"
             print s_mat
         return get_supercell(cell, s_mat)
-
-    

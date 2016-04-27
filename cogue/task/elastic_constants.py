@@ -66,7 +66,7 @@ class ElasticConstantsBase(TaskElement):
 
     def begin(self):
         if not self._job:
-            print "set_job has to be executed."
+            print("set_job has to be executed.")
             raise
 
         if self._is_cell_relaxed:
@@ -127,12 +127,12 @@ class ElasticConstantsBase(TaskElement):
             lattice = cell.get_lattice().T
             points = cell.get_points().T
             symbols = cell.get_symbols()
-        
+
             w.write("lattice:\n")
             for v, a in zip(lattice, ('a', 'b', 'c')) :
                 w.write("- [ %22.16f, %22.16f, %22.16f ] # %s\n" %
                         (v[0], v[1], v[2], a))
-    
+
             w.write("points:\n")
             for i, v in enumerate(points):
                 w.write("- [ %20.16f, %20.16f, %20.16f ] # %d\n" %
@@ -147,4 +147,3 @@ class ElasticConstantsBase(TaskElement):
             for v in self._elastic_constants:
                 w.write("- [ %12.4f, %12.4f, %12.4f, %12.4f, %12.4f, %12.4f ]\n" % tuple(v))
         w.close()
-

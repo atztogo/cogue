@@ -33,7 +33,7 @@ class PhononModulation:
         self._points_on_sphere = []
 
         self._run()
-        
+
     def get_modulation_cells(self):
         return [self._get_cell_with_modulation(m)
                 for m in self.get_modulations()]
@@ -66,14 +66,14 @@ class PhononModulation:
                     modulation / phase * amplitude)
                 symmetry = get_symmetry_dataset(
                     modcell, tolerance=self._symmetry_tolerance)
-    
+
                 num_op = len(symmetry['rotations'])
                 if num_op > max_num_op:
                     max_num_op = num_op
                     best_cells = [modcell]
                     best_spacegroup_types = [symmetry['number']]
                     points_on_sphere = [[point, phase, amplitude]]
-    
+
                 elif num_op == max_num_op:
                     if symmetry['number'] in best_spacegroup_types:
                         cell_in_best_cells = False
@@ -85,7 +85,7 @@ class PhononModulation:
                                 angle_tolerance=1.0):
                                 cell_in_best_cells = True
                                 break
-                                
+
                         if not cell_in_best_cells:
                             best_cells.append(modcell)
                             points_on_sphere.append([point, phase, amplitude])
@@ -112,24 +112,24 @@ class PhononModulation:
         modulation = self._add_modulations(point)
         modulation *= self._get_normalize_phase_factor(modulation)
         return modulation
-        
+
     def _add_modulations(self, phase_set):
         modulation = np.zeros(self._vectors[0].shape, dtype='complex128')
         for c, v in zip(phase_set, self._vectors):
             modulation += c * v
         return modulation
-        
+
     def _get_cell_with_modulation(self, modulation):
         points = np.dot(self._lattice_inv,
                         self._positions + modulation.real)
         for p in points.T:
             p -= np.floor(p)
-    
+
         return Cell(lattice=self._lattice,
                     points=points,
                     masses=self._supercell.get_masses(),
                     numbers=self._supercell.get_numbers())
-    
+
     def _get_normalize_phase_factor(self, modulation):
         u = modulation.flatten()
         index_max_elem = np.argmax(abs(u))
@@ -188,7 +188,7 @@ class PhononModulation:
         for i in range(self._modulation_dimension[0]):
             for j in range(self._modulation_dimension[1]):
                 for k in range(self._modulation_dimension[2]):
-                    phase = np.exp(2j * np.pi * 
+                    phase = np.exp(2j * np.pi *
                                    np.dot([i, j, k], 1. / dim))
                     is_found = True
                     for p in total_phase_shifts:
@@ -199,7 +199,7 @@ class PhononModulation:
                         total_phase_shifts.append(phase)
 
         return total_phase_shifts
-        
+
 
 class PhononModulationOld:
     def __init__(self,
@@ -225,7 +225,7 @@ class PhononModulationOld:
         self._all_cells = []
 
         self._run()
-        
+
     def get_modulation_cells(self):
         return [self._get_cell_with_modulation(m)
                 for m in self.get_modulations()]
@@ -290,7 +290,7 @@ class PhononModulationOld:
                         for i in self._band_indices]
         self._phonon.set_modulations(self._modulation_dimension, phonon_modes)
         modulations, supercell = self._phonon.get_modulations_and_supercell()
-            
+
         self._supercell = atoms2cell(supercell)
 
         vectors = []
@@ -302,25 +302,25 @@ class PhononModulationOld:
 
         self._vectors = vectors
         self._arguments = arguments
-    
+
     def _get_modulation(self, point):
         modulation = np.zeros(self._vectors[0].shape, dtype='double')
         for c, v in zip(point, self._vectors):
             modulation += c * v
         return modulation
-        
+
     def _get_all_points_on_sphere(self):
         ndiv = self._ndiv
         n = len(self._vectors)
         phi = np.linspace(0, 2 * np.pi, ndiv * 2)
         theta = np.linspace(0, np.pi, ndiv)
-    
+
         if n == 1:
             x_i = np.array([[1.0]])
-    
+
         elif n == 2:
             x_i = np.transpose([np.cos(phi), np.sin(phi)])
-    
+
         elif n == 3:
             x = []
             for a in np.sin(theta):
@@ -335,7 +335,7 @@ class PhononModulationOld:
                 for b in np.cos(phi):
                     z.append(a * 1)
             x_i = np.transpose([x, y, z])
-    
+
         elif n == 4:
             x1 = []
             for a in np.cos(theta): # C
@@ -358,7 +358,7 @@ class PhononModulationOld:
                     for c in np.sin(phi):
                         x4.append(a * b * c)
             x_i = np.transpose([x1, x2, x3, x4])
-    
+
         elif n == 6:
             x1 = []
             for a in np.cos(theta): # C
@@ -402,15 +402,15 @@ class PhononModulationOld:
                         for d in np.sin(theta):
                             for e in np.sin(phi):
                                 x6.append(a * b * c * d * e)
-    
-    
+
+
             x_i = np.transpose([x1, x2, x3, x4, x5, x6])
-    
+
         else:
             x_i = None
-                        
+
         return x_i
-    
+
     def _get_cell_with_modulation(self, modulation):
         supercell = self._supercell
         lattice = supercell.get_lattice()
@@ -424,12 +424,12 @@ class PhononModulationOld:
                         modulation / max_mod * self._max_displacement)
         for p in points.T:
             p -= np.floor(p)
-    
+
         return Cell(lattice=lattice,
                     points=points,
                     masses=supercell.get_masses(),
                     numbers=supercell.get_numbers())
-    
+
     def _best_argument(self, deltas):
         num_atom = deltas.shape[1] / np.prod(self._modulation_dimension)
         argument = 0
@@ -441,5 +441,5 @@ class PhononModulationOld:
                     max_val = abs(deltas[j, i])
                     argument = np.angle(deltas[j, i])
                     best_indices = (j, i)
-    
+
         return argument, best_indices

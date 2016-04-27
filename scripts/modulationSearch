@@ -33,7 +33,7 @@ def get_parameters():
     parser.add_option("--pa", "--primitive_axis",
                       dest="t_mat",
                       action="store",
-                      type="string",                      
+                      type="string",
                       help=("Multiply transformation matrix. Absolute "
                             "value of determinant has to be 1 or less "
                             "than 1."))
@@ -42,50 +42,50 @@ def get_parameters():
     parser.add_option("--distance", dest="distance", type="float",
                       help="Maximum displacement distance")
     (options, args) = parser.parse_args()
-    
+
     if not options.supercell_dimension:
-        print "Option --dim has to be set."
+        print("Option --dim has to be set.")
         sys.exit(1)
-    
+
     if not options.qpoint:
-        print "Option -q has to be set."
+        print("Option -q has to be set.")
         sys.exit(1)
 
     if not options.band_indices:
-        print "Option --band has to be set."
+        print("Option --band has to be set.")
         sys.exit(1)
 
     qpoint = [frac2val(x) for x in options.qpoint.split()]
     if len(qpoint) == 3:
         qpoint = np.array(qpoint)
     else:
-        print "Illeagal q-point"
+        print("Illeagal q-point")
         sys.exit(1)
-    
+
     supercell_dimension = [int(x)
                            for x in options.supercell_dimension.split()]
     if not len(supercell_dimension) == 3:
-        print "Illeagal supercell dimension"
+        print("Illeagal supercell dimension")
         sys.exit(1)
 
     modulation_dimension = [int(x)
                             for x in options.modulation_dimension.split()]
     if not len(modulation_dimension) == 3:
-        print "Illeagal modulatoin dimension"
+        print("Illeagal modulatoin dimension")
         sys.exit(1)
 
     if options.t_mat:
         primitive_matrix = [frac2val(x) for x in options.t_mat.split()]
         if len(primitive_matrix) != 9:
-            print "Illeagal primitive matrix"
+            print("Illeagal primitive matrix")
             sys.exit(1)
     else:
         primitive_matrix = None
 
-        
+
     band_indices = [int(x) - 1 for x in options.band_indices.split()]
     if len(band_indices) > 4:
-        print "Number of band indices is too large (%d)" % len(band_indices)
+        print("Number of band indices is too large (%d)" % len(band_indices))
         sys.exit(1)
 
     if options.ndiv:
@@ -116,12 +116,12 @@ def get_parameters():
             band_indices,
             distance,
             tolerance)
-                      
+
 def get_phonon(cell,
                supercell_dimension,
                fc,
                primitive_matrix=None):
-                          
+
     phonon = Phonopy(cell,
                      np.diag(supercell_dimension),
                      is_auto_displacements=False)
@@ -162,8 +162,9 @@ mods = phononMod.get_modulations()
 pos = phononMod.get_points_on_sphere()
 for i, (cell, m, pt) in enumerate(zip(best_cells, mods, pos)):
     sym = get_symmetry_dataset(cell, tolerance)
-    print sym['international'], len(sym['rotations'])
+    print(sym['international'], len(sym['rotations']))
     vasp_io.write_poscar(cell, "BEST_CELL-%d" % (i + 1))
-    print pt
+    print(pt)
     for x in m.flatten():
-        print "[%10.7f %10.7f] (%9.7f, %7.2f)" % (x.real, x.imag, abs(x), np.angle(x)/np.pi*180)
+        print("[%10.7f %10.7f] (%9.7f, %7.2f)" %
+              (x.real, x.imag, abs(x), np.angle(x)/np.pi*180)))

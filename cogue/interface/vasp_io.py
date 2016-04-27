@@ -61,19 +61,19 @@ class VaspCell(Cell):
         lines = []
         lines.append(self._comment)
         lines.append("   1.0")
-        
+
         for v in self._lattice.T:
             lines.append(" %22.16f%22.16f%22.16f" % tuple(v))
 
         if not self._is_vasp4:
             lines.append(' ' + ' '.join(self._compressed_symbols))
-        
+
         lines.append(' ' + ' '.join(
             ["%3d" % self._symbols.count(s)
              for s in self._compressed_symbols]))
 
         lines.append("Direct")
-    
+
         for v in self._points.T:
             v16 = (v - np.rint(v)).round(decimals=16)
             for i in range(3):
@@ -127,7 +127,7 @@ class VaspCell(Cell):
             self._comment = ' ' + ' '.join(self._compressed_symbols)
         else:
             self._comment = comment.strip()
-        
+
 
 def parse_poscar(lines):
     isvasp5 = False
@@ -181,11 +181,11 @@ def parse_poscar(lines):
 
     for i, n in enumerate(num_atoms):
         symbols_expanded += [symbols[i]] * n
-    
+
     return Cell(lattice=lattice,
                 points=points,
                 symbols=symbols_expanded)
-    
+
 def read_poscar(filename="POSCAR"):
     with open(filename) as f:
         cell = parse_poscar(f.readlines())
@@ -285,7 +285,7 @@ def write_potcar(names, filename="POTCAR"):
     else:
         print "COGUE_POTCAR_PATH is not set correctly."
         return False
-    
+
     w = open(filename, 'w')
     for i, s in enumerate(names):
         if i == 0 or not s == names[i - 1]:
@@ -299,7 +299,7 @@ def get_enmax_from_potcar(names):
     else:
         print "COGUE_POTCAR_PATH is not set correctly."
         return False
-    
+
     enmax = []
     for i, s in enumerate(names):
         if i == 0 or not s == names[i - 1]:
@@ -383,7 +383,7 @@ class Incar:
             'addgrid' : addgrid,
             'aggac'   : aggac,
             'algo'    : algo,
-            'ediff'   : ediff, 
+            'ediff'   : ediff,
             'ediffg'  : ediffg,
             'emax'    : emax,
             'emin'    : emin,
@@ -748,7 +748,7 @@ def write_kpoints(filename="KPOINTS",
             w.write("     0.    0.    0.\n")
         else:
             w.write(" %5.3f %5.3f %5.3f\n" % tuple(shift))
-        
+
     w.close()
 
 class Outcar:
@@ -782,14 +782,14 @@ class Outcar:
 
                     ec.append(elem)
                     pos += 12
-    
+
             self._elastic_constants = np.array(np.reshape(ec, (6, 6)),
                                                dtype='double', order='C')
             return True
         else:
             return False
 
- 
+
 class Vasprunxml:
     def __init__(self, filename="vasprun.xml"):
         self._filename = filename
@@ -856,7 +856,7 @@ class Vasprunxml:
 
     def get_nbands(self):
         return self._nbands
-    
+
     def parse_calculation(self):
         forces = []
         stress = []
@@ -871,16 +871,16 @@ class Vasprunxml:
 
                 if element.tag != 'calculation':
                     continue
-    
+
                 for varray in element.findall('./varray'):
                     self._parse_forces_and_stress(varray, forces, stress)
-        
+
                 for varray in element.findall('./structure/varray'):
                     self._parse_points(varray, points)
-                    
+
                 for varray in element.findall('./structure/crystal/varray'):
                     self._parse_lattice(varray, lattice)
-    
+
                 for energy in element.findall('./energy'):
                     self._parse_energies(energy, energies)
 
@@ -913,7 +913,7 @@ class Vasprunxml:
 
                 if element.tag != 'parameters':
                     continue
-                
+
                 for separator in element.findall('./separator'):
                     if separator.attrib['name'] == 'electronic':
                         for i in separator.findall('./i'):
@@ -922,23 +922,23 @@ class Vasprunxml:
             return True
         except:
             return False
-            
+
     def parse_efermi(self):
         try:
             for event, element in etree.iterparse(self._filename):
 
                 if element.tag != 'dos':
                     continue
-                
+
                 for i in element.findall('./i'):
                     if i.attrib['name'] == 'efermi':
                         efermi = float(i.text)
-                        
+
             self._efermi = efermi
             return True
         except:
             return False
-            
+
     def parse_eigenvalues(self):
         spin1 = []
         spin2 = []
@@ -949,7 +949,7 @@ class Vasprunxml:
 
                 if element.tag != 'eigenvalues':
                     continue
-                
+
                 for array in element.findall('./array/set/set'):
 
                     if array.attrib['comment'] == 'spin 1':
@@ -966,7 +966,7 @@ class Vasprunxml:
                 self._occupancies_spin2 = np.array(occ2)
 
             return self._parse_kpoints()
-        
+
         except:
             return False
 
@@ -976,7 +976,7 @@ class Vasprunxml:
 
                 if element.tag != 'kpoints':
                     continue
-                
+
                 kpoints = []
                 weights = []
                 for varray in element.findall('./varray'):
@@ -1023,7 +1023,7 @@ class Vasprunxml:
                 stress_geomopt.append(
                     [float(x) for x in v.text.strip().split()])
             stress.append(stress_geomopt)
-        
+
     def _parse_points(self, varray, points):
         # points
         if varray.attrib['name'] == 'positions':
@@ -1063,7 +1063,7 @@ class Vasprunxml:
 class VasprunxmlExpat:
     def __init__(self, filename):
         self._filename = filename
-        
+
         self._is_forces = False
         self._is_stress = False
         self._is_positions = False
@@ -1087,7 +1087,7 @@ class VasprunxmlExpat:
         self._all_energies = []
         self._forces = None
         self._stress = None
-        self._points = None        
+        self._points = None
         self._lattice = None
         self._energies = None
 
@@ -1096,7 +1096,7 @@ class VasprunxmlExpat:
         self._p.StartElementHandler = self._start_element
         self._p.EndElementHandler = self._end_element
         self._p.CharacterDataHandler = self._char_data
-    
+
     def parse(self):
         try:
             self._p.ParseFile(open(self._filename))
@@ -1116,7 +1116,7 @@ class VasprunxmlExpat:
 
     def get_lattice(self):
         return np.array(self._all_lattice)
-    
+
     def get_symbols(self):
         return self._symbols
 
@@ -1134,19 +1134,19 @@ class VasprunxmlExpat:
 
     def _start_element(self, name, attrs):
         # Used not to collect energies in <scstep>
-        if name == 'scstep': 
+        if name == 'scstep':
             self._is_scstep = True
 
         # Used not to collect basis and positions in
         # <structure name="initialpos" >
         # <structure name="finalpos" >
-        if name == 'structure': 
+        if name == 'structure':
             if 'name' in attrs.keys():
                 self._is_structure = True
 
-        if (self._is_forces or 
-            self._is_stress or 
-            self._is_positions or 
+        if (self._is_forces or
+            self._is_stress or
+            self._is_positions or
             self._is_basis):
             if name == 'v':
                 self._is_v = True
@@ -1156,16 +1156,16 @@ class VasprunxmlExpat:
                 if attrs['name'] == 'forces':
                     self._is_forces = True
                     self._forces = []
-    
+
                 if attrs['name'] == 'stress':
                     self._is_stress = True
                     self._stress = []
-    
+
                 if not self._is_structure:
                     if attrs['name'] == 'positions':
                         self._is_positions = True
                         self._points = []
-        
+
                     if attrs['name'] == 'basis':
                         self._is_basis = True
                         self._lattice = []
@@ -1182,20 +1182,20 @@ class VasprunxmlExpat:
 
         if self._is_symbols and self._is_rc and name == 'c':
             self._is_c = True
-            
+
         if name == 'array':
             if 'name' in attrs.keys():
                 if attrs['name'] == 'atoms':
                     self._is_symbols = True
-            
-                
+
+
     def _end_element(self, name):
         if name == 'scstep':
             self._is_scstep = False
 
         if name == 'structure' and self._is_structure:
             self._is_structure = False
-        
+
         if name == 'varray':
             if self._is_forces:
                 self._is_forces = False
@@ -1216,7 +1216,7 @@ class VasprunxmlExpat:
         if name == 'array':
             if self._is_symbols:
                 self._is_symbols = False
-                
+
 
         if name == 'energy' and (not self._is_scstep):
             self._is_energy = False
@@ -1235,7 +1235,7 @@ class VasprunxmlExpat:
 
         if name == 'c':
             self._is_c = False
-    
+
     def _char_data(self, data):
         if self._is_v:
             if self._is_forces:
@@ -1261,4 +1261,3 @@ class VasprunxmlExpat:
         if self._is_c:
             if self._is_symbols:
                 self._symbols.append(str(data.strip()))
-
