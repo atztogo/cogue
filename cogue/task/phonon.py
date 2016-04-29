@@ -169,7 +169,7 @@ class PhononBase(TaskElement, PhononYaml):
             if self._status == "next":
                 self._energy = self._tasks[0].get_energy()
                 num_atom = len(self._tasks[0].get_cell().get_symbols())
-                self._comment = self._space_group['international_standard']
+                self._comment = self._space_group['international']
                 self._comment += "\\n%f/%d" % (self._energy, num_atom)
                 self._set_stage1()
                 return self._tasks

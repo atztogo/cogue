@@ -132,7 +132,7 @@ class StructureOptimizationBase(TaskElement, StructureOptimizationYaml):
                     self._symmetry_tolerance)
             task = self._get_next_task(self._cell)
         if self._space_group:
-            self._comment = self._space_group['international_standard']
+            self._comment = self._space_group['international']
 
         self._all_tasks = [task]
         self._tasks = [task]
@@ -188,7 +188,7 @@ class StructureOptimizationBase(TaskElement, StructureOptimizationYaml):
                         self._next_cell,
                         tolerance=self._symmetry_tolerance)
             if self._space_group:
-                self._comment = self._space_group['international_standard']
+                self._comment = self._space_group['international']
             
         if self._status == "done":
             if self._stage < self._min_iteration:
@@ -217,7 +217,7 @@ class StructureOptimizationBase(TaskElement, StructureOptimizationYaml):
             lines.append("symmetry_tolerance: %s" %
                          self._symmetry_tolerance)
             lines.append("space_group_type: %s" %
-                         self._space_group['international_standard'])
+                         self._space_group['international'])
             lines.append("space_group_number: %d" %
                          self._space_group['number'])
 

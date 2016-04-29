@@ -12,6 +12,9 @@ def get_symmetry_dataset(cell, tolerance=1e-5):
     numbers = cell.get_numbers()
     dataset = spglib.get_symmetry_dataset((lattice, positions, numbers),
                                           symprec=tolerance)
+    if dataset is None:
+        return None
+
     dataset['std_points'] = np.array(dataset['std_positions'].T,
                                      dtype='double', order='C')
     dataset['std_lattice'] = np.array(dataset['std_lattice'].T,
