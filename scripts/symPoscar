@@ -59,6 +59,10 @@ options, args = ui_utils.get_options(get_parser())
 tolerance = options.symprec
 cell = vasp_io.read_poscar(args[0])
 dataset = symmetry.get_symmetry_dataset(cell, tolerance)
+if dataset is None:
+    import sys
+    print("Symmetry search failed.")
+    sys.exit(1)
 
 spg_type = dataset['international']
 spg_number = dataset['number']

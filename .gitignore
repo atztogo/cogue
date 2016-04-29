@@ -2,7 +2,7 @@
 /build
 /lib
 /dist
-/potcar
+/potcar*
 /_build
 *~
 .buildinfo
