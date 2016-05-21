@@ -195,7 +195,7 @@ class StructureOptimizationBase(TaskElement, StructureOptimizationYaml):
                 self._status = "next"
 
         if self._status == "next":
-            if self._stage == self._max_iteration:
+            if self._stage >= self._max_iteration:
                 self._status = "max_iteration"
             else:
                 self._set_next_task()

@@ -113,9 +113,11 @@ class TaskElement(TaskBase):
             import yaml
             data = yaml.load(open(".coguerc"))
             if 'max_iteration' in data:
-                self._max_iteration = data['max_iteration']
+                if '_max_iteration' in self.__dict__:
+                    self._max_iteration = data['max_iteration']
             if 'min_iteration' in data:
-                self._min_iteration = data['min_iteration']
+                if '_min_iteration' in self.__dict__:
+                    self._min_iteration = data['min_iteration']
             if 'traverse' in data:
                 self._traverse = data['traverse']
 
