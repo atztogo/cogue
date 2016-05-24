@@ -148,8 +148,6 @@ class PhononBase(TaskElement, PhononYaml):
             print "set_job has to be executed."
             raise
 
-        self._overwrite_settings()
-
         if self._is_cell_relaxed:
             self._all_tasks = [None]
             self._set_stage1()

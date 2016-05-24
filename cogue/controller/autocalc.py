@@ -74,6 +74,8 @@ class AutoCalc:
         cwd = self._chdir_in(directory)
 
         task.set_tid(self._tid_count)
+        task.overwrite_settings()
+
         self._tid_count += 1
         task.begin()
         subtasks = task.get_tasks()
@@ -87,6 +89,7 @@ class AutoCalc:
 
     def _deep_run(self, task):
         orig_cwd = self._chdir_in(task.get_directory())
+        task.overwrite_settings()
 
         subtasks = task.get_tasks()
         if subtasks: # Task-set

@@ -121,8 +121,6 @@ class PhononRelaxBase(TaskElement):
             print "set_job has to be executed."
             raise
 
-        self._overwrite_settings()
-
         self._status = "stage 0"
         self._stage = 0
         self._tasks = []
@@ -357,7 +355,6 @@ class PhononRelaxElementBase(TaskElement):
             print "set_job has to be executed."
             raise
 
-        self._overwrite_settings()
         self._set_stage0()
 
     def done(self):

@@ -117,8 +117,6 @@ class StructureOptimizationBase(TaskElement, StructureOptimizationYaml):
             print "set_job has to be executed."
             raise
 
-        self._overwrite_settings()
-
         self._status = "stage 1"
         if self._impose_symmetry:
             prim_cell = get_primitive_cell(self._cell,

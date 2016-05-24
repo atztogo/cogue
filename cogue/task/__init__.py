@@ -1,4 +1,5 @@
 import os
+import datetime
 
 class TaskBase:
     def __init__(self):
@@ -70,6 +71,28 @@ class TaskBase:
     def __str__(self):
         return "\n".join(self.get_yaml_lines())
 
+    def overwrite_settings(self):
+        if os.path.exists(".coguerc"):
+            with open(".coguerc") as yaml_file:
+                try:
+                    import yaml
+                    data = yaml.load(yaml_file)
+                    if data is not None:
+                        if 'max_iteration' in data:
+                            if '_max_iteration' in self.__dict__:
+                                self._max_iteration = data['max_iteration']
+                        if 'min_iteration' in data:
+                            if '_min_iteration' in self.__dict__:
+                                self._min_iteration = data['min_iteration']
+                        if 'traverse' in data:
+                            self._traverse = data['traverse']
+                        if 'status' in data:
+                            self._status = data['status']
+                except:
+                    print("Fail to parse .coguerc of tid %d" % self._tid)
+                os.rename(".coguerc", ".coguerc.%s" %
+                          datetime.datetime.now().strftime("%Y%m%d%H%M"))
+
     def _write_yaml(self, filename=None):
         if filename:
             w = open(filename)
@@ -107,19 +130,6 @@ class TaskElement(TaskBase):
         elif self._traverse is not False:
             lines.append("traverse:  %s" % self._traverse)
         return lines
-
-    def _overwrite_settings(self):
-        if os.path.exists(".coguerc"):
-            import yaml
-            data = yaml.load(open(".coguerc"))
-            if 'max_iteration' in data:
-                if '_max_iteration' in self.__dict__:
-                    self._max_iteration = data['max_iteration']
-            if 'min_iteration' in data:
-                if '_min_iteration' in self.__dict__:
-                    self._min_iteration = data['min_iteration']
-            if 'traverse' in data:
-                self._traverse = data['traverse']
 
 class TaskSet(TaskBase):
     def __init__(self,
