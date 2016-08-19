@@ -122,9 +122,7 @@ def get_phonon(cell,
                fc,
                primitive_matrix=None):
 
-    phonon = Phonopy(cell,
-                     np.diag(supercell_dimension),
-                     is_auto_displacements=False)
+    phonon = Phonopy(cell, np.diag(supercell_dimension))
 
     if primitive_matrix:
         phonon.set_post_process(primitive_matrix=np.reshape(

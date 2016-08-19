@@ -256,7 +256,6 @@ class PhononBase(TaskElement, PhononYaml):
         self._phonon = Phonopy(phonopy_cell,
                                self._supercell_matrix,
                                primitive_matrix=self._primitive_matrix,
-                               is_auto_displacements=False,
                                dynamical_matrix_decimals=14,
                                force_constants_decimals=14)
         self._phonon.generate_displacements(
