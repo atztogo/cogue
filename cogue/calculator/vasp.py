@@ -929,7 +929,7 @@ class ElectronicStructure(TaskVasp, ElectronicStructureBase):
             self._atom_order = None
 
         if not os.path.exists("vasprun.xml"):
-            self._log += "vasprun.xml not exists.\n"
+            self._log += "    vasprun.xml not exists.\n"
             self._status = "terminate"
         else:
             vxml = Vasprunxml("vasprun.xml")
@@ -953,7 +953,7 @@ class ElectronicStructure(TaskVasp, ElectronicStructureBase):
                                     'nbands': vxml.get_nbands()}
                 self._status = "done"
             else:
-                self._log += "Failed to parse vasprun.xml.\n"
+                self._log += "    Failed to parse vasprun.xml.\n"
                 self._status = "terminate"
 
 class StructureOptimizationElement(TaskVasp,
@@ -1011,7 +1011,7 @@ class StructureOptimizationElement(TaskVasp,
             self._current_cell.set_masses(masses)
     
         if not os.path.exists("vasprun.xml"):
-            self._log += "vasprun.xml not exists.\n"
+            self._log += "    vasprun.xml not exists.\n"
             self._status = "terminate"
         else:
             vxml = VasprunxmlExpat("vasprun.xml")
@@ -1044,7 +1044,7 @@ class StructureOptimizationElement(TaskVasp,
                     self._forces = forces[max_iter - 1]
                 self._judge(lattice[max_iter - 1], _points)
             elif (not is_success) and max_iter > 2:
-                self._log += "vasprun.xml is not cleanly closed.\n"
+                self._log += "    vasprun.xml is not cleanly closed.\n"
                 self._stress = stress[max_iter - 3] / 10
                 self._energy = energies[max_iter - 3, 1]
                 if self._atom_order:
@@ -1055,7 +1055,7 @@ class StructureOptimizationElement(TaskVasp,
                     self._forces = forces[max_iter - 3]
                 self._judge(lattice[max_iter - 3], _points)
             else:
-                self._log += "Failed to parse vasprun.xml.\n"
+                self._log += "    Failed to parse vasprun.xml.\n"
                 self._current_cell = None
                 self._status = "terminate"
 
@@ -1095,17 +1095,17 @@ class StructureOptimizationElement(TaskVasp,
         # Non termination conditions
         if self._lattice_tolerance is not None:
             if (abs(d_vecs2_ratio) > self._lattice_tolerance ** 2).any():
-                self._log += "Lattice is not enough relaxed.\n"
+                self._log += "    Lattice is not enough relaxed.\n"
                 self._status = "next"
 
         if self._stress_tolerance is not None:
             if (abs(self._stress - np.eye(3) * self._pressure_target)
                 > self._stress_tolerance).any():
-                self._log += "Stress is not enough relaxed.\n"
+                self._log += "    Stress is not enough relaxed.\n"
                 self._status = "next"
 
         if (abs(self._forces) > self._force_tolerance).any():
-            self._log += "Forces are not enough relaxed.\n"
+            self._log += "    Forces are not enough relaxed.\n"
             self._status = "next"
 
         if not self._status == "next":
@@ -1116,7 +1116,7 @@ class StructureOptimizationElement(TaskVasp,
         vol_init = np.linalg.det(lattice_init)
         if self._max_increase is not None:
             if vol_last > self._max_increase * vol_init:
-                self._log += "Too large volume expansion.\n"
+                self._log += "    Too large volume expansion.\n"
                 self._status = "terminate"
 
 
@@ -1678,7 +1678,7 @@ class ElasticConstantsElement(TaskVasp, ElasticConstantsElementBase):
         """
 
         if not os.path.exists("OUTCAR"):
-            self._log += "OUTCAR not exists.\n"
+            self._log += "    OUTCAR not exists.\n"
             self._status = "terminate"
         else:
             outcar = Outcar("OUTCAR")
@@ -1687,7 +1687,7 @@ class ElasticConstantsElement(TaskVasp, ElasticConstantsElementBase):
                 self._elastic_constants = outcar.get_elastic_constants()
                 self._status = "done"
             else:
-                self._log += "Failed to parse OUTCAR.\n"
+                self._log += "    Failed to parse OUTCAR.\n"
                 self._status = "terminate"
 
 class ModeGruneisen(TaskVasp, TaskVaspQHA, ModeGruneisenBase):

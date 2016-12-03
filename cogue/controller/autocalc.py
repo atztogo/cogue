@@ -48,8 +48,8 @@ class AutoCalc:
             time.sleep(check_period)
             self._log.append("-" * 40 + "> %s" % date())
             self._deep_run(self._taskset)
-            self._log.append("<" + "-" * 40)
             self._overwrite_settings()
+            self._log.append("<" + "-" * 40 + " %s" % date())
             self._write_log()
             self._write_dot()
             self._write_qstatus()
@@ -153,6 +153,7 @@ class AutoCalc:
         if self._verbose > 1:
             with open("%s.log" % self._log_name, 'a') as w:
                 w.write("\n".join(self._log))
+                w.write("\n")
                 self._log = []
 
     def _write_dot(self):

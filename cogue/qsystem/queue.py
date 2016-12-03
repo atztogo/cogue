@@ -4,6 +4,12 @@ import shlex
 import shutil
 import tarfile
 from subprocess import check_output
+import datetime
+import traceback
+import sys
+
+def get_time():
+    return datetime.datetime.today().strftime("%H:%M:%S")
 
 class EmptyQueue:
     def __init__(self):
@@ -103,7 +109,7 @@ class LocalQueueBase(QueueBase):
             if task.get_traverse():
                 jobid = None
             else:
-                qsub_out = self._shell.run(
+                qsub_out = self._shell_run(
                     shlex.split(self._qsub_command + " " + "job.sh"),
                     cwd=os.getcwd()).output
                 jobid = self._get_jobid(qsub_out)
@@ -130,14 +136,12 @@ class RemoteQueueBase(QueueBase):
             self._sleep_time = sleep_time
 
         if not os.path.exists(temporary_dir):
-            self._shell.run(["mkdir", "-p", temporary_dir])
-            time.sleep(self._sleep_time)
+            self._shell_run(["mkdir", "-p", temporary_dir])
         
         if self._name is not None:
             self._working_dir = "%s/%s" % (temporary_dir, self._name)
             if not os.path.exists(self._working_dir):
-                self._shell.run(["mkdir", "-p", self._working_dir])
-                time.sleep(self._sleep_time)
+                self._shell_run(["mkdir", "-p", self._working_dir])
         else:
             self._working_dir = "%s" % temporary_dir
 
@@ -162,8 +166,7 @@ class RemoteQueueBase(QueueBase):
         task_log = task.get_log()
 
         job.write_script()
-        self._shell.run(["mkdir", "-p", remote_dir])
-        time.sleep(self._sleep_time)
+        self._shell_run(["mkdir", "-p", remote_dir])
 
         with tarfile.open("cogue.tar", "w") as tar:
             for name in os.listdir("."):
@@ -177,31 +180,30 @@ class RemoteQueueBase(QueueBase):
                 time.sleep(self._sleep_time)
 
             shasum_l = check_output(["shasum", "cogue.tar"]).split()[0]
-            shasum_r = self._shell.run(["shasum", "cogue.tar"],
+            shasum_r = self._shell_run(["shasum", "cogue.tar"],
                                        cwd=remote_dir).output.split()[0]
-            time.sleep(self._sleep_time)
-            task_log += ("[task-id %05d] local %s.. -> remote %s..\n" %
-                         (tid, shasum_l[:8], shasum_r[:8]))
+            task_log += ("    copy local %s -> remote %s (%s tid-%05d)\n" %
+                         (shasum_l[:8], shasum_r[:8], get_time(), tid))
+
             if shasum_r == shasum_l:
                 break
             else:
-                task_log += ("[task-id %05d] copying to remote, "
-                             "waiting for 10s...\n" % tid)
+                err_log = ("    copying to remote, waiting for 10s..."
+                           " (%s tid-%05d)\n" % (get_time(), tid))
+                sys.stderr.write(err_log)
+                task_log += err_log
                 time.sleep(10)
 
         os.remove("cogue.tar")
-        self._shell.run(["tar", "xvf", "cogue.tar"], cwd=remote_dir)
-        time.sleep(self._sleep_time)
-        self._shell.run(["rm", "cogue.tar"], cwd=remote_dir)
-        time.sleep(self._sleep_time)
+        self._shell_run(["tar", "xvf", "cogue.tar"], cwd=remote_dir)
+        self._shell_run(["rm", "cogue.tar"], cwd=remote_dir)
 
         if task.get_traverse():
             jobid = None
         else:
-            qsub_out = self._shell.run(
+            qsub_out = self._shell_run(
                 shlex.split(self._qsub_command + " " + "job.sh"),
                 cwd=remote_dir).output
-            time.sleep(self._sleep_time)
             jobid = self._get_jobid(qsub_out)
         self._tid2jobid[tid] = jobid
         self._tid_queue.pop(0)
@@ -215,10 +217,8 @@ class RemoteQueueBase(QueueBase):
         remote_dir = "%s/c%05d" % (self._working_dir, tid)
         task_log = task.get_log()
 
-        names = self._shell.run(["/bin/ls"], cwd=remote_dir).output.split()
-        time.sleep(self._sleep_time)
-        self._shell.run(["tar", "cvf", "cogue.tar"] + names, cwd=remote_dir)
-        time.sleep(self._sleep_time)
+        names = self._shell_run(["/bin/ls"], cwd=remote_dir).output.split()
+        self._shell_run(["tar", "cvf", "cogue.tar"] + names, cwd=remote_dir)
 
         for i in range(20):
             with open("cogue.tar", "wb") as local_file, \
@@ -227,27 +227,55 @@ class RemoteQueueBase(QueueBase):
                 shutil.copyfileobj(remote_file, local_file)
                 time.sleep(self._sleep_time)
 
-            shasum_r = self._shell.run(["shasum", "cogue.tar"],
+            shasum_r = self._shell_run(["shasum", "cogue.tar"],
                                        cwd=remote_dir).output.split()[0]
-            time.sleep(self._sleep_time)
 
             shasum_l = check_output(["shasum", "cogue.tar"]).split()[0]
-            task_log += ("[task-id %05d] local %s.. <- remote %s..\n" %
-                         (tid, shasum_l[:8], shasum_r[:8]))
+            task_log += ("    copy local %s <- remote %s (%s tid-%05d)\n" %
+                         (shasum_l[:8], shasum_r[:8], get_time(), tid))
 
             if shasum_r == shasum_l:
                 break
             else:
-                task_log += ("[task-id %05d] copying from remote, "
-                             "waiting for 10s...\n" % tid)
+                err_log = ("    copying from remote, waiting for 10s..."
+                           " (%s tid-%05d)\n" % (get_time(), tid))
+                sys.stderr.write(err_log)
+                task_log += err_log
                 time.sleep(10)
 
         with tarfile.open("cogue.tar") as tar:
             tar.extractall()
 
         os.remove("cogue.tar")
-        self._shell.run(["rm", "cogue.tar"], cwd=remote_dir)
-        time.sleep(self._sleep_time)
+        self._shell_run(["rm", "cogue.tar"], cwd=remote_dir)
 
         task.set_log(task_log)
+
+    def _shell_run(self, command, cwd=None):
+        shell_done = False
+        for i in range(10):
+            try:
+                if cwd is None:
+                    return self._shell.run(command)
+                else:
+                    return self._shell.run(command, cwd=cwd)
+                time.sleep(self._sleep_time)
+                shell_done = True
+            except RunProcessError:
+                date = datetime.datetime.today().strftime("%Y-%m-%d %H:%M:%S")
+                print("%s: SshShell.run() failed (%d)." % (date, i + 1))
+                print("command: %s" % command)
+                if cwd:
+                    print("cwd: %s" % cwd)
+                if (i < 9):
+                    err_log = traceback.format_exc()
+                    sys.stderr.write(err_log)
+                    print("    copying from remote, waiting for 10s...")
+                    
+                    time.sleep(10)
+                else:
+                    raise
+
+            if shell_done:
+                break
 
