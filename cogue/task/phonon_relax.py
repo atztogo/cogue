@@ -118,8 +118,8 @@ class PhononRelaxBase(TaskElement):
 
     def begin(self):
         if not self._job:
-            print "set_job has to be executed."
-            raise
+            print("set_job has to be executed.")
+            raise RuntimeError
 
         self._status = "stage 0"
         self._stage = 0
@@ -165,7 +165,7 @@ class PhononRelaxBase(TaskElement):
                 self._comment += " --> %s" % task.get_space_group_type()
                 self._tasks = []
             else:
-                print "It is something wrong happening in PhononRelaxBase."
+                print("It is something wrong happening in PhononRelaxBase.")
         else:
             if self._status == "next":
                 self._log += "# phonon_relax: task ID %d\n" % self._tid
@@ -352,8 +352,8 @@ class PhononRelaxElementBase(TaskElement):
 
     def begin(self):
         if not self._job:
-            print "set_job has to be executed."
-            raise
+            print("set_job has to be executed.")
+            raise RuntimeError
 
         self._set_stage0()
 
@@ -397,8 +397,9 @@ class PhononRelaxElementBase(TaskElement):
                   self._status == "low_symmetry"):
                 pass
             else:
-                print "Status is ", self._status, self._tid, self._name
-                print "It is something wrong happening in PhononRelaxElementBase."
+                print("Status is %s %d %s" %
+                      (self._status, self._tid, self._name))
+                print("Something wrong is happening in PhononRelaxElementBase.")
         else:
             if self._status == "next":
                 self._analyze_phonon()
@@ -477,7 +478,7 @@ class PhononRelaxElementBase(TaskElement):
                 imaginary_modes = []
                 qpoints_done = [imag_mode[1]
                                 for imag_mode in self._imaginary_modes]
-                print "Modulation structure search, start"
+                print("Modulation structure search, start")
                 self._imaginary_modes += get_unstable_modulations(
                     phonon,
                     dimension,
@@ -486,7 +487,7 @@ class PhononRelaxElementBase(TaskElement):
                     cutoff_eigenvalue=self._cutoff_eigenvalue,
                     ndiv=self._num_sampling_points,
                     excluded_qpoints=qpoints_done)
-                print "Modulation structure search, done"
+                print("Modulation structure search, done")
 
         sym_dataset = get_symmetry_dataset(
             self._tasks[0].get_cell())

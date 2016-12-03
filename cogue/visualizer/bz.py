@@ -59,7 +59,7 @@ class VisualizeBrillouinZone:
                          if cell and (-1 not in cell)]
     
         if len(voronoi_cells) == 0:
-            print "BZ is not unique."
+            print("BZ is not unique.")
             return False
     
         norm2s = np.sum(voronoi.vertices ** 2, axis=1)

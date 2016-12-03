@@ -67,7 +67,7 @@ class ElasticConstantsBase(TaskElement):
     def begin(self):
         if not self._job:
             print("set_job has to be executed.")
-            raise
+            raise RuntimeError
 
         if self._is_cell_relaxed:
             self._ec_tasks = [None]
@@ -145,5 +145,6 @@ class ElasticConstantsBase(TaskElement):
         if self._elastic_constants is not None:
             w.write("elastic_constants:\n")
             for v in self._elastic_constants:
-                w.write("- [ %12.4f, %12.4f, %12.4f, %12.4f, %12.4f, %12.4f ]\n" % tuple(v))
+                w.write("- [ %12.4f, %12.4f, %12.4f, %12.4f, %12.4f, %12.4f ]\n"
+                        % tuple(v))
         w.close()

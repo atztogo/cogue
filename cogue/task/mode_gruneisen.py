@@ -94,8 +94,8 @@ class ModeGruneisenBase(TaskElement, PhononYaml):
 
     def begin(self):
         if not self._job:
-            print "set_job has to be executed."
-            raise
+            print("set_job has to be executed.")
+            raise RuntimeError
 
         if self._is_cell_relaxed:
             self._all_tasks = [None]

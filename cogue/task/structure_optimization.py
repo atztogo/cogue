@@ -114,8 +114,8 @@ class StructureOptimizationBase(TaskElement, StructureOptimizationYaml):
 
     def begin(self):
         if not self._job:
-            print "set_job has to be executed."
-            raise
+            print("set_job has to be executed.")
+            raise RuntimeError
 
         self._status = "stage 1"
         if self._impose_symmetry:

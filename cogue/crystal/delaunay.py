@@ -12,7 +12,7 @@ def get_Delaunay_reduction(lattice, tolerance):
         if reduce_bases(extended_bases, tolerance):
             break
     if i == 99:
-        print "Delaunary reduction failed."
+        print("Delaunary reduction failed.")
 
     shortest3 = get_shortest_bases(extended_bases, tolerance)
 
@@ -59,5 +59,5 @@ def get_shortest_bases(extended_bases, tolerance):
                                      basis[j],
                                      basis[k]])
 
-    print "Delaunary reduction is failed."
+    print("Delaunary reduction is failed.")
     return basis[:3]

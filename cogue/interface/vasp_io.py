@@ -166,8 +166,8 @@ def parse_poscar(lines):
 
     # Assume Direct
     if lines[6][0] in 'CcKk':
-        print "Cartesian is not supported"
-        raise
+        print("Cartesian is not supported.")
+        raise RuntimeError
 
     points = np.zeros((3, num_atoms.sum()), dtype=float)
     for i in range(num_atoms.sum()):
@@ -196,7 +196,7 @@ def read_poscar_yaml(filename="POSCAR.yaml"):
     try:
         import yaml
     except ImportError:
-        print "You need to install python-yaml."
+        print("You need to install python-yaml.")
         sys.exit(1)
 
     try:
@@ -244,7 +244,7 @@ def get_atom_order_from_poscar_yaml(filename):
     try:
         import yaml
     except ImportError:
-        print "You need to install python-yaml."
+        print("You need to install python-yaml.")
         sys.exit(1)
 
     try:
@@ -283,7 +283,7 @@ def write_potcar(names, filename="POTCAR"):
     if 'COGUE_POTCAR_PATH' in os.environ:
         potcarpath = os.environ['COGUE_POTCAR_PATH']
     else:
-        print "COGUE_POTCAR_PATH is not set correctly."
+        print("COGUE_POTCAR_PATH is not set correctly.")
         return False
 
     w = open(filename, 'w')
@@ -297,7 +297,7 @@ def get_enmax_from_potcar(names):
     if 'COGUE_POTCAR_PATH' in os.environ:
         potcarpath = os.environ['COGUE_POTCAR_PATH']
     else:
-        print "COGUE_POTCAR_PATH is not set correctly."
+        print("COGUE_POTCAR_PATH is not set correctly.")
         return False
 
     enmax = []
@@ -456,7 +456,7 @@ class Incar:
         if k in self._tagvals:
             self._tagvals[k] = v
         else:
-            print "Key %s is not available."
+            print("Key %s is not available." % k)
 
     def set_addgrid(self, x):
         self._tagvals['addgrid'] = x

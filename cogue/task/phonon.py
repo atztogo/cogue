@@ -1,3 +1,4 @@
+import sys
 import numpy as np
 from cogue.task import TaskElement
 from cogue.task.structure_optimization import StructureOptimizationYaml
@@ -12,8 +13,8 @@ try:
     from phonopy.file_IO import write_disp_yaml
     from phonopy.file_IO import write_FORCE_SETS
 except ImportError:
-    print "You need to install phonopy."
-    exit(1)
+    print("You need to install phonopy.")
+    sys.exit(1)
 
 class PhononYaml(StructureOptimizationYaml):
     def _get_phonon_yaml_lines(self, cell):
@@ -145,8 +146,8 @@ class PhononBase(TaskElement, PhononYaml):
 
     def begin(self):
         if not self._job:
-            print "set_job has to be executed."
-            raise
+            print("set_job has to be executed.")
+            raise RuntimeError
 
         if self._is_cell_relaxed:
             self._all_tasks = [None]

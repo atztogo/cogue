@@ -135,16 +135,16 @@ class AutoCalc:
     def _overwrite_settings(self):
         filename = "%s.cogue" % self._name
         if os.path.exists(filename):
-            print "%s is found." % filename
+            print("%s is found." % filename)
 
             with open(filename) as f:
                 data = yaml.load(f)
                 if 'max_jobs' in data:
                     max_jobs = data['max_jobs']
                     self._queue.set_max_jobs(max_jobs)
-                    print "Overwrite max number of jobs by %d." % max_jobs
+                    print("Overwrite max number of jobs by %d." % max_jobs)
 
-            print "File %s was renamed to %s.done." % (filename, filename)
+            print("File %s was renamed to %s.done." % (filename, filename))
             if os.path.exists("%s.done" % filename):
                 os.remove("%s.done" % filename)
             os.rename("%s" % filename, "%s.done" % filename)

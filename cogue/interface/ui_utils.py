@@ -124,15 +124,15 @@ def write_cells(write_func, cells,
                 root, ext = os.path.splitext(output_filename)
                 write_func(cell, root + "-%03d" % (i + 1) + ext)
             else:
-                print "-" * len(input_filenames[i])
-                print input_filenames[i]
-                print "-" * len(input_filenames[i])
-                print write_func(cell)
+                print("-" * len(input_filenames[i]))
+                print("%s" % input_filenames[i])
+                print("-" * len(input_filenames[i]))
+                print(write_func(cell))
         else:
             if output_filename:
                 write_func(cell, output_filename)
             else:
-                print write_func(cell),
+                sys.stdout.write(write_func(cell))
 
 def _get_matrix(mat):
     if len(mat) == 3:
@@ -151,8 +151,8 @@ def _get_tmat_cell(cell, options):
         return False
     else:
         if options.is_verbose:
-            print "Transform cell using transformation matrix:"
-            print t_mat
+            print("Transform cell using transformation matrix:")
+            print(t_mat)
         return reduce_points(t_mat, cell)
 
 def _get_smat_cell(cell, options):
@@ -163,6 +163,6 @@ def _get_smat_cell(cell, options):
         return False
     else:
         if options.is_verbose:
-            print "Transform cell using supercell matrix:"
-            print s_mat
+            print("Transform cell using supercell matrix:")
+            print(s_mat)
         return get_supercell(cell, s_mat)

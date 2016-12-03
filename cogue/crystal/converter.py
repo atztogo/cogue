@@ -1,3 +1,4 @@
+import sys
 import numpy as np
 from cogue.crystal.cell import Cell
 from cogue.crystal.symmetry import (get_symmetry_dataset,
@@ -105,8 +106,8 @@ def cell2atoms(cell):
     try:
         from phonopy.structure.atoms import Atoms
     except ImportError:
-        print "You need to install phonopy."
-        exit(1)
+        print("You need to install phonopy.")
+        sys.exit(1)
     return Atoms(cell=cell.get_lattice().T,
                  scaled_positions=cell.get_points().T,
                  masses=cell.get_masses(),

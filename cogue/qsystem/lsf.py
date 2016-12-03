@@ -124,13 +124,13 @@ class Job(JobBase):
         JobBase.__init__(self)
 
         if script is None:
-            print "Queue script not found"
+            print("Queue script not found.")
             sys.exit(1)
         else:
             self._script = script
 
         if q is None:
-            print "Queue name must be set."
+            print("Queue name must be set.")
             sys.exit(1)
         else:
             self._q = q

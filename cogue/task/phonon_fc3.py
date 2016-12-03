@@ -1,3 +1,4 @@
+import sys
 import numpy as np
 from cogue.task import TaskElement
 from cogue.interface.vasp_io import write_poscar
@@ -6,13 +7,13 @@ from cogue.crystal.converter import cell2atoms
 try:
     from phonopy import Phonopy
 except ImportError:
-    print "You need to install phonopy."
-    exit(1)
+    print("You need to install phonopy.")
+    sys.exit(1)
 try:
     from phono3py.phonon3 import Phono3py
 except ImportError:
-    print "You need to install phono3py."
-    exit(1)
+    print("You need to install phono3py.")
+    sys.exit(1)
 
 from phonopy.structure.atoms import Atoms
 from phonopy.file_IO import write_FORCE_SETS
@@ -117,8 +118,8 @@ class PhononFC3Base(TaskElement):
 
     def begin(self):
         if not self._job:
-            print "set_job has to be executed."
-            raise
+            print("set_job has to be executed.")
+            raise RuntimeError
 
         if self._is_cell_relaxed:
             self._phonon_fc3_tasks = [None]

@@ -40,8 +40,8 @@ import numpy as np
 try:
     import yaml
 except ImportError:
-    print "You need to install python-yaml."
-    exit(1)
+    print("You need to install python-yaml.")
+    sys.exit(1)
     
 try:
     from yaml import CLoader as Loader
@@ -115,7 +115,8 @@ if not options.is_gnuplot:
         from matplotlib import rc
         rc('text', usetex=True)
 
-colors = ['b-', 'g-', 'r-', 'c-', 'm-', 'y-', 'k-', 'b--', 'g--', 'r--', 'c--', 'm--', 'y--', 'k--']
+colors = ['b-', 'g-', 'r-', 'c-', 'm-', 'y-', 'k-',
+          'b--', 'g--', 'r--', 'c--', 'm--', 'y--', 'k--']
 if options.is_points:
     colors = [x + 'o' for x in colors]
 
@@ -127,7 +128,7 @@ else:
     filenames = args
 
 if options.is_gnuplot:
-    print "# distance  eigenvalue (bands are separated by blank lines)"
+    print("# distance  eigenvalue (bands are separated by blank lines)")
 
 for i, filename in enumerate(filenames):
     string = open(filename).read()
@@ -135,10 +136,11 @@ for i, filename in enumerate(filenames):
     distances, eigenvalues, segment_positions = get_plot_data(data)
 
     if options.is_gnuplot:
-        print "# segments:",
+        text = "# segments:"
         for v in segment_positions:
-            print "%10.8f" % v,
-        print "%10.8f" % distances[-1]
+            text += "%10.8f" % v
+        text += "%10.8f" % distances[-1]
+        print(text)
         
     elif options.is_vertial_line and len(filenames) == 1:
         for v in segment_positions[1:]:
@@ -147,8 +149,8 @@ for i, filename in enumerate(filenames):
     for j, eigvals in enumerate(np.array(eigenvalues).T):
         if options.is_gnuplot:
             for d, f in zip(distances, eigvals):
-                print d, f
-            print
+                print("%f %f" % (d, f))
+            print("")
         else:
             if j==0:
                 plt.plot(distances, eigvals, colors[i], label=filename)
@@ -156,7 +158,7 @@ for i, filename in enumerate(filenames):
                 plt.plot(distances, eigvals, colors[i])
 
     if options.is_gnuplot:
-        print
+        print("")
 
     
 if not options.is_gnuplot:
@@ -178,7 +180,7 @@ if not options.is_gnuplot:
             if len(symbols)==len(xticks):
                 plt.xticks(xticks, symbols)
             else:
-                print "Numbers of symbols and band segments don't match."
+                print("Numbers of symbols and band segments don't match.")
                 sys.exit(1)
         else:
             plt.xticks(xticks, [''] * len(xticks))

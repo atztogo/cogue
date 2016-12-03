@@ -8,13 +8,13 @@ if os.path.exists("settings.py"):
     import settings
     
     try:
-        print "Include directories", settings.include_dirs
+        print("Include directories %s" % settings.include_dirs)
         include_dirs = settings.include_dirs
     except NameError:
         include_dirs = []
 
     try:
-        print "Library directories", settings.library_dirs
+        print("Library directories %s" % settings.library_dirs)
         library_dirs = settings.library_dirs
     except NameError:
         library_dirs = []

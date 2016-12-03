@@ -129,7 +129,7 @@ class Job(JobBase):
         JobBase.__init__(self)
 
         if not script:
-            print "Queue script not found"
+            print("Queue script not found.")
             sys.exit(1)
         else:
             self._script = script

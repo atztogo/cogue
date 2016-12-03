@@ -80,7 +80,7 @@ class DensityOfStatesBase(TaskElement):
     def begin(self):
         if not self._job:
             print("set_job has to be executed.")
-            raise
+            raise RuntimeError
 
         if self._is_cell_relaxed:
             self._dos_tasks = [None]

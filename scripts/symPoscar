@@ -68,6 +68,7 @@ spg_type = dataset['international']
 spg_number = dataset['number']
 hall_number = dataset['hall_number']
 hall_symbol = dataset['hall']
+pointgroup = dataset['pointgroup']
 tmat = dataset['transformation_matrix']
 shift = dataset['origin_shift']
 rots = dataset['rotations']
@@ -78,7 +79,11 @@ eqiv_atoms = dataset['equivalent_atoms']
 plat = cell.get_lattice()
 blat = np.dot(plat, tmat)
 
-spg_info = "%s (%d) / %s (%d)" % (spg_type, spg_number, hall_symbol, hall_number)
+spg_info = "%s (%d) / %s (%d) / %s" % (spg_type,
+                                       spg_number,
+                                       hall_symbol,
+                                       hall_number,
+                                       pointgroup)
 if not options.is_bravais:
     print(spg_info)
 

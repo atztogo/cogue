@@ -90,7 +90,7 @@ class LocalQueueBase(QueueBase):
         try:
             import spur
         except ImportError:
-            print "You need to install spur."
+            print("You need to install spur.")
             exit(1)
         
         QueueBase.__init__(self, max_jobs=max_jobs)
@@ -274,7 +274,7 @@ class RemoteQueueBase(QueueBase):
                     
                     time.sleep(10)
                 else:
-                    raise
+                    raise RuntimeError
 
             if shell_done:
                 break

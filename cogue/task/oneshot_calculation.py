@@ -72,8 +72,8 @@ class OneShotCalculation(TaskElement, OneShotCalculationYaml):
     def begin(self):
         if self._traverse is False:
             if self._job is None:
-                print "set_job has to be executed."
-                raise
+                print("set_job has to be executed.")
+                raise RuntimeError
             self._prepare() # When traverse != False, files are not created.
 
         self._status = "begin"

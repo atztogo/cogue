@@ -54,12 +54,12 @@ if __name__ == '__main__':
     import sys
     
     T = 0.4
-    print "Temperature %f K (%f eV)" % (T / Kb, T)
+    print("Temperature %f K (%f eV)" % (T / Kb, T))
 
     vasprun = Vasprunxml(sys.argv[1])
     succeeded = vasprun.parse_eigenvalues()
     eigvals = vasprun.get_eigenvalues()
     kpoints, weights = vasprun.get_kpoints()
     mu = get_chemical_potential(eigvals, weights, T, 16)
-    print "Chemical potential:", mu
-    print "Entropy (T*S):", get_entropy(eigvals, weights, mu, T) * T
+    print("Chemical potential: %f" % mu)
+    print("Entropy (T*S): %f" % get_entropy(eigvals, weights, mu, T) * T)

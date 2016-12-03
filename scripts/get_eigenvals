@@ -28,7 +28,7 @@ for filename in args.filenames:
                     band_gap = e - prev_eig
                     set_band_gap = True
                     
-            print "%10.5f %7.5f" % (e, o)
+            print("%10.5f %7.5f" % (e, o))
             if set_band_gap:
                 VBM = prev_eig
                 CBM = e
@@ -37,9 +37,9 @@ for filename in args.filenames:
             prev_occ = o
             prev_eig = e
 
-        print "# [VBM, CBM]: [%f, %f]" % (VBM, CBM)
-        print "# Band gap:", band_gap
+        print("# [VBM, CBM]: [%f, %f]" % (VBM, CBM))
+        print("# Band gap: %f" % band_gap)
 
     if efermi:
-        print "# Fermi level:", efermi
+        print("# Fermi level: %f" % efermi)
         
