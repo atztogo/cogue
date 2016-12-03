@@ -5,15 +5,20 @@ from cogue.crystal.converter import cell2atoms
 
 try:
     from phonopy import Phonopy
-    from anharmonic.phonon3 import Phono3py
-    from phonopy.structure.atoms import Atoms
-    from phonopy.file_IO import write_FORCE_SETS
-    from phonopy.file_IO import write_disp_yaml
-    from anharmonic.file_IO import write_disp_fc3_yaml
-    from anharmonic.file_IO import write_FORCES_FC3
 except ImportError:
-    print "You need to install phonopy and phono3py."
+    print "You need to install phonopy."
     exit(1)
+try:
+    from phono3py.phonon3 import Phono3py
+except ImportError:
+    print "You need to install phono3py."
+    exit(1)
+
+from phonopy.structure.atoms import Atoms
+from phonopy.file_IO import write_FORCE_SETS
+from phonopy.file_IO import write_disp_yaml
+from phono3py.file_IO import write_disp_fc3_yaml
+from phono3py.file_IO import write_FORCES_FC3
 
 class PhononFC3Base(TaskElement):
     """PhononFC3Base class
