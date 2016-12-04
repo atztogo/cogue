@@ -1,8 +1,5 @@
-Automation system
-==================================
-
-Architecture
--------------
+Architecture of automation
+===========================
 
 Cogue is composed of three objects, task, taskset, and controller
 (``autocalc``). Task corresponds to a calculation. Taskset is a set of

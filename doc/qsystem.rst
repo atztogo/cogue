@@ -1,7 +1,7 @@
 .. _qsystem:
 
-Installation and configure of queueing system
-==============================================
+Installation and configuration of queueing system
+==================================================
 
 Queueing system is one of the most important component of the Cogue
 package. Probably researchers around first-principles calculation are
