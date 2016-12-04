@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Automation system &#8212; cogue 0.1 documentation</title>
+    <title>Architecture of automation &#8212; cogue 0.1 documentation</title>
     
     <link rel="stylesheet" href="_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -31,6 +31,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="top" title="cogue 0.1 documentation" href="index.html" />
+    <link rel="prev" title="VASP interface" href="vasp_interface.html" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
 <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
@@ -65,10 +66,13 @@
      href="index.html">Site <b class="caret"></b></a>
   <ul class="dropdown-menu globaltoc"
       role="menu"
-      aria-labelledby="dLabelGlobalToc"><ul>
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="vasp_interface.html">VASP interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="qsystem.html">Installation and configuration of queueing system</a></li>
+<li class="toctree-l1"><a class="reference internal" href="example.html">Example</a></li>
 <li class="toctree-l1"><a class="reference internal" href="command_line_tool.html">Command line tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="vasp_interface.html">VASP interface</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Architecture of automation</a></li>
 </ul>
 </ul>
 </li>
@@ -82,10 +86,7 @@
   <ul class="dropdown-menu localtoc"
       role="menu"
       aria-labelledby="dLabelLocalToc"><ul>
-<li><a class="reference internal" href="#">Automation system</a><ul>
-<li><a class="reference internal" href="#architecture">Architecture</a></li>
-</ul>
-</li>
+<li><a class="reference internal" href="#">Architecture of automation</a></li>
 </ul>
 </ul>
 </li>
@@ -94,6 +95,10 @@
             
               
                 
+  <li>
+    <a href="vasp_interface.html" title="Previous Chapter: VASP interface"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; VASP interface</span>
+    </a>
+  </li>
               
             
             
@@ -119,16 +124,13 @@
   <div class="row">
     <div class="col-md-12 content">
       
-  <div class="section" id="automation-system">
-<h1>Automation system<a class="headerlink" href="#automation-system" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="architecture">
-<h2>Architecture<a class="headerlink" href="#architecture" title="Permalink to this headline">¶</a></h2>
+  <div class="section" id="architecture-of-automation">
+<h1>Architecture of automation<a class="headerlink" href="#architecture-of-automation" title="Permalink to this headline">¶</a></h1>
 <p>Cogue is composed of three objects, task, taskset, and controller
 (<code class="docutils literal"><span class="pre">autocalc</span></code>). Task corresponds to a calculation. Taskset is a set of
 tasks and tasksets. A series of tasksets can be contained in a
 task. Complicated process is designed by nesting tasks and tasksets.
 Controller handles tasks and tasksets with the help of a queueing system.</p>
-</div>
 </div>
 
 

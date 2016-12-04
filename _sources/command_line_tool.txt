@@ -62,4 +62,4 @@ Crystal viewer
 ``crystalView``
 ^^^^^^^^^^^^^^^^^^^
 
-Crystal structure is visualized.
+Crystal structure is visualized. Mayavi2 is necessary to use this script.
