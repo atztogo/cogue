@@ -20,7 +20,7 @@ In the case of Ubuntu, the installation has be made as follows:
 ::
 
    % sudo apt-get install python-dev python-numpy python-lxml python-yaml python-paramiko python-h5py python-pip 
-   % sudo pip install spur
+   % pip install spur --user
 
 spur.py is an interface for ssh. python-paramiko is used by spur.py.
 Since Ubuntu doesn't contain spur.py deb-package, using pip is

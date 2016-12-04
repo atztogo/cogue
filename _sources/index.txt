@@ -15,7 +15,9 @@ Documentation
 .. toctree::
    :maxdepth: 2
 
-   contents
+   install
+   vasp_interface
+   command_line_tool
 
 Source code repository
 -----------------------
