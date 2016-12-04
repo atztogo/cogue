@@ -17,30 +17,12 @@ Documentation
 
    contents
 
-- `Presentaion slide <https://github.com/atztogo/cogue/blob/gh-pages/cogue-presentation.pdf?raw=true>`_
-
-.. _example_rutile:
-
 Source code repository
 -----------------------
 
 The source code repository is hosted on github.
 
 * https://github.com/atztogo/cogue
-
-Examples
----------
-
-Bulk modulus task on a local machine
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. literalinclude:: ./examples/SnO2-bulkmodulus.py
-
-Phonon task on a remote cluster
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. literalinclude:: ./examples/ZnO-phonon-remote.py
-
 
 About this code
 ------------------
