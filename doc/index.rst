@@ -16,8 +16,11 @@ Documentation
    :maxdepth: 2
 
    install
-   vasp_interface
+   qsystem
+   example
    command_line_tool
+   vasp_interface
+   automation
 
 Source code repository
 -----------------------
