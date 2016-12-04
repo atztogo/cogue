@@ -1,0 +1,15 @@
+To create Cogue code reference in rst,
+
+% sphinx-apidoc -H "Cogue code reference" -f -o . ./lib/python
+
+Then create HTML files by
+
+% make html
+
+HTML files are created under _build/html.
+Copy them to the top directory by
+
+% rsync -av _build/html/ .
+
+Togo
+ 
