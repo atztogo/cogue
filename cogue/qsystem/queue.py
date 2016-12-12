@@ -109,7 +109,7 @@ class LocalQueueBase(QueueBase):
             if task.get_traverse():
                 jobid = None
             else:
-                qsub_out = self._shell_run(
+                qsub_out = self._shell.run(
                     shlex.split(self._qsub_command + " " + "job.sh"),
                     cwd=os.getcwd()).output
                 jobid = self._get_jobid(qsub_out)
