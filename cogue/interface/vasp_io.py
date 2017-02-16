@@ -1070,6 +1070,8 @@ class VasprunxmlExpat:
         self._is_symbols = False
         self._is_basis = False
         self._is_energy = False
+        self._is_k_weights = False
+        self._is_eigenvalues = False
 
         self._is_v = False
         self._is_i = False
@@ -1093,7 +1095,10 @@ class VasprunxmlExpat:
         self._points = None
         self._lattice = None
         self._energies = None
-        self._projectors = []
+        self._k_weights = None
+        self._eigenvalues = None
+        self._eig_state = [0, 0]
+        self._projectors = None
         self._proj_state = [0, 0, 0]
 
         self._p = xml.parsers.expat.ParserCreate()
@@ -1137,6 +1142,12 @@ class VasprunxmlExpat:
     def get_energies(self):
         return np.array(self._all_energies)
 
+    def get_k_weights(self):
+        return self._k_weights
+
+    def get_eigenvalues(self):
+        return self._eigenvalues
+
     def get_projectors(self):
         return self._projectors
 
@@ -1155,7 +1166,8 @@ class VasprunxmlExpat:
         if (self._is_forces or
             self._is_stress or
             self._is_positions or
-            self._is_basis):
+            self._is_basis or
+            self._is_k_weights):
             if name == 'v':
                 self._is_v = True
 
@@ -1168,6 +1180,10 @@ class VasprunxmlExpat:
                 if attrs['name'] == 'stress':
                     self._is_stress = True
                     self._stress = []
+
+                if attrs['name'] == 'weights':
+                    self._is_k_weights = True
+                    self._k_weights = []
 
                 if not self._is_structure:
                     if attrs['name'] == 'positions':
@@ -1215,12 +1231,30 @@ class VasprunxmlExpat:
             if name == 'r':
                 self._is_r = True
 
+        if self._is_eigenvalues:
+            if name == 'set':
+                if 'comment' in attrs.keys():
+                    if 'spin' in attrs['comment']:
+                        self._eigenvalues.append([])
+                        spin_num = int(attrs['comment'].split()[1])
+                        self._eig_state = [spin_num - 1, -1]
+                    if 'kpoint' in attrs['comment']:
+                        self._eigenvalues[self._eig_state[0]].append([])
+                        k_num = int(attrs['comment'].split()[1])
+                        self._eig_state[1] = k_num - 1
+            if name == 'r':
+                self._is_r = True
+
         if name == 'projected':
             self._is_projected = True
+            self._projectors = []
 
         if name == 'eigenvalues':
             if self._is_projected:
                 self._is_proj_eig = True
+            else:
+                self._is_eigenvalues = True
+                self._eigenvalues = []
 
     def _end_element(self, name):
         if name == 'scstep':
@@ -1237,6 +1271,9 @@ class VasprunxmlExpat:
             if self._is_stress:
                 self._is_stress = False
                 self._all_stress.append(self._stress)
+
+            if self._is_k_weights:
+                self._is_k_weights = False
 
             if self._is_positions:
                 self._is_positions = False
@@ -1277,6 +1314,8 @@ class VasprunxmlExpat:
         if name == 'eigenvalues':
             if self._is_projected:
                 self._is_proj_eig = False
+            else:
+                self._is_eigenvalues = False
 
     def _char_data(self, data):
         if self._is_v:
@@ -1296,6 +1335,9 @@ class VasprunxmlExpat:
                 self._lattice.append(
                     [float(x) for x in data.split()])
 
+            if self._is_k_weights:
+                self._k_weights.append(float(data))
+
         if self._is_i:
             if self._is_energy:
                 self._energies.append(float(data.strip()))
@@ -1309,3 +1351,7 @@ class VasprunxmlExpat:
                 s, k, b = self._proj_state
                 vals = [float(x) for x in data.split()]
                 self._projectors[s][k][b].append(vals)
+            elif self._is_eigenvalues:
+                s, k = self._eig_state
+                vals = [float(x) for x in data.split()]
+                self._eigenvalues[s][k].append(vals)
