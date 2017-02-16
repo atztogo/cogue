@@ -1075,9 +1075,12 @@ class VasprunxmlExpat:
         self._is_i = False
         self._is_rc = False
         self._is_c = False
+        self._is_r = False
 
         self._is_scstep = False
         self._is_structure = False
+        self._is_projected = False
+        self._is_proj_eig = False
 
         self._all_forces = []
         self._all_stress = []
@@ -1090,6 +1093,8 @@ class VasprunxmlExpat:
         self._points = None
         self._lattice = None
         self._energies = None
+        self._projectors = []
+        self._proj_state = [0, 0, 0]
 
         self._p = xml.parsers.expat.ParserCreate()
         self._p.buffer_text = True
@@ -1131,6 +1136,9 @@ class VasprunxmlExpat:
 
     def get_energies(self):
         return np.array(self._all_energies)
+
+    def get_projectors(self):
+        return self._projectors
 
     def _start_element(self, name, attrs):
         # Used not to collect energies in <scstep>
@@ -1188,6 +1196,31 @@ class VasprunxmlExpat:
                 if attrs['name'] == 'atoms':
                     self._is_symbols = True
 
+        if self._is_projected and not self._is_proj_eig:
+            if name == 'set':
+                if 'comment' in attrs.keys():
+                    if 'spin' in attrs['comment']:
+                        self._projectors.append([])
+                        spin_num = int(attrs['comment'].replace("spin", ''))
+                        self._proj_state = [spin_num - 1, -1, -1]
+                    if 'kpoint' in attrs['comment']:
+                        self._projectors[self._proj_state[0]].append([])
+                        k_num = int(attrs['comment'].split()[1])
+                        self._proj_state[1:3] = k_num - 1, -1
+                    if 'band' in attrs['comment']:
+                        s, k = self._proj_state[:2]
+                        self._projectors[s][k].append([])
+                        b_num = int(attrs['comment'].split()[1])
+                        self._proj_state[2] = b_num - 1
+            if name == 'r':
+                self._is_r = True
+
+        if name == 'projected':
+            self._is_projected = True
+
+        if name == 'eigenvalues':
+            if self._is_projected:
+                self._is_proj_eig = True
 
     def _end_element(self, name):
         if name == 'scstep':
@@ -1217,7 +1250,6 @@ class VasprunxmlExpat:
             if self._is_symbols:
                 self._is_symbols = False
 
-
         if name == 'energy' and (not self._is_scstep):
             self._is_energy = False
             self._all_energies.append(self._energies)
@@ -1235,6 +1267,16 @@ class VasprunxmlExpat:
 
         if name == 'c':
             self._is_c = False
+
+        if name == 'r':
+            self._is_r = False
+
+        if name == 'projected':
+            self._is_projected = False
+
+        if name == 'eigenvalues':
+            if self._is_projected:
+                self._is_proj_eig = False
 
     def _char_data(self, data):
         if self._is_v:
@@ -1261,3 +1303,9 @@ class VasprunxmlExpat:
         if self._is_c:
             if self._is_symbols:
                 self._symbols.append(str(data.strip()))
+
+        if self._is_r:
+            if self._is_projected and not self._is_proj_eig:
+                s, k, b = self._proj_state
+                vals = [float(x) for x in data.split()]
+                self._projectors[s][k][b].append(vals)
