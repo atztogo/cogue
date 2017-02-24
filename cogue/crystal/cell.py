@@ -1,6 +1,7 @@
 """ """
 import numpy as np
 from cogue.crystal.atom import atomic_symbols, atomic_weights
+import warnings
 
 def symbols2formula(symbols):
     counts = {}
@@ -149,6 +150,10 @@ class Cell:
         else:
             return self._magmoms.copy()
 
+    @property
+    def numbers(self):
+        return self._numbers.copy()
+
     def set_numbers(self, numbers):
         """ """
         self._numbers = np.array(numbers, dtype='intc')
@@ -157,7 +162,8 @@ class Cell:
 
     def get_numbers(self):
         """ """
-        return self._numbers.copy()
+        warnings.warn("get_numbers method is deprecated.", DeprecationWarning)
+        return self.numbers
 
     def copy(self):
         """ """
