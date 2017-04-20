@@ -44,6 +44,9 @@ class OneShotCalculation(TaskElement, OneShotCalculationYaml):
         self._forces = None
         self._stress = None
 
+    def __next__(self):
+        return self.next()
+
     def next(self):
         self._collect()
         self._write_yaml()

@@ -139,6 +139,9 @@ class PhononRelaxBase(TaskElement):
                 self._status == "done" or
                 self._status == "next")
 
+    def __next__(self):
+        return self.next()
+
     def next(self):
         if self._stage == 0:
             task = self._phr_tasks[0]

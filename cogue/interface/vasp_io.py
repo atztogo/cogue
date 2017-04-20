@@ -5,7 +5,10 @@ import xml.parsers.expat
 import xml.etree.cElementTree as etree
 from cogue.crystal.atom import atomic_symbols, atomic_weights
 from cogue.crystal.cell import Cell
-import StringIO
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 
 class VaspCell(Cell):
     def __init__(self,
@@ -691,8 +694,8 @@ class Incar:
 
     def copy(self):
         incar = Incar()
-        for k, v in self._tagvals.iteritems():
-            incar.set_tag(k, v)
+        for k in self._tagvals:
+            incar.set_tag(k, self._tagvals[k])
         return incar
 
     def write(self, filename="INCAR"):
@@ -790,7 +793,7 @@ class Outcar:
             return False
 
 
-class Vasprunxml:
+class Vasprunxml(object):
     def __init__(self, filename="vasprun.xml"):
         self._filename = filename
         self._forces = None
@@ -808,6 +811,8 @@ class Vasprunxml:
         self._epsilon = None
         self._nbands = None
         self._efermi = None
+
+        self._log = ""
 
     def get_forces(self):
         return self._forces
@@ -857,6 +862,12 @@ class Vasprunxml:
     def get_nbands(self):
         return self._nbands
 
+    @property
+    def log(self):
+        log = self._log
+        self._log = ""
+        return log
+
     def parse_calculation(self):
         forces = []
         stress = []
@@ -905,6 +916,7 @@ class Vasprunxml:
             return True
 
         except:
+            self._log += "    [Vasprunxml] Failed parse_calculation\n"
             return False
 
     def parse_parameters(self):
@@ -921,6 +933,7 @@ class Vasprunxml:
                                 self._nbands = int(i.text)
             return True
         except:
+            self._log += "    [Vasprunxml] Failed parse_parameters\n"
             return False
 
     def parse_efermi(self):
@@ -937,6 +950,7 @@ class Vasprunxml:
             self._efermi = efermi
             return True
         except:
+            self._log += "    [Vasprunxml] Failed parse_efermi\n"
             return False
 
     def parse_eigenvalues(self):
@@ -968,6 +982,7 @@ class Vasprunxml:
             return self._parse_kpoints()
 
         except:
+            self._log += "    [Vasprunxml] Failed parse_eigenvalues\n"
             return False
 
     def _parse_kpoints(self):
@@ -994,6 +1009,7 @@ class Vasprunxml:
             return True
 
         except:
+            self._log += "    [Vasprunxml] Failed parse_kpoints\n"
             return False
 
     def _parse_eigenvalues_spin(self, array, eigenvals, occupancies):
@@ -1107,10 +1123,14 @@ class VasprunxmlExpat:
         self._p.EndElementHandler = self._end_element
         self._p.CharacterDataHandler = self._char_data
 
+        self._log = ""
+
     def parse(self):
+        from io import open
         try:
-            self._p.ParseFile(open(self._filename))
+            self._p.ParseFile(open(self._filename, 'rb'))
         except:
+            self._log += "    [VasprunxmlExpat] ParseFile failed.\n"
             return False
         else:
             return True
@@ -1150,6 +1170,12 @@ class VasprunxmlExpat:
 
     def get_projectors(self):
         return self._projectors
+
+    @property
+    def log(self):
+        log = self._log
+        self._log = ""
+        return log
 
     def _start_element(self, name, attrs):
         # Used not to collect energies in <scstep>

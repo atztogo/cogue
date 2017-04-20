@@ -21,6 +21,9 @@ class TaskBase:
     def begin(self):
         pass
 
+    def __next__(self):
+        return self.next()
+
     def next(self):
         raise StopIteration
 
