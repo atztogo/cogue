@@ -163,6 +163,9 @@ class PhononBase(TaskElement, PhononYaml):
                 self._status == "force_collection_failure" or
                 self._status == "next")
 
+    def __next__(self):
+        return self.next()
+
     def next(self):
         if self._stage == 0:
             if self._status == "next":

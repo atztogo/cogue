@@ -137,6 +137,9 @@ class PhononFC3Base(TaskElement):
                 self._status == "next" or
                 self._status == "imaginary_mode")
 
+    def __next__(self):
+        return self.next()
+
     def next(self):
         if self._stage == 0:
             if "next" in self._status:

@@ -142,6 +142,9 @@ class StructureOptimizationBase(TaskElement, StructureOptimizationYaml):
                 self._status == "terminate" or
                 self._status == "max_iteration")
 
+    def __next__(self):
+        return self.next()
+
     def next(self):
         if self._status == "terminate":
             self._stress = None

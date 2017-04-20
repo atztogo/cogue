@@ -133,12 +133,13 @@ class QuasiHarmonicPhononBase(TaskElement, PhononYaml):
             self._set_stage0()
 
     def done(self):
-        return (self._status == "done" or
-                self._status == "terminate" or
-                self._status == "imaginary_modes" or
-                self._status == "phonon_for_gruneisen_failed" or
-                self._status == "strain_estimation_difficulty" or
-                self._status == "next")
+        return self._status in ["done", "terminate", "imaginary_modes",
+                                "phonon_for_gruneisen_failed",
+                                "strain_estimation_difficulty",
+                                "next"]
+
+    def __next__(self):
+        return self.next()
 
     def next(self):
         if self._stage == 0: # Equilibrium
@@ -237,8 +238,8 @@ class QuasiHarmonicPhononBase(TaskElement, PhononYaml):
             for phonon in phonons:
                 if not phonon.set_mesh(self._sampling_mesh,
                                        is_gamma_center=self._is_gamma_center):
-                    self._log += ("Phonon calculation failed in QHA "
-                                  "calculation.\n")
+                    self._log += ("[quasiharmonic_phonon] Harmonic phonon "
+                                  "calculation failed.\n")
                     self._status = "phonon_for_qha_failed"
                     return False
 
@@ -270,6 +271,16 @@ class QuasiHarmonicPhononBase(TaskElement, PhononYaml):
                 qha.write_heat_capacity_P_polyfit()
                 qha.write_gruneisen_temperature()
                 return True
+        else:
+            self._log += (
+                " --------------- quasiharmonic_phonon ---------------\n"
+                " | Phonons for QHA are done. But thermal properties |\n"
+                " | are not calculated because sampling mesh is not  |\n"
+                " | specified.                                       |\n"
+                " ----------------------------------------------------\n")
+            return True
+
+
 
     def _get_quasiharmonic_phonon(self,
                                   energies,
@@ -294,7 +305,8 @@ class QuasiHarmonicPhononBase(TaskElement, PhononYaml):
             if (np.isnan(free_energies).any() or
                 np.isnan(entropies).any() or
                 np.isnan(heat_capacities).any()):
-                self._log += "nan is found in thermal property.\n"
+                self._log += ("[quasiharmonic_phonon]\n"
+                              "nan is found in thermal property.\n")
                 continue
 
             T.append(temperatures)
@@ -304,7 +316,8 @@ class QuasiHarmonicPhononBase(TaskElement, PhononYaml):
             V.append(v)
             U.append(u)
 
-        self._log += "Number of QHA volume points is %d.\n" % len(U)
+        self._log += ("[quasiharmonic_phonon]\n"
+                      "Number of QHA volume points is %d.\n" % len(U))
 
         if len(U) > 4:
             qha = PhonopyQHA(V,
@@ -405,7 +418,8 @@ class QuasiHarmonicPhononBase(TaskElement, PhononYaml):
 
         phonons = [task.get_phonon() for task in self._all_tasks[2:5]]
         if None in phonons:
-            self._log += ("Phonon calculation failed in mode Gruneisen "
+            self._log += ("[quasiharmonic_phonon]\n"
+                          "Phonon calculation failed in mode Gruneisen "
                           "parameter calculation.\n")
             self._status = "phonon_for_gruneisen_failed"
             return []
@@ -413,13 +427,15 @@ class QuasiHarmonicPhononBase(TaskElement, PhononYaml):
         if phonons[0].set_mesh(self._sampling_mesh, self._is_gamma_center):
             self._imaginary_ratio = self._check_imaginary(phonons[0], lattice)
         else:
-            self._log += ("Phonon calculation failed in mode Gruneisen "
+            self._log += ("[quasiharmonic_phonon]\n"
+                          "Phonon calculation failed in mode Gruneisen "
                           "parameter calculation.\n")
             self._status = "phonon_for_gruneisen_failed"
             return []
 
         if self._imaginary_ratio > 0.01:
-            self._log += ("Imaginary modes are found in one point phonon "
+            self._log += ("[quasiharmonic_phonon]\n"
+                          "Imaginary modes are found in one point phonon "
                           "calculation.\n")
             self._status = "imaginary_modes"
             return []
@@ -428,7 +444,8 @@ class QuasiHarmonicPhononBase(TaskElement, PhononYaml):
 
         if not gruneisen.set_mesh(self._sampling_mesh,
                                   is_gamma_center=self._is_gamma_center):
-            self._log += ("Phonon calculation failed in mode Gruneisen "
+            self._log += ("[quasiharmonic_phonon]\n"
+                          "Phonon calculation failed in mode Gruneisen "
                           "parameter calculation.\n")
             self._status = "phonon_for_gruneisen_failed"
             return []
@@ -460,7 +477,8 @@ class QuasiHarmonicPhononBase(TaskElement, PhononYaml):
                                              t_max)
 
         if qha is None:
-            self._log += ("Approximated QHA from mode Grunsein parameter "
+            self._log += ("[quasiharmonic_phonon]\n"
+                          "Approximated QHA from mode Grunsein parameter "
                           "failed.\n")
             self._status = "strain_estimation_difficulty"
             return []

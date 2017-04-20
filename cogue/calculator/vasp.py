@@ -953,6 +953,7 @@ class ElectronicStructure(TaskVasp, ElectronicStructureBase):
                                     'nbands': vxml.get_nbands()}
                 self._status = "done"
             else:
+                self._log += vxml.log
                 self._log += "    Failed to parse vasprun.xml.\n"
                 self._status = "terminate"
 
@@ -1016,7 +1017,7 @@ class StructureOptimizationElement(TaskVasp,
         else:
             vxml = VasprunxmlExpat("vasprun.xml")
             is_success = vxml.parse()
-            
+
             lattice = vxml.get_lattice()   # [num_geomopt, 3, 3]
             points = vxml.get_points()     # [num_geomopt, 3, num_atoms]
             forces = vxml.get_forces()     # [num_geomopt, num_atoms, 3]
@@ -1055,6 +1056,7 @@ class StructureOptimizationElement(TaskVasp,
                     self._forces = forces[max_iter - 3]
                 self._judge(lattice[max_iter - 3], _points)
             else:
+                self._log += vxml.log
                 self._log += "    Failed to parse vasprun.xml.\n"
                 self._current_cell = None
                 self._status = "terminate"

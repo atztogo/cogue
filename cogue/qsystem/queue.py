@@ -51,7 +51,8 @@ class QueueBase:
         for tid in self._tid_queue:
             f_qstat.write("%8d %8s %8s\n" % (tid, 'None', 'Queued'))
             
-        for tid, jobid in self._tid2jobid.iteritems():
+        for tid in self._tid2jobid:
+            jobid = self._tid2jobid[tid]
             if jobid in self._qstatus:
                 f_qstat.write("%8d %8d %8s\n" %
                               (tid, jobid, self._qstatus[jobid]))
