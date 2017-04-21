@@ -42,6 +42,7 @@ class QuasiHarmonicPhononBase(TaskElement, PhononYaml):
                  min_iteration=None,
                  is_cell_relaxed=False,
                  max_num_atoms=None,
+                 first_phonon_index=None,
                  traverse=False):
 
         TaskElement.__init__(self)
@@ -85,6 +86,7 @@ class QuasiHarmonicPhononBase(TaskElement, PhononYaml):
         self._traverse = traverse
         self._is_cell_relaxed = is_cell_relaxed
         self._max_num_atoms = max_num_atoms
+        self._first_phonon_index  = first_phonon_index
         
         self._stage = 0
         self._tasks = None
@@ -392,9 +394,10 @@ class QuasiHarmonicPhononBase(TaskElement, PhononYaml):
         phonons = []
         for i, cell in enumerate(cells):
             phonons.append(
-                self._get_phonon_task(cell,
-                                      "%s-%02d" % (directory, i),
-                                      is_cell_relaxed=is_cell_relaxed))
+                self._get_phonon_task(
+                    cell,
+                    "%s-%02d" % (directory, i + self._first_phonon_index),
+                    is_cell_relaxed=is_cell_relaxed))
 
         return phonons
 

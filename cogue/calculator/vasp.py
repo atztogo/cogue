@@ -501,6 +501,7 @@ def quasiharmonic_phonon(directory="quasiharmonic_phonon",
                          min_iteration=1,
                          is_cell_relaxed=False,
                          max_num_atoms=120,
+                         first_phonon_index=0,
                          traverse=False,
                          cell=None,
                          pseudo_potential_map=None,
@@ -529,6 +530,7 @@ def quasiharmonic_phonon(directory="quasiharmonic_phonon",
                              min_iteration=min_iteration,
                              is_cell_relaxed=is_cell_relaxed,
                              max_num_atoms=max_num_atoms,
+                             first_phonon_index=first_phonon_index,
                              traverse=traverse)
 
     qh.set_configurations(cell=cell,
@@ -1757,6 +1759,7 @@ class QuasiHarmonicPhonon(TaskVasp, TaskVaspQHA, QuasiHarmonicPhononBase):
                  min_iteration=1,
                  is_cell_relaxed=False,
                  max_num_atoms=120,
+                 first_phonon_index=0,
                  traverse=False):
 
         QuasiHarmonicPhononBase.__init__(
@@ -1780,6 +1783,7 @@ class QuasiHarmonicPhonon(TaskVasp, TaskVaspQHA, QuasiHarmonicPhononBase):
             min_iteration=min_iteration,
             is_cell_relaxed=is_cell_relaxed,
             max_num_atoms=max_num_atoms,
+            first_phonon_index=first_phonon_index,
             traverse=traverse)
 
     def _get_bulk_modulus_task(self,
