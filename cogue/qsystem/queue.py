@@ -218,7 +218,8 @@ class RemoteQueueBase(QueueBase):
         remote_dir = "%s/c%05d" % (self._working_dir, tid)
         task_log = task.get_log()
 
-        names = self._shell_run(["/bin/ls"], cwd=remote_dir).output.split()
+        names = [filename.decode('utf-8') for filename in 
+                 self._shell_run(["/bin/ls"], cwd=remote_dir).output.split()]
         self._shell_run(["tar", "cvf", "cogue.tar"] + names, cwd=remote_dir)
 
         for i in range(20):
