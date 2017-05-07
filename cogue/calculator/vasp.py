@@ -14,17 +14,19 @@ from cogue.interface.vasp_io import (change_point_order, read_poscar,
                                      write_poscar, write_potcar, Incar,
                                      write_kpoints, Outcar, Vasprunxml,
                                      VasprunxmlExpat, VaspCell)
-from cogue.task.oneshot_calculation import *
-from cogue.task.structure_optimization import *
-from cogue.task.bulk_modulus import *
-from cogue.task.mode_gruneisen import *
-from cogue.task.phonon import *
-from cogue.task.phonon_fc3 import *
-from cogue.task.phonon_relax import *
-from cogue.task.elastic_constants import *
-from cogue.task.quasiharmonic_phonon import *
-from cogue.task.band_structure import *
-from cogue.task.density_of_states import *
+from cogue.task.oneshot_calculation import (ElectronicStructureBase,
+                                            StructureOptimizationElementBase,
+                                            ElasticConstantsElementBase)
+from cogue.task.structure_optimization import StructureOptimizationBase
+from cogue.task.bulk_modulus import BulkModulusBase
+from cogue.task.mode_gruneisen import ModeGruneisenBase
+from cogue.task.phonon import PhononBase
+from cogue.task.phonon_fc3 import PhononFC3Base
+from cogue.task.phonon_relax import PhononRelaxBase, PhononRelaxElementBase
+from cogue.task.elastic_constants import ElasticConstantsBase
+from cogue.task.quasiharmonic_phonon import QuasiHarmonicPhononBase
+from cogue.task.band_structure import BandStructureBase
+from cogue.task.density_of_states import DensityOfStatesBase
 
 def incar(addgrid=None,
           ediff=None,
@@ -335,6 +337,7 @@ def phonon_fc3(directory="phonon_fc3",
                supercell_matrix=None,
                primitive_matrix=None,
                distance=0.03,
+               is_diagonal=True,
                cutoff_frequency=-0.5,
                lattice_tolerance=0.1,
                force_tolerance=1e-3,
@@ -358,6 +361,7 @@ def phonon_fc3(directory="phonon_fc3",
                     supercell_matrix=supercell_matrix,
                     primitive_matrix=primitive_matrix,
                     distance=distance,
+                    is_diagonal=is_diagonal,
                     lattice_tolerance=lattice_tolerance,
                     force_tolerance=force_tolerance,
                     pressure_target=pressure_target,
@@ -1566,6 +1570,7 @@ class PhononFC3(TaskVasp, TaskVaspPhonon, PhononFC3Base):
                  supercell_matrix=None,
                  primitive_matrix=None,
                  distance=0.03,
+                 is_diagonal=True,
                  cutoff_frequency=-0.5,
                  lattice_tolerance=0.1,
                  force_tolerance=1e-3,
@@ -1584,6 +1589,7 @@ class PhononFC3(TaskVasp, TaskVaspPhonon, PhononFC3Base):
             supercell_matrix=supercell_matrix,
             primitive_matrix=primitive_matrix,
             distance=distance,
+            is_diagonal=is_diagonal,
             cutoff_frequency=cutoff_frequency,
             lattice_tolerance=lattice_tolerance,
             force_tolerance=force_tolerance,
