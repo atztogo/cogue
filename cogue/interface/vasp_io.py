@@ -208,27 +208,28 @@ def read_poscar_yaml(filename="POSCAR.yaml"):
     except ImportError:
         from yaml import Loader, Dumper
 
-    data = yaml.load(open(filename), Loader=Loader)
-    lattice = np.transpose(data['lattice'])
-    points = np.transpose([x['coordinates'] for x in data['points']])
-    symbols = []
-    masses = []
-    for point in data['points']:
-        if 'mass' in point:
-            masses.append(point['mass'])
-        if 'symbol' in point:
-            symbols.append(point['symbol'])
-    if len(masses) != len(data['points']):
-        masses = None
-    if len(symbols) != len(data['points']):
-        symbols = None
-
-    poscar_order = data['poscar_order']
-
-    return Cell(lattice=lattice,
-                points=points,
-                symbols=symbols,
-                masses=masses), poscar_order
+    with open(filename) as f:
+        data = yaml.load(f, Loader=Loader)
+        lattice = np.transpose(data['lattice'])
+        points = np.transpose([x['coordinates'] for x in data['points']])
+        symbols = []
+        masses = []
+        for point in data['points']:
+            if 'mass' in point:
+                masses.append(point['mass'])
+            if 'symbol' in point:
+                symbols.append(point['symbol'])
+        if len(masses) != len(data['points']):
+            masses = None
+        if len(symbols) != len(data['points']):
+            symbols = None
+    
+        poscar_order = data['poscar_order']
+    
+        return Cell(lattice=lattice,
+                    points=points,
+                    symbols=symbols,
+                    masses=masses), poscar_order
 
 def change_point_order(cell, atom_order):
     symbols = [cell.get_symbols()[i] for i in atom_order]
@@ -256,10 +257,11 @@ def get_atom_order_from_poscar_yaml(filename):
     except ImportError:
         from yaml import Loader, Dumper
 
-    data = yaml.load(open(filename), Loader=Loader)
-    poscar_order = data['poscar_order']
-    inverse_order = {(j - 1): i for i, j in enumerate(poscar_order)}
-    return [inverse_order[i] for i in range(len(inverse_order))]
+    with open(filename) as f:
+        data = yaml.load(f, Loader=Loader)
+        poscar_order = data['poscar_order']
+        inverse_order = {(j - 1): i for i, j in enumerate(poscar_order)}
+        return [inverse_order[i] for i in range(len(inverse_order))]
 
 def write_poscar(cell,
                  filename=None,
@@ -289,12 +291,12 @@ def write_potcar(names, filename="POTCAR"):
         print("COGUE_POTCAR_PATH is not set correctly.")
         return False
 
-    w = open(filename, 'w')
-    for i, s in enumerate(names):
-        if i == 0 or not s == names[i - 1]:
-            for line in open("%s/%s" % (potcarpath, s)):
-                w.write(line)
-    w.close()
+    with open(filename, 'w') as w:
+        for i, s in enumerate(names):
+            if i == 0 or not s == names[i - 1]:
+                with open("%s/%s" % (potcarpath, s)) as f:
+                    for line in f:
+                        w.write(line)
 
 def get_enmax_from_potcar(names):
     if 'COGUE_POTCAR_PATH' in os.environ:
@@ -306,9 +308,10 @@ def get_enmax_from_potcar(names):
     enmax = []
     for i, s in enumerate(names):
         if i == 0 or not s == names[i - 1]:
-            for line in open("%s/%s" % (potcarpath, s)):
-                if 'ENMAX' in line:
-                    enmax.append(float(line[11:20]))
+            with open("%s/%s" % (potcarpath, s)) as f:
+                for line in f:
+                    if 'ENMAX' in line:
+                        enmax.append(float(line[11:20]))
     return enmax
 
 class Incar:
@@ -474,6 +477,8 @@ class Incar:
         return self._tagvals['aggac']
 
     def set_algo(self, x):
+        if 'ialgo' in self._tagvals:
+            self._tagvals.pop('ialgo')
         self._tagvals['algo'] = x
 
     def get_algo(self):
@@ -516,6 +521,8 @@ class Incar:
         return self._tagvals['gga']
 
     def set_ialgo(self, x):
+        if 'algo' in self._tagvals:
+            self._tagvals.pop('algo')
         self._tagvals['ialgo'] = x
 
     def get_ialgo(self):
@@ -701,25 +708,23 @@ class Incar:
     def write(self, filename="INCAR"):
         names = self._tagnames
 
-        w = open(filename, 'w')
-        for k in self._tagorder:
-            v = self._tagvals[k]
-            if isinstance(v, bool):
-                if v:
-                    w.write("%10s = .TRUE.\n" % (names[k]))
-                else:
-                    w.write("%10s = .FALSE.\n" % (names[k]))
-            elif isinstance(v, int):
-                w.write("%10s = %d\n" % (names[k], v))
-            elif isinstance(v, float):
-                if v < 1:
-                    w.write("%10s = %e\n" % (names[k], v))
-                else:
-                    w.write("%10s = %f\n" % (names[k], v))
-            elif isinstance(v, str):
-                w.write("%10s = %s\n" % (names[k], v))
-
-        w.close()
+        with open(filename, 'w') as w:
+            for k in self._tagorder:
+                v = self._tagvals[k]
+                if isinstance(v, bool):
+                    if v:
+                        w.write("%10s = .TRUE.\n" % (names[k]))
+                    else:
+                        w.write("%10s = .FALSE.\n" % (names[k]))
+                elif isinstance(v, int):
+                    w.write("%10s = %d\n" % (names[k], v))
+                elif isinstance(v, float):
+                    if v < 1:
+                        w.write("%10s = %e\n" % (names[k], v))
+                    else:
+                        w.write("%10s = %f\n" % (names[k], v))
+                elif isinstance(v, str):
+                    w.write("%10s = %s\n" % (names[k], v))
 
 def write_kpoints(filename="KPOINTS",
                   mesh=None,
@@ -728,31 +733,29 @@ def write_kpoints(filename="KPOINTS",
                   length=None,
                   kpoint=None):
 
-    w = open(filename, 'w')
-    if length:
-        w.write("Automatic mesh\n")
-        w.write("0\n")
-        w.write("Auto\n")
-        w.write("%4d\n" % length)
-    elif kpoint is not None:
-        w.write("Explicit k-point\n")
-        w.write("1\n")
-        w.write("Reciprocal\n")
-        w.write("%10.7f %10.7f %10.7f  1\n" % tuple(kpoint))
-    elif mesh is not None:
-        w.write("Automatic mesh\n")
-        w.write("0\n")
-        if gamma:
-            w.write("Gamma\n")
-        else:
-            w.write("Monkhorst-pack\n")
-        w.write(" %5d %5d %5d\n" % tuple(mesh))
-        if shift == None:
-            w.write("     0.    0.    0.\n")
-        else:
-            w.write(" %5.3f %5.3f %5.3f\n" % tuple(shift))
-
-    w.close()
+    with open(filename, 'w') as w:
+        if length:
+            w.write("Automatic mesh\n")
+            w.write("0\n")
+            w.write("Auto\n")
+            w.write("%4d\n" % length)
+        elif kpoint is not None:
+            w.write("Explicit k-point\n")
+            w.write("1\n")
+            w.write("Reciprocal\n")
+            w.write("%10.7f %10.7f %10.7f  1\n" % tuple(kpoint))
+        elif mesh is not None:
+            w.write("Automatic mesh\n")
+            w.write("0\n")
+            if gamma:
+                w.write("Gamma\n")
+            else:
+                w.write("Monkhorst-pack\n")
+            w.write(" %5d %5d %5d\n" % tuple(mesh))
+            if shift == None:
+                w.write("     0.    0.    0.\n")
+            else:
+                w.write(" %5.3f %5.3f %5.3f\n" % tuple(shift))
 
 class Outcar:
     def __init__(self, filename="OUTCAR"):
@@ -763,34 +766,34 @@ class Outcar:
         return self._elastic_constants
 
     def parse_elastic_constants(self):
-        outcar = open(self._filename)
-        hooked = False
-        for line in outcar:
-            if line.strip() == 'TOTAL ELASTIC MODULI (kBar)':
-                hooked = True
-                break
-
-        if hooked:
-            outcar.next()
-            outcar.next()
-            ec = []
-            for i in range(6):
-                pos = 8
-                line = outcar.next()
-                for j in range(6):
-                    try:
-                        elem = float(line[pos:(pos+12)])
-                    except ValueError:
-                        return False
-
-                    ec.append(elem)
-                    pos += 12
-
-            self._elastic_constants = np.array(np.reshape(ec, (6, 6)),
-                                               dtype='double', order='C')
-            return True
-        else:
-            return False
+        with open(self._filename) as outcar:
+            hooked = False
+            for line in outcar:
+                if line.strip() == 'TOTAL ELASTIC MODULI (kBar)':
+                    hooked = True
+                    break
+    
+            if hooked:
+                outcar.next()
+                outcar.next()
+                ec = []
+                for i in range(6):
+                    pos = 8
+                    line = outcar.next()
+                    for j in range(6):
+                        try:
+                            elem = float(line[pos:(pos+12)])
+                        except ValueError:
+                            return False
+    
+                        ec.append(elem)
+                        pos += 12
+    
+                self._elastic_constants = np.array(np.reshape(ec, (6, 6)),
+                                                   dtype='double', order='C')
+                return True
+            else:
+                return False
 
 
 class Vasprunxml(object):
@@ -1127,13 +1130,14 @@ class VasprunxmlExpat:
 
     def parse(self):
         from io import open
-        try:
-            self._p.ParseFile(open(self._filename, 'rb'))
-        except:
-            self._log += "    [VasprunxmlExpat] ParseFile failed.\n"
-            return False
-        else:
-            return True
+        with open(self._filename, 'rb') as f:
+            try:
+                self._p.ParseFile(f)
+            except:
+                self._log += "    [VasprunxmlExpat] ParseFile failed.\n"
+                return False
+            else:
+                return True
 
     def get_forces(self):
         return np.array(self._all_forces)
