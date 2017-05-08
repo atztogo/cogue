@@ -9,7 +9,7 @@ from cogue.crystal.cell import Cell
 def get_symmetry_dataset(cell, tolerance=1e-5):
     lattice = cell.get_lattice().T
     positions = cell.get_points().T
-    numbers = cell.get_numbers()
+    numbers = cell.numbers
     dataset = spglib.get_symmetry_dataset((lattice, positions, numbers),
                                           symprec=tolerance)
     if dataset is None:
@@ -22,7 +22,7 @@ def get_symmetry_dataset(cell, tolerance=1e-5):
     return dataset
 
 def get_crystallographic_cell(cell, tolerance=1e-5):
-    numbers = cell.get_numbers()
+    numbers = cell.numbers
     (std_lattice,
      std_positions,
      std_numbers) = spglib.refine_cell(
@@ -36,7 +36,7 @@ def get_crystallographic_cell(cell, tolerance=1e-5):
                 masses=std_masses)
 
 def get_primitive_cell(cell, tolerance=1e-5):
-    numbers = cell.get_numbers()
+    numbers = cell.numbers
     (prim_lattice,
      prim_positions,
      prim_numbers) = spglib.find_primitive(

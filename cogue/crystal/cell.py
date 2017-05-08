@@ -105,8 +105,14 @@ class Cell:
         """ """
         self._lattice = np.array(lattice, dtype='double', order='C')
 
+    @property
+    def lattice(self):
+        """ """
+        return self._lattice.copy()
+
     def get_lattice(self):
         """ """
+        warnings.warn("get_lattice method is deprecated.", DeprecationWarning)
         return self._lattice.copy()
 
     def get_volume(self):
