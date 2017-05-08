@@ -46,17 +46,16 @@ class QueueBase:
             job.set_status("preparing")
 
     def write_qstatus(self, name):
-        f_qstat = open("%s.qstat" % name, 'w')
-        f_qstat.write("%8s %8s %8s\n" % ("tid", "jobid", "status"))
-        for tid in self._tid_queue:
-            f_qstat.write("%8d %8s %8s\n" % (tid, 'None', 'Queued'))
-            
-        for tid in self._tid2jobid:
-            jobid = self._tid2jobid[tid]
-            if jobid in self._qstatus:
-                f_qstat.write("%8d %8d %8s\n" %
-                              (tid, jobid, self._qstatus[jobid]))
-        f_qstat.close()
+        with open("%s.qstat" % name, 'w') as f_qstat:
+            f_qstat.write("%8s %8s %8s\n" % ("tid", "jobid", "status"))
+            for tid in self._tid_queue:
+                f_qstat.write("%8d %8s %8s\n" % (tid, 'None', 'Queued'))
+                
+            for tid in self._tid2jobid:
+                jobid = self._tid2jobid[tid]
+                if jobid in self._qstatus:
+                    f_qstat.write("%8d %8d %8s\n" %
+                                  (tid, jobid, self._qstatus[jobid]))
 
     def submit(self):
         """To be implemented in specific queue"""
@@ -174,11 +173,11 @@ class RemoteQueueBase(QueueBase):
                 tar.add(name)
 
         for i in range(20):
-            with open("cogue.tar", "rb") as local_file, \
-                 self._shell.open("%s/%s" % (remote_dir, "cogue.tar"),
-                                  "wb") as remote_file:
-                shutil.copyfileobj(local_file, remote_file)
-                time.sleep(self._sleep_time)
+            with open("cogue.tar", "rb") as local_file:
+                with self._shell.open("%s/%s" % (remote_dir, "cogue.tar"),
+                                      "wb") as remote_file:
+                    shutil.copyfileobj(local_file, remote_file)
+                    time.sleep(self._sleep_time)
 
             shasum_l = check_output(["shasum", "cogue.tar"]).split()[0]
             shasum_r = self._shell_run(["shasum", "cogue.tar"],
@@ -223,11 +222,11 @@ class RemoteQueueBase(QueueBase):
         self._shell_run(["tar", "cvf", "cogue.tar"] + names, cwd=remote_dir)
 
         for i in range(20):
-            with open("cogue.tar", "wb") as local_file, \
-                 self._shell.open("%s/%s" % (remote_dir, "cogue.tar"),
-                                  "rb") as remote_file:
-                shutil.copyfileobj(remote_file, local_file)
-                time.sleep(self._sleep_time)
+            with open("cogue.tar", "wb") as local_file:
+                with self._shell.open("%s/%s" % (remote_dir, "cogue.tar"),
+                                      "rb") as remote_file:
+                    shutil.copyfileobj(remote_file, local_file)
+                    time.sleep(self._sleep_time)
 
             shasum_r = self._shell_run(["shasum", "cogue.tar"],
                                        cwd=remote_dir).output.split()[0]
