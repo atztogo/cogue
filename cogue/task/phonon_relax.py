@@ -457,7 +457,7 @@ class PhononRelaxElementBase(TaskElement):
         # Long cell axis is not multiplied.
         for dimension in self._supercell_dimensions:
             for i, length in enumerate(
-                get_lattice_parameters(prim_cell.get_lattice())):
+                get_lattice_parameters(prim_cell.lattice)):
                 if length * dimension[i] > 20:
                     dimension[i] = 1
 

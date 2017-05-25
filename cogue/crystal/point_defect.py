@@ -9,10 +9,10 @@ class PointDefect(Cell):
 
     def set_cell(self, cell):
         Cell.__init__(self,
-                      lattice=cell.get_lattice(),
+                      lattice=cell.lattice,
                       magmoms=cell.get_magnetic_moments(),
                       masses=cell.get_masses(),
-                      numbers=cell.get_numbers(),
+                      numbers=cell.numbers,
                       points=cell.get_points())
         
     def set_point_vacancy(self, index):

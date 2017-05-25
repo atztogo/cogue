@@ -127,7 +127,7 @@ class ElasticConstantsBase(TaskElement):
             cell = self._ec_tasks[0].get_cell()
 
         if cell:
-            lattice = cell.get_lattice().T
+            lattice = cell.lattice.T
             points = cell.get_points().T
             symbols = cell.get_symbols()
 

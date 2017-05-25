@@ -1,5 +1,6 @@
 import os
 import sys
+import numbers
 import numpy as np
 import xml.parsers.expat
 import xml.etree.cElementTree as etree
@@ -119,7 +120,7 @@ class VaspCell(Cell):
             magmoms = None
 
         Cell.__init__(self,
-                      lattice=self._cell.get_lattice(),
+                      lattice=self._cell.lattice,
                       points=(self._cell.get_points().T)[self._atom_order].T,
                       symbols=symbols,
                       magmoms=magmoms,
@@ -238,7 +239,7 @@ def change_point_order(cell, atom_order):
     else:
         magmoms = None
 
-    return Cell(lattice=cell.get_lattice(),
+    return Cell(lattice=cell.lattice,
                 points=(cell.get_points().T)[atom_order].T,
                 symbols=symbols,
                 magmoms=magmoms,
@@ -331,6 +332,7 @@ class Incar:
                  isif=None,
                  ismear=None,
                  ispin=None,
+                 isym=None,
                  ivdw=None,
                  lcharg=None,
                  lepsilon=None,
@@ -366,6 +368,7 @@ class Incar:
             'isif'    : "ISIF",
             'ismear'  : "ISMEAR",
             'ispin'   : "ISPIN",
+            'isym'    : "ISYM",
             'ivdw'    : "IVDW",
             'lcharg'  : "LCHARG",
             'lepsilon': "LEPSILON",
@@ -401,6 +404,7 @@ class Incar:
             'isif'    : isif,
             'ismear'  : ismear,
             'ispin'   : ispin,
+            'isym'    : isym,
             'ivdw'    : ivdw,
             'lcharg'  : lcharg,
             'lepsilon': lepsilon,
@@ -452,6 +456,7 @@ class Incar:
                           'lcharg',
                           'lepsilon',
                           'npar',
+                          'isym',
                           'symprec']
 
     def clear(self):
@@ -557,6 +562,12 @@ class Incar:
 
     def get_ispin(self):
         return self._tagvals['ispin']
+
+    def set_isym(self, x):
+        self._tagvals['isym'] = x
+
+    def get_isym(self):
+        return self._tagvals['isym']
 
     def set_ivdw(self, x):
         self._tagvals['ivdw'] = x
@@ -732,7 +743,6 @@ def write_kpoints(filename="KPOINTS",
                   gamma=False,
                   length=None,
                   kpoint=None):
-
     with open(filename, 'w') as w:
         if length:
             w.write("Automatic mesh\n")
@@ -740,10 +750,17 @@ def write_kpoints(filename="KPOINTS",
             w.write("Auto\n")
             w.write("%4d\n" % length)
         elif kpoint is not None:
-            w.write("Explicit k-point\n")
-            w.write("1\n")
-            w.write("Reciprocal\n")
-            w.write("%10.7f %10.7f %10.7f  1\n" % tuple(kpoint))
+            if isinstance(kpoint[0], numbers.Number):
+                w.write("Explicit k-point\n")
+                w.write("1\n")
+                w.write("Reciprocal\n")
+                w.write("%10.7f %10.7f %10.7f  1\n" % tuple(kpoint))
+            else:
+                w.write("Automatic mesh\n")
+                w.write("0\n")
+                w.write("Reciprocal\n")
+                for k in kpoint:
+                    w.write("%10.7f %10.7f %10.7f\n" % tuple(k))
         elif mesh is not None:
             w.write("Automatic mesh\n")
             w.write("0\n")

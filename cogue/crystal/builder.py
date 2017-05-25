@@ -9,8 +9,8 @@ class CellBuilder:
         self._symbols = cell.get_symbols()
         self._magmoms = cell.get_magnetic_moments()
         self._masses = cell.get_masses()
-        self._numbers = cell.get_numbers()
-        self._lattice = cell.get_lattice()
+        self._numbers = cell.numbers
+        self._lattice = cell.lattice
         
     def push(self,
              point=None,

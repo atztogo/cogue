@@ -32,7 +32,7 @@ def sort_cell_by_symbols(cell):
     else:
         magmoms = None
 
-    return Cell(lattice=cell.get_lattice(),
+    return Cell(lattice=cell.lattice,
                 points=(cell.get_points().T)[atom_order].T,
                 symbols=[symbols[i] for i in atom_order],
                 magmoms=magmoms,
@@ -40,7 +40,7 @@ def sort_cell_by_symbols(cell):
 
 def get_strained_cells(cell_orig, strains):
     cells = []
-    lattice = cell_orig.get_lattice()
+    lattice = cell_orig.lattice
     for strain in strains:
         cell = cell_orig.copy()
         if isinstance(strain, int) or isinstance(strain, float):

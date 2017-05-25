@@ -413,7 +413,7 @@ class QuasiHarmonicPhononBase(TaskElement, PhononYaml):
         t_min = 0
 
         cell = self.get_cell()
-        lattice = cell.get_lattice()
+        lattice = cell.lattice
 
         if self._sampling_mesh is None:
             self._sampling_mesh = klength2mesh(self._grid_spacing, lattice)

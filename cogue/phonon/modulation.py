@@ -104,7 +104,7 @@ class PhononModulation:
         modulations, supercell = self._phonon.get_modulations_and_supercell()
         self._vectors = [delta.T for delta in modulations]
         self._supercell = atoms2cell(supercell)
-        self._lattice = self._supercell.get_lattice()
+        self._lattice = self._supercell.lattice
         self._lattice_inv = np.linalg.inv(self._lattice)
         self._positions = np.dot(self._lattice, self._supercell.get_points())
 
@@ -128,7 +128,7 @@ class PhononModulation:
         return Cell(lattice=self._lattice,
                     points=points,
                     masses=self._supercell.get_masses(),
-                    numbers=self._supercell.get_numbers())
+                    numbers=self._supercell.numbers)
 
     def _get_normalize_phase_factor(self, modulation):
         u = modulation.flatten()
@@ -413,7 +413,7 @@ class PhononModulationOld:
 
     def _get_cell_with_modulation(self, modulation):
         supercell = self._supercell
-        lattice = supercell.get_lattice()
+        lattice = supercell.lattice
         max_mod = 0.0
         for mod in modulation.T:
             if max_mod < np.linalg.norm(mod):
@@ -428,7 +428,7 @@ class PhononModulationOld:
         return Cell(lattice=lattice,
                     points=points,
                     masses=supercell.get_masses(),
-                    numbers=supercell.get_numbers())
+                    numbers=supercell.numbers)
 
     def _best_argument(self, deltas):
         num_atom = deltas.shape[1] / np.prod(self._modulation_dimension)

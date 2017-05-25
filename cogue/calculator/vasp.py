@@ -4,6 +4,7 @@ __all__ = ['incar', 'electronic_structure', 'structure_optimization',
            'band_structure', 'density_of_states']
 
 import os
+import numbers
 import numpy as np
 import shutil
 from cogue.crystal.cell import Cell
@@ -75,6 +76,7 @@ def electronic_structure(directory="electronic_structure",
                          k_shift=None,
                          k_gamma=None,
                          k_length=None,
+                         k_point=None,
                          incar=None):
 
     es = ElectronicStructure(directory=directory,
@@ -87,6 +89,7 @@ def electronic_structure(directory="electronic_structure",
                           k_shift=k_shift,
                           k_gamma=k_gamma,
                           k_length=k_length,
+                          k_point=k_point,
                           incar=incar)
     es.set_job(job)
 
@@ -112,6 +115,7 @@ def structure_optimization(directory="structure_optimization",
                            k_shift=None,
                            k_gamma=None,
                            k_length=None,
+                           k_point=None,
                            incar=None):
 
     so = StructureOptimization(directory=directory,
@@ -134,6 +138,7 @@ def structure_optimization(directory="structure_optimization",
                           k_shift=k_shift,
                           k_gamma=k_gamma,
                           k_length=k_length,
+                          k_point=k_point,
                           incar=incar)
     so.set_job(job)
 
@@ -158,6 +163,7 @@ def bulk_modulus(directory="bulk_modulus",
                  k_shift=None,
                  k_gamma=None,
                  k_length=None,
+                 k_point=None,
                  incar=None):
 
     bk = BulkModulus(directory=directory,
@@ -179,6 +185,7 @@ def bulk_modulus(directory="bulk_modulus",
                           k_shift=k_shift,
                           k_gamma=k_gamma,
                           k_length=k_length,
+                          k_point=k_point,
                           incar=incar)
     bk.set_job(job)
 
@@ -203,6 +210,7 @@ def band_structure(directory="band_structure",
                    k_shift=None,
                    k_gamma=None,
                    k_length=None,
+                   k_point=None,
                    incar=None):
 
     bs = BandStructure(directory=directory,
@@ -224,6 +232,7 @@ def band_structure(directory="band_structure",
                           k_shift=k_shift,
                           k_gamma=k_gamma,
                           k_length=k_length,
+                          k_point=k_point,
                           incar=incar)
     bs.set_job(job)
 
@@ -248,6 +257,7 @@ def density_of_states(directory="density_of_states",
                       k_shift=None,
                       k_gamma=None,
                       k_length=None,
+                      k_point=None,
                       incar=None):
 
     dos = DensityOfStates(directory=directory,
@@ -269,6 +279,7 @@ def density_of_states(directory="density_of_states",
                            k_shift=k_shift,
                            k_gamma=k_gamma,
                            k_length=k_length,
+                           k_point=k_point,
                            incar=incar)
     dos.set_job(job)
 
@@ -299,6 +310,7 @@ def phonon(directory="phonon",
            k_shift=None,
            k_gamma=None,
            k_length=None,
+           k_point=None,
            incar=None):
 
     ph = Phonon(directory=directory,
@@ -326,6 +338,7 @@ def phonon(directory="phonon",
                           k_shift=k_shift,
                           k_gamma=k_gamma,
                           k_length=k_length,
+                          k_point=k_point,
                           incar=incar)
     ph.set_job(job)
 
@@ -354,6 +367,7 @@ def phonon_fc3(directory="phonon_fc3",
                k_shift=None,
                k_gamma=None,
                k_length=None,
+               k_point=None,
                incar=None):
 
     ph3 = PhononFC3(directory=directory,
@@ -378,6 +392,7 @@ def phonon_fc3(directory="phonon_fc3",
                            k_shift=k_shift,
                            k_gamma=k_gamma,
                            k_length=k_length,
+                           k_point=k_point,
                            incar=incar)
     ph3.set_job(job)
 
@@ -403,6 +418,7 @@ def elastic_constants(directory="elastic_constants",
                       k_shift=None,
                       k_gamma=None,
                       k_length=None,
+                      k_point=None,
                       incar=None):
 
     ec = ElasticConstants(directory=directory,
@@ -423,6 +439,7 @@ def elastic_constants(directory="elastic_constants",
                           k_shift=k_shift,
                           k_gamma=k_gamma,
                           k_length=k_length,
+                          k_point=k_point,
                           incar=incar)
     ec.set_job(job)
 
@@ -454,6 +471,7 @@ def mode_gruneisen(directory="mode_gruneisen",
                    k_shift=None,
                    k_gamma=None,
                    k_length=None,
+                   k_point=None,
                    incar=None):
 
     mg = ModeGruneisen(directory=directory,
@@ -480,6 +498,7 @@ def mode_gruneisen(directory="mode_gruneisen",
                           k_shift=k_shift,
                           k_gamma=k_gamma,
                           k_length=k_length,
+                          k_point=k_point,
                           incar=incar)
     mg.set_job(job)
 
@@ -513,6 +532,7 @@ def quasiharmonic_phonon(directory="quasiharmonic_phonon",
                          k_shift=None,
                          k_gamma=None,
                          k_length=None,
+                         k_point=None,
                          incar=None):
 
     qh = QuasiHarmonicPhonon(directory=directory,
@@ -543,6 +563,7 @@ def quasiharmonic_phonon(directory="quasiharmonic_phonon",
                           k_shift=k_shift,
                           k_gamma=k_gamma,
                           k_length=k_length,
+                          k_point=k_point,
                           incar=incar)
     qh.set_job(job)
 
@@ -571,6 +592,7 @@ def phonon_relax_element(directory="phonon_relax_element",
                          k_shift=None,
                          k_gamma=None,
                          k_length=None,
+                         k_point=None,
                          incar=None):
 
     phre = PhononRelaxElement(directory=directory,
@@ -596,6 +618,7 @@ def phonon_relax_element(directory="phonon_relax_element",
                             k_shift=k_shift,
                             k_gamma=k_gamma,
                             k_length=k_length,
+                            k_point=k_point,
                             incar=incar)
     phre.set_job(job)
 
@@ -626,6 +649,7 @@ def phonon_relax(directory="phonon_relax",
                  k_shift=None,
                  k_gamma=None,
                  k_length=None,
+                 k_point=None,
                  incar=None):
 
     phr = PhononRelax(directory=directory,
@@ -653,6 +677,7 @@ def phonon_relax(directory="phonon_relax",
                            k_shift=k_shift,
                            k_gamma=k_gamma,
                            k_length=k_length,
+                           k_point=k_point,
                            incar=incar)
     phr.set_job(job)
 
@@ -666,9 +691,8 @@ class TaskVasp:
                            k_shift=None,
                            k_gamma=False,
                            k_length=None,
-                           kpoint=None,
+                           k_point=None,
                            incar=None):
-
         if not cell:
             self._cell = None
         else:
@@ -705,13 +729,13 @@ class TaskVasp:
         else:
             self._k_length = k_length
 
-        if isinstance(kpoint, np.ndarray):
-            self._kpoint = list(kpoint)
-        elif isinstance(kpoint, tuple):
-            self._kpiont = list(kpoint)
+        if isinstance(k_point, np.ndarray):
+            self._kpoint = list(k_point)
+        elif isinstance(k_point, tuple):
+            self._kpiont = list(k_point)
         else:
-            self._kpoint = kpoint
-            
+            self._kpoint = k_point
+
         if isinstance(incar, tuple):
             self._incar = list(incar)
         else:
@@ -740,7 +764,7 @@ class TaskVasp:
         write_potcar(ps_set)
 
         if self._k_length: # Overwrite k_mesh if k_length is given.
-            k_mesh = klength2mesh(self._k_length, self._cell.get_lattice())
+            k_mesh = klength2mesh(self._k_length, self._cell.lattice)
             k_gamma = True
             k_shift = [0.0, 0.0, 0.0]
         else:
@@ -793,11 +817,19 @@ class TaskVasp:
             k_length = self._k_length
 
         # kpoint
-        kpoint = self._kpoint
-        if self._kpoint:
-            if np.array(self._kpoint).ndim == 2:
-                kpoint = self._kpoint[index]
-            
+        # kpoint = self._kpoint
+        # if self._kpoint:
+        #     if np.array(self._kpoint).ndim == 2:
+        #         kpoint = self._kpoint[index]
+        if self._kpoint is None:
+            kpoint = None
+        elif isinstance(self._kpoint[0], numbers.Number):
+            kpoint = self._kpoint
+        elif isinstance(self._kpoint, list):
+            kpoint = self._kpoint[index]
+        else: # I don't know this case.
+            kpoint = self._kpoint
+
         # job
         if isinstance(self._job, list):
             job = self._job[index]
@@ -825,6 +857,7 @@ class TaskVasp:
         k_shift = kpoints['shift']
         k_gamma = kpoints['gamma']
         k_length = kpoints['length']
+        k_point = kpoints['kpoint']
 
         if max_iteration is None:
             _max_iteration = self._max_iteration
@@ -867,6 +900,7 @@ class TaskVasp:
             k_shift=k_shift,
             k_gamma=k_gamma,
             k_length=k_length,
+            k_point=k_point,
             incar=incar)
         task.set_job(job.copy("%s-%s" % (job.get_jobname(), directory)))
         return task
@@ -1068,7 +1102,7 @@ class StructureOptimizationElement(TaskVasp,
                 self._status = "terminate"
 
     def _judge(self, lattice_last, points):
-        lattice_init = self._current_cell.get_lattice()
+        lattice_init = self._current_cell.lattice
         vecs2_init = np.diag(np.dot(lattice_init.T, lattice_init))
         vecs2_last = np.diag(np.dot(lattice_last.T, lattice_last))
         d_vecs2_ratio = (vecs2_last - vecs2_init) / vecs2_init
@@ -1094,7 +1128,7 @@ class StructureOptimizationElement(TaskVasp,
                 # structure same as POSCAR. In this case, the third
                 # relaxed structure from the last is used for the new
                 # cell.
-                if (abs(self._current_cell.get_lattice() - lattice_init)
+                if (abs(self._current_cell.lattice - lattice_init)
                     < 1e-12).all():
                     self._current_cell = cell
         else:
@@ -1164,6 +1198,7 @@ class StructureOptimization(TaskVasp, StructureOptimizationBase):
         self._k_mesh = None
         self._k_shift = None
         self._k_gamma = None
+        self._k_point = None
         self._incar = None
 
     def _get_next_task(self, cell):
@@ -1183,6 +1218,7 @@ class StructureOptimization(TaskVasp, StructureOptimizationBase):
             k_shift=self._k_shift,
             k_gamma=self._k_gamma,
             k_length=self._k_length,
+            k_point=self._k_point,
             incar=self._incar.copy())
 
         task.set_job(self._job.copy(
@@ -1308,7 +1344,7 @@ class BandStructure(TaskVasp, BandStructureBase):
             task.set_configurations(
                 cell=cell,
                 pseudo_potential_map=self._pseudo_potential_map,
-                kpoint=kpoint,
+                k_point=kpoint,
                 incar=incar)
             task.set_job(
                 job.copy("%s-%s%d" % (job.get_jobname(), directory, i)))
@@ -1360,6 +1396,7 @@ class DensityOfStates(TaskVasp, DensityOfStatesBase):
         k_shift = kpoints['shift']
         k_gamma = kpoints['gamma']
         k_length = kpoints['length']
+        k_point = kpoints['kpoint']
 
         incar.set_icharg(11)
         incar.set_ibrion(-1)
@@ -1380,6 +1417,7 @@ class DensityOfStates(TaskVasp, DensityOfStatesBase):
             k_shift=k_shift,
             k_gamma=k_gamma,
             k_length=k_length,
+            k_point=k_point,
             incar=incar)
         task.set_job(
             job.copy("%s-%s" % (job.get_jobname(), directory)))
@@ -1418,11 +1456,12 @@ class TaskVaspPhonon:
         k_shift = kpoints['shift']
         k_gamma = kpoints['gamma']
         k_length = kpoints['length']
-
+        k_point = kpoints['kpoint']
+        
         directory = ("disp-%0" + "%d" % digit_number + "d") % disp_number
 
         if k_length:
-            k_mesh = klength2mesh(k_length, cell.get_lattice())
+            k_mesh = klength2mesh(k_length, cell.lattice)
             k_gamma = True
             k_shift = [0.0, 0.0, 0.0]
         
@@ -1444,6 +1483,7 @@ class TaskVaspPhonon:
             k_mesh=k_mesh,
             k_shift=k_shift,
             k_gamma=k_gamma,
+            k_point=k_point,
             incar=incar)
         task.set_job(job.copy("%s-%s" % (job.get_jobname(), directory)))
 
@@ -1499,6 +1539,11 @@ class TaskVaspQHA:
             k_length = self._k_length[1:]
         else:
             k_length = self._k_length
+
+        if isinstance(self._k_point, list):
+            k_point = self._k_point[1:]
+        else:
+            k_point = self._k_point
 
         if isinstance(self._incar, list):
             incar = [x.copy() for x in self._incar[1:]]
@@ -1676,6 +1721,7 @@ class ElasticConstantsElement(TaskVasp, ElasticConstantsElementBase):
         self._k_mesh = None
         self._k_shift = None
         self._k_gamma = None
+        self._k_point = None
         self._incar = None
         self._copy_files = []
         
@@ -1841,6 +1887,11 @@ class QuasiHarmonicPhonon(TaskVasp, TaskVaspQHA, QuasiHarmonicPhononBase):
         else:
             k_length = self._k_length
 
+        if isinstance(self._k_point, list):
+            k_point = self._k_point[:2]
+        else:
+            k_point = self._k_point
+            
         if isinstance(self._incar, list):
             incar = [x.copy() for x in self._incar[:2]]
         else:
@@ -1853,6 +1904,7 @@ class QuasiHarmonicPhonon(TaskVasp, TaskVaspQHA, QuasiHarmonicPhononBase):
             k_shift=k_shift,
             k_gamma=k_gamma,
             k_length=k_length,
+            k_point=k_point,
             incar=incar)
         task.set_job(job)
 
@@ -1928,6 +1980,7 @@ class PhononRelax(TaskVasp, PhononRelaxBase):
             k_shift=self._k_shift,
             k_gamma=self._k_gamma,
             k_length=self._k_length,
+            k_point=self._k_point,
             incar=self._incar)
         task.set_job(self._job)
 
@@ -1960,6 +2013,7 @@ class PhononRelax(TaskVasp, PhononRelaxBase):
             k_shift=self._k_shift,
             k_gamma=self._k_gamma,
             k_length=self._k_length,
+            k_point=self._k_point,
             incar=self._incar)
         task.set_job(self._job)
 
@@ -2030,6 +2084,7 @@ class PhononRelaxElement(TaskVasp, PhononRelaxElementBase):
             k_shift=self._k_shift,
             k_gamma=self._k_gamma,
             k_length=self._k_length,
+            k_point=self._k_point,
             incar=self._incar[1:3])
         task.set_job(self._job)
 

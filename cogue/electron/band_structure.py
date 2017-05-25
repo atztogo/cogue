@@ -9,7 +9,7 @@ class BandStructure:
         self._cell = cell
         self._paths = paths
         self._fermi_energy = fermi_energy
-        self._rec_lattice = np.linalg.inv(cell.get_lattice()).T
+        self._rec_lattice = np.linalg.inv(cell.lattice).T
         self._eigvals = eigenvalues
         self._distances = []
         self._set_distances()

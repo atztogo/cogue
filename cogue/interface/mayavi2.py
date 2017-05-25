@@ -14,8 +14,8 @@ def savefig(filename, size=None):
     mlab.savefig(filename, size=size)
 
 def plot_cell(cell, margin=1e-5, color=(1, 0, 0)):
-    _plot_lattice(cell.get_lattice(), color=color)
-    _plot_axes(cell.get_lattice(), color=color)
+    _plot_lattice(cell.lattice, color=color)
+    _plot_axes(cell.lattice, color=color)
     _plot_atoms(cell, margin=margin)
 
 def _line_plot(m, n, pt, color=None):
@@ -86,7 +86,7 @@ def _plot_atoms(cell, margin=1e-5, shift=[0,0,0], atom_scale=0.4):
     points -= np.floor(points)
     points, symbols = _get_points_with_margin(cell, margin)
 
-    xs, ys, zs = np.dot(cell.get_lattice(), points)
+    xs, ys, zs = np.dot(cell.lattice, points)
     for x, y, z, s in zip(xs, ys, zs, symbols):
         color = tuple(np.array(atomic_jmol_colors[s], dtype=float) / 256)
         mlab.points3d(x, y, z,
@@ -95,7 +95,7 @@ def _plot_atoms(cell, margin=1e-5, shift=[0,0,0], atom_scale=0.4):
                       color=color)
 
 def _get_points_with_margin(cell, margin=1e-5):
-    abc = get_lattice_parameters(cell.get_lattice())
+    abc = get_lattice_parameters(cell.lattice)
     points = cell.get_points()
     points_new = []
     symbols_new = []
