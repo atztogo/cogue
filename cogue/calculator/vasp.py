@@ -730,11 +730,11 @@ class TaskVasp:
             self._k_length = k_length
 
         if isinstance(k_point, np.ndarray):
-            self._kpoint = list(k_point)
+            self._k_point = list(k_point)
         elif isinstance(k_point, tuple):
-            self._kpiont = list(k_point)
+            self._k_point = list(k_point)
         else:
-            self._kpoint = k_point
+            self._k_point = k_point
 
         if isinstance(incar, tuple):
             self._incar = list(incar)
@@ -775,7 +775,7 @@ class TaskVasp:
         write_kpoints(mesh=k_mesh,
                       shift=k_shift,
                       gamma=k_gamma,
-                      kpoint=self._kpoint)
+                      kpoint=self._k_point)
         self._incar.write()
 
         for (fsrc, fdst) in self._copy_files:
@@ -817,18 +817,18 @@ class TaskVasp:
             k_length = self._k_length
 
         # kpoint
-        # kpoint = self._kpoint
-        # if self._kpoint:
-        #     if np.array(self._kpoint).ndim == 2:
-        #         kpoint = self._kpoint[index]
-        if self._kpoint is None:
+        # kpoint = self._k_point
+        # if self._k_point:
+        #     if np.array(self._k_point).ndim == 2:
+        #         kpoint = self._k_point[index]
+        if self._k_point is None:
             kpoint = None
-        elif isinstance(self._kpoint[0], numbers.Number):
-            kpoint = self._kpoint
-        elif isinstance(self._kpoint, list):
-            kpoint = self._kpoint[index]
+        elif isinstance(self._k_point[0], numbers.Number):
+            kpoint = self._k_point
+        elif isinstance(self._k_point, list):
+            kpoint = self._k_point[index]
         else: # I don't know this case.
-            kpoint = self._kpoint
+            kpoint = self._k_point
 
         # job
         if isinstance(self._job, list):
