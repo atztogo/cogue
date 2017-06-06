@@ -816,19 +816,15 @@ class TaskVasp:
         else:
             k_length = self._k_length
 
-        # kpoint
-        # kpoint = self._k_point
-        # if self._k_point:
-        #     if np.array(self._k_point).ndim == 2:
-        #         kpoint = self._k_point[index]
+        # k_point
         if self._k_point is None:
-            kpoint = None
+            k_point = None
         elif isinstance(self._k_point[0], numbers.Number):
-            kpoint = self._k_point
+            k_point = self._k_point
         elif isinstance(self._k_point, list):
-            kpoint = self._k_point[index]
+            k_point = self._k_point[index]
         else: # I don't know this case.
-            kpoint = self._k_point
+            k_point = self._k_point
 
         # job
         if isinstance(self._job, list):
@@ -840,7 +836,7 @@ class TaskVasp:
                             'shift': k_shift,
                             'gamma': k_gamma,
                             'length': k_length,
-                            'kpoint': kpoint}
+                            'kpoint': k_point}
 
     def _get_equilibrium_task(self,
                               index=0,
@@ -1426,6 +1422,18 @@ class DensityOfStates(TaskVasp, DensityOfStatesBase):
         return task
         
 class TaskVaspPhonon:
+    """Phonon calculation configuration class
+
+    Normally the configurations are stored in a list. Each index is
+    fixed for specific type of calculation in the task list.
+    
+    index:
+        0: Structure optimization
+        1: Displacement. For job configuration, if this is a list and k_mesh is
+           Gamma-only, the second one is used.
+        2: Born effective charge
+
+    """
     def _get_vasp_displacement_tasks(self,
                                      phonon,
                                      start=0,
@@ -1466,15 +1474,13 @@ class TaskVaspPhonon:
             k_shift = [0.0, 0.0, 0.0]
         
         # For Gamma-only VASP, take third element of self._job
-        if isinstance(self._job, list) or isinstance(self._job, tuple):
-            if len(self._job) > 2:
-                if (np.array(k_mesh) == 1).all():
-                    if k_shift:
-                        if (np.abs(k_shift) < 1e-10).all():
-                            job = self._job[2]
-                    else:
-                        job = self._job[2]
-
+        if isinstance(job, list) or isinstance(job, tuple):
+            job_disp = job[0]
+            if (np.array(k_mesh) == 1).all() and k_shift:
+                if (np.abs(k_shift) < 1e-10).all():
+                    job_disp = job[1]
+            job = job_disp
+                    
         task = ElectronicStructure(directory=directory,
                                    traverse=self._traverse)
         task.set_configurations(
@@ -1490,6 +1496,18 @@ class TaskVaspPhonon:
         return task
 
 class TaskVaspQHA:
+    """QHA calculation configuration class
+
+    Normally the configurations are stored in a list. Each index is
+    fixed for specific type of calculation in the task list.
+    
+    index:
+        0: Structure optimization
+        0-1: Mapped to Bulk modulus configuration
+             ISIF=4 is forced for index=1.
+        1-3: Mapped to 0-2 of Phonon configuration
+    
+    """
     def _get_phonon_task(self,
                          cell,
                          directory,
@@ -1514,7 +1532,6 @@ class TaskVaspQHA:
                    for j in self._job[1:]]
         else:
             job = self._job.copy("%s-%s" % (self._job.get_jobname(), directory))
-
 
         k_mesh = self._k_mesh
         if self._k_mesh:
