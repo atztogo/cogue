@@ -119,6 +119,9 @@ class BulkModulusBase(TaskElement, StructureOptimizationYaml):
                 self._status == "max_iteration" or
                 self._status == "next")
 
+    def __next__(self):
+        return self.next()
+
     def next(self):    
         if self._stage == 0:
             if self._status == "next":

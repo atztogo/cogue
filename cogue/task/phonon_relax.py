@@ -139,6 +139,9 @@ class PhononRelaxBase(TaskElement):
                 self._status == "done" or
                 self._status == "next")
 
+    def __next__(self):
+        return self.next()
+
     def next(self):
         if self._stage == 0:
             task = self._phr_tasks[0]
@@ -454,7 +457,7 @@ class PhononRelaxElementBase(TaskElement):
         # Long cell axis is not multiplied.
         for dimension in self._supercell_dimensions:
             for i, length in enumerate(
-                get_lattice_parameters(prim_cell.get_lattice())):
+                get_lattice_parameters(prim_cell.lattice)):
                 if length * dimension[i] > 20:
                     dimension[i] = 1
 

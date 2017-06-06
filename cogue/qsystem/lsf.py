@@ -62,7 +62,7 @@ class Qstat:
         Text of output of 'qjobs'
 
         """
-        qstat_out = self._shell.run(["qjobs"]).output.split('\n')
+        qstat_out = self._shell.run(["qjobs"]).output.split(b'\n')
         self._qstatus = {}
 
         for line in qstat_out[1:]:
@@ -78,7 +78,7 @@ class Qstat:
                         self._qstatus[jobid] = 'Pending'
         
 def _parse_jobid(qsub_out):
-    return int(qsub_out.split()[1].replace("<", "").replace(">", ""))
+    return int(qsub_out.split()[1].replace(b"<", b"").replace(b">", b""))
 
 class LocalQueue(LocalQueueBase,Qstat):
     def __init__(self,

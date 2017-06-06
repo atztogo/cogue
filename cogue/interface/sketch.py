@@ -138,7 +138,7 @@ class Sketch:
 class SketchCell(Sketch):
     def __init__(self, cell, scale=1.0):
         Sketch.__init__(self,
-                        cell.get_lattice(),
+                        cell.lattice,
                         cell.get_points(),
                         cell.get_symbols(),
                         scale=scale)

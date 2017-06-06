@@ -4,17 +4,88 @@
 
 static PyObject * py_xtalcomp(PyObject *self, PyObject *args);
 
-static PyMethodDef functions[] = {
+struct module_state {
+  PyObject *error;
+};
+
+#if PY_MAJOR_VERSION >= 3
+#define GETSTATE(m) ((struct module_state*)PyModule_GetState(m))
+#else
+#define GETSTATE(m) (&_state)
+static struct module_state _state;
+#endif
+
+static PyObject *
+error_out(PyObject *m) {
+  struct module_state *st = GETSTATE(m);
+  PyErr_SetString(st->error, "something bad happened");
+  return NULL;
+}
+
+static PyMethodDef _xtalcomp_methods[] = {
   {"compare", py_xtalcomp, METH_VARARGS, "Dynamical matrix"},
   {NULL, NULL, 0, NULL}
 };
 
-PyMODINIT_FUNC init_xtalcomp(void)
-{
-  Py_InitModule3("_xtalcomp", functions, "C-extension for xtalcomp\n\n...\n");
-  return;
+
+#if PY_MAJOR_VERSION >= 3
+
+static int _xtalcomp_traverse(PyObject *m, visitproc visit, void *arg) {
+  Py_VISIT(GETSTATE(m)->error);
+  return 0;
 }
 
+static int _xtalcomp_clear(PyObject *m) {
+  Py_CLEAR(GETSTATE(m)->error);
+  return 0;
+}
+
+static struct PyModuleDef moduledef = {
+  PyModuleDef_HEAD_INIT,
+  "_xtalcomp",
+  NULL,
+  sizeof(struct module_state),
+  _xtalcomp_methods,
+  NULL,
+  _xtalcomp_traverse,
+  _xtalcomp_clear,
+  NULL
+};
+
+#define INITERROR return NULL
+
+PyObject *
+PyInit__xtalcomp(void)
+
+#else
+#define INITERROR return
+
+  void
+  init_xtalcomp(void)
+#endif
+{
+  struct module_state *st;
+#if PY_MAJOR_VERSION >= 3
+  PyObject *module = PyModule_Create(&moduledef);
+#else
+  PyObject *module = Py_InitModule("_xtalcomp", _xtalcomp_methods);
+#endif
+
+  if (module == NULL)
+    INITERROR;
+
+  st = GETSTATE(module);
+
+  st->error = PyErr_NewException("_xtalcomp.Error", NULL, NULL);
+  if (st->error == NULL) {
+    Py_DECREF(module);
+    INITERROR;
+  }
+
+#if PY_MAJOR_VERSION >= 3
+  return module;
+#endif
+}
 
 static PyObject * py_xtalcomp(PyObject *self, PyObject *args)
 {
@@ -54,5 +125,5 @@ static PyObject * py_xtalcomp(PyObject *self, PyObject *args)
 			tolerance,
 			angle_tolerance);
 	       
-  return PyInt_FromLong((long) result);
+  return PyLong_FromLong((long) result);
 }

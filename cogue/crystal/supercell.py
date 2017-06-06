@@ -27,7 +27,7 @@ def get_supercell(cell, supercell_matrix, tolerance=1e-5):
     return supercell
 
 def get_simple_supercell(multi, cell):
-    lattice = cell.get_lattice()
+    lattice = cell.lattice
     points = cell.get_points()
     masses = cell.get_masses()
     magmoms = cell.get_magnetic_moments()
@@ -90,12 +90,12 @@ def estimate_supercell_matrix(cell,
 
     dataset = get_symmetry_dataset(cell)
     spg_num = dataset['number']
-    num_atoms = len(cell.get_numbers())
-    lengths_orig = get_lattice_parameters(cell.get_lattice())
+    num_atoms = len(cell.numbers)
+    lengths_orig = get_lattice_parameters(cell.lattice)
     lengths = get_lattice_parameters(dataset['std_lattice'])
 
     # assert (np.abs(lengths_orig - lengths) < symprec).all(), \
-    #     "%s\n%s" % (cell.get_lattice(), dataset['std_lattice'])
+    #     "%s\n%s" % (cell.lattice, dataset['std_lattice'])
 
     if spg_num <= 74: # Triclinic, monoclinic, and orthorhombic
         multi = _get_multiplicity_abc(num_atoms, lengths, max_num_atoms)

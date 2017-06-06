@@ -8,7 +8,7 @@ from cogue.crystal.symmetry import (get_symmetry_dataset,
 # Generally usable functions #
 ##############################
 def reduce_points(tmat, cell, tolerance=1e-5):
-    lattice = cell.get_lattice()
+    lattice = cell.lattice
     points_prim = []
     symbols_prim = []
     masses_prim = []
@@ -36,7 +36,7 @@ def reduce_points(tmat, cell, tolerance=1e-5):
             if magmoms != None:
                 magmoms_prim.append(magmoms[i])
 
-    return Cell(lattice=np.dot(cell.get_lattice(), tmat),
+    return Cell(lattice=np.dot(cell.lattice, tmat),
                 points=np.transpose(points_prim),
                 symbols=symbols_prim,
                 magmoms=magmoms_prim,
@@ -108,7 +108,7 @@ def cell2atoms(cell):
     except ImportError:
         print("You need to install phonopy.")
         sys.exit(1)
-    return Atoms(cell=cell.get_lattice().T,
+    return Atoms(cell=cell.lattice.T,
                  scaled_positions=cell.get_points().T,
                  masses=cell.get_masses(),
                  magmoms=cell.get_magnetic_moments(),

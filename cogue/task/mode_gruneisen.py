@@ -110,6 +110,9 @@ class ModeGruneisenBase(TaskElement, PhononYaml):
                 self._status == "terminate" or
                 self._status == "next")
 
+    def __next__(self):
+        return self.next()
+
     def next(self):    
         if self._stage == 0:
             if self._status == "next":
@@ -177,7 +180,7 @@ class ModeGruneisenBase(TaskElement, PhononYaml):
             return np.eye(3) + factor * np.array(strain)
 
     def _get_phonon_tasks(self, cell):
-        lattice = np.dot(self._strain, cell.get_lattice())
+        lattice = np.dot(self._strain, cell.lattice)
         cell_orig = cell.copy()
         cell_orig.set_lattice(np.dot(self._delta_strain_orig, lattice))
         cell_minus = cell.copy()

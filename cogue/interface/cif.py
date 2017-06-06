@@ -5,8 +5,8 @@ from cogue.crystal.utility import get_angles, get_lattice_parameters
 # Cif
 #
 def write_cif_P1(cell, filename=None):
-    a, b, c = get_lattice_parameters(cell.get_lattice())
-    alpha, beta, gamma = get_angles(cell.get_lattice())
+    a, b, c = get_lattice_parameters(cell.lattice)
+    alpha, beta, gamma = get_angles(cell.lattice)
 
     cif = """data_cogue_crystal_converter
 

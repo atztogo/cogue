@@ -1,6 +1,7 @@
 """ """
 import numpy as np
 from cogue.crystal.atom import atomic_symbols, atomic_weights
+import warnings
 
 def symbols2formula(symbols):
     counts = {}
@@ -31,7 +32,7 @@ def sort_cell_by_symbols(cell):
     else:
         magmoms = None
 
-    return Cell(lattice=cell.get_lattice(),
+    return Cell(lattice=cell.lattice,
                 points=(cell.get_points().T)[atom_order].T,
                 symbols=[symbols[i] for i in atom_order],
                 magmoms=magmoms,
@@ -39,7 +40,7 @@ def sort_cell_by_symbols(cell):
 
 def get_strained_cells(cell_orig, strains):
     cells = []
-    lattice = cell_orig.get_lattice()
+    lattice = cell_orig.lattice
     for strain in strains:
         cell = cell_orig.copy()
         if isinstance(strain, int) or isinstance(strain, float):
@@ -104,8 +105,14 @@ class Cell:
         """ """
         self._lattice = np.array(lattice, dtype='double', order='C')
 
+    @property
+    def lattice(self):
+        """ """
+        return self._lattice.copy()
+
     def get_lattice(self):
         """ """
+        warnings.warn("get_lattice method is deprecated.", DeprecationWarning)
         return self._lattice.copy()
 
     def get_volume(self):
@@ -149,6 +156,10 @@ class Cell:
         else:
             return self._magmoms.copy()
 
+    @property
+    def numbers(self):
+        return self._numbers.copy()
+
     def set_numbers(self, numbers):
         """ """
         self._numbers = np.array(numbers, dtype='intc')
@@ -157,7 +168,8 @@ class Cell:
 
     def get_numbers(self):
         """ """
-        return self._numbers.copy()
+        warnings.warn("get_numbers method is deprecated.", DeprecationWarning)
+        return self.numbers
 
     def copy(self):
         """ """

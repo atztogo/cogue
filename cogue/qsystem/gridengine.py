@@ -64,7 +64,7 @@ class Qstat:
         Text of output of 'qstat'
 
         """
-        qstat_out = self._shell.run(["qstat"]).output.split('\n')
+        qstat_out = self._shell.run(["qstat"]).output.split(b'\n')
         self._qstatus = {}
 
         # subprocess.check_out is new in python 2.7

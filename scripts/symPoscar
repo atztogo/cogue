@@ -76,7 +76,7 @@ trans = dataset['translations']
 wyckoffs = dataset['wyckoffs']
 eqiv_atoms = dataset['equivalent_atoms']
 
-plat = cell.get_lattice()
+plat = cell.lattice
 blat = np.dot(plat, tmat)
 
 spg_info = "%s (%d) / %s (%d) / %s" % (spg_type,
@@ -127,8 +127,7 @@ elif options.is_primitive:
         write_to_file(prim_cell, options.output_filename)
     else:
         print("--------------------")
-        tmat = np.dot(np.linalg.inv(cell.get_lattice()),
-                      prim_cell.get_lattice())
+        tmat = np.dot(np.linalg.inv(cell.lattice), prim_cell.lattice)
         for v in tmat:
             print("%6.3f %6.3f %6.3f" % tuple(v))
         print("--------------------")

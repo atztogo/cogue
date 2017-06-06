@@ -96,6 +96,9 @@ class BandStructureBase(TaskElement):
                 self._status == "max_iteration" or
                 self._status == "next")
 
+    def __next__(self):
+        return self.next()
+
     def next(self):
         if self._stage == 0:
             if self._status == "next":
@@ -193,7 +196,7 @@ class BandStructureBase(TaskElement):
             cell = self._bs_tasks[0].get_cell()
 
         if cell:
-            lattice = cell.get_lattice().T
+            lattice = cell.lattice.T
             points = cell.get_points().T
             symbols = cell.get_symbols()
 

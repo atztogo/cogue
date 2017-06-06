@@ -1,11 +1,15 @@
 import os
 import sys
+import numbers
 import numpy as np
 import xml.parsers.expat
 import xml.etree.cElementTree as etree
 from cogue.crystal.atom import atomic_symbols, atomic_weights
 from cogue.crystal.cell import Cell
-import StringIO
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 
 class VaspCell(Cell):
     def __init__(self,
@@ -116,7 +120,7 @@ class VaspCell(Cell):
             magmoms = None
 
         Cell.__init__(self,
-                      lattice=self._cell.get_lattice(),
+                      lattice=self._cell.lattice,
                       points=(self._cell.get_points().T)[self._atom_order].T,
                       symbols=symbols,
                       magmoms=magmoms,
@@ -205,27 +209,28 @@ def read_poscar_yaml(filename="POSCAR.yaml"):
     except ImportError:
         from yaml import Loader, Dumper
 
-    data = yaml.load(open(filename), Loader=Loader)
-    lattice = np.transpose(data['lattice'])
-    points = np.transpose([x['coordinates'] for x in data['points']])
-    symbols = []
-    masses = []
-    for point in data['points']:
-        if 'mass' in point:
-            masses.append(point['mass'])
-        if 'symbol' in point:
-            symbols.append(point['symbol'])
-    if len(masses) != len(data['points']):
-        masses = None
-    if len(symbols) != len(data['points']):
-        symbols = None
-
-    poscar_order = data['poscar_order']
-
-    return Cell(lattice=lattice,
-                points=points,
-                symbols=symbols,
-                masses=masses), poscar_order
+    with open(filename) as f:
+        data = yaml.load(f, Loader=Loader)
+        lattice = np.transpose(data['lattice'])
+        points = np.transpose([x['coordinates'] for x in data['points']])
+        symbols = []
+        masses = []
+        for point in data['points']:
+            if 'mass' in point:
+                masses.append(point['mass'])
+            if 'symbol' in point:
+                symbols.append(point['symbol'])
+        if len(masses) != len(data['points']):
+            masses = None
+        if len(symbols) != len(data['points']):
+            symbols = None
+    
+        poscar_order = data['poscar_order']
+    
+        return Cell(lattice=lattice,
+                    points=points,
+                    symbols=symbols,
+                    masses=masses), poscar_order
 
 def change_point_order(cell, atom_order):
     symbols = [cell.get_symbols()[i] for i in atom_order]
@@ -234,7 +239,7 @@ def change_point_order(cell, atom_order):
     else:
         magmoms = None
 
-    return Cell(lattice=cell.get_lattice(),
+    return Cell(lattice=cell.lattice,
                 points=(cell.get_points().T)[atom_order].T,
                 symbols=symbols,
                 magmoms=magmoms,
@@ -253,10 +258,11 @@ def get_atom_order_from_poscar_yaml(filename):
     except ImportError:
         from yaml import Loader, Dumper
 
-    data = yaml.load(open(filename), Loader=Loader)
-    poscar_order = data['poscar_order']
-    inverse_order = {(j - 1): i for i, j in enumerate(poscar_order)}
-    return [inverse_order[i] for i in range(len(inverse_order))]
+    with open(filename) as f:
+        data = yaml.load(f, Loader=Loader)
+        poscar_order = data['poscar_order']
+        inverse_order = {(j - 1): i for i, j in enumerate(poscar_order)}
+        return [inverse_order[i] for i in range(len(inverse_order))]
 
 def write_poscar(cell,
                  filename=None,
@@ -286,12 +292,12 @@ def write_potcar(names, filename="POTCAR"):
         print("COGUE_POTCAR_PATH is not set correctly.")
         return False
 
-    w = open(filename, 'w')
-    for i, s in enumerate(names):
-        if i == 0 or not s == names[i - 1]:
-            for line in open("%s/%s" % (potcarpath, s)):
-                w.write(line)
-    w.close()
+    with open(filename, 'w') as w:
+        for i, s in enumerate(names):
+            if i == 0 or not s == names[i - 1]:
+                with open("%s/%s" % (potcarpath, s)) as f:
+                    for line in f:
+                        w.write(line)
 
 def get_enmax_from_potcar(names):
     if 'COGUE_POTCAR_PATH' in os.environ:
@@ -303,9 +309,10 @@ def get_enmax_from_potcar(names):
     enmax = []
     for i, s in enumerate(names):
         if i == 0 or not s == names[i - 1]:
-            for line in open("%s/%s" % (potcarpath, s)):
-                if 'ENMAX' in line:
-                    enmax.append(float(line[11:20]))
+            with open("%s/%s" % (potcarpath, s)) as f:
+                for line in f:
+                    if 'ENMAX' in line:
+                        enmax.append(float(line[11:20]))
     return enmax
 
 class Incar:
@@ -325,6 +332,7 @@ class Incar:
                  isif=None,
                  ismear=None,
                  ispin=None,
+                 isym=None,
                  ivdw=None,
                  lcharg=None,
                  lepsilon=None,
@@ -360,6 +368,7 @@ class Incar:
             'isif'    : "ISIF",
             'ismear'  : "ISMEAR",
             'ispin'   : "ISPIN",
+            'isym'    : "ISYM",
             'ivdw'    : "IVDW",
             'lcharg'  : "LCHARG",
             'lepsilon': "LEPSILON",
@@ -395,6 +404,7 @@ class Incar:
             'isif'    : isif,
             'ismear'  : ismear,
             'ispin'   : ispin,
+            'isym'    : isym,
             'ivdw'    : ivdw,
             'lcharg'  : lcharg,
             'lepsilon': lepsilon,
@@ -446,6 +456,7 @@ class Incar:
                           'lcharg',
                           'lepsilon',
                           'npar',
+                          'isym',
                           'symprec']
 
     def clear(self):
@@ -471,6 +482,8 @@ class Incar:
         return self._tagvals['aggac']
 
     def set_algo(self, x):
+        if 'ialgo' in self._tagvals:
+            self._tagvals.pop('ialgo')
         self._tagvals['algo'] = x
 
     def get_algo(self):
@@ -513,6 +526,8 @@ class Incar:
         return self._tagvals['gga']
 
     def set_ialgo(self, x):
+        if 'algo' in self._tagvals:
+            self._tagvals.pop('algo')
         self._tagvals['ialgo'] = x
 
     def get_ialgo(self):
@@ -547,6 +562,12 @@ class Incar:
 
     def get_ispin(self):
         return self._tagvals['ispin']
+
+    def set_isym(self, x):
+        self._tagvals['isym'] = x
+
+    def get_isym(self):
+        return self._tagvals['isym']
 
     def set_ivdw(self, x):
         self._tagvals['ivdw'] = x
@@ -691,32 +712,30 @@ class Incar:
 
     def copy(self):
         incar = Incar()
-        for k, v in self._tagvals.iteritems():
-            incar.set_tag(k, v)
+        for k in self._tagvals:
+            incar.set_tag(k, self._tagvals[k])
         return incar
 
     def write(self, filename="INCAR"):
         names = self._tagnames
 
-        w = open(filename, 'w')
-        for k in self._tagorder:
-            v = self._tagvals[k]
-            if isinstance(v, bool):
-                if v:
-                    w.write("%10s = .TRUE.\n" % (names[k]))
-                else:
-                    w.write("%10s = .FALSE.\n" % (names[k]))
-            elif isinstance(v, int):
-                w.write("%10s = %d\n" % (names[k], v))
-            elif isinstance(v, float):
-                if v < 1:
-                    w.write("%10s = %e\n" % (names[k], v))
-                else:
-                    w.write("%10s = %f\n" % (names[k], v))
-            elif isinstance(v, str):
-                w.write("%10s = %s\n" % (names[k], v))
-
-        w.close()
+        with open(filename, 'w') as w:
+            for k in self._tagorder:
+                v = self._tagvals[k]
+                if isinstance(v, bool):
+                    if v:
+                        w.write("%10s = .TRUE.\n" % (names[k]))
+                    else:
+                        w.write("%10s = .FALSE.\n" % (names[k]))
+                elif isinstance(v, int):
+                    w.write("%10s = %d\n" % (names[k], v))
+                elif isinstance(v, float):
+                    if v < 1:
+                        w.write("%10s = %e\n" % (names[k], v))
+                    else:
+                        w.write("%10s = %f\n" % (names[k], v))
+                elif isinstance(v, str):
+                    w.write("%10s = %s\n" % (names[k], v))
 
 def write_kpoints(filename="KPOINTS",
                   mesh=None,
@@ -724,32 +743,36 @@ def write_kpoints(filename="KPOINTS",
                   gamma=False,
                   length=None,
                   kpoint=None):
-
-    w = open(filename, 'w')
-    if length:
-        w.write("Automatic mesh\n")
-        w.write("0\n")
-        w.write("Auto\n")
-        w.write("%4d\n" % length)
-    elif kpoint is not None:
-        w.write("Explicit k-point\n")
-        w.write("1\n")
-        w.write("Reciprocal\n")
-        w.write("%10.7f %10.7f %10.7f  1\n" % tuple(kpoint))
-    elif mesh is not None:
-        w.write("Automatic mesh\n")
-        w.write("0\n")
-        if gamma:
-            w.write("Gamma\n")
-        else:
-            w.write("Monkhorst-pack\n")
-        w.write(" %5d %5d %5d\n" % tuple(mesh))
-        if shift == None:
-            w.write("     0.    0.    0.\n")
-        else:
-            w.write(" %5.3f %5.3f %5.3f\n" % tuple(shift))
-
-    w.close()
+    with open(filename, 'w') as w:
+        if length:
+            w.write("Automatic mesh\n")
+            w.write("0\n")
+            w.write("Auto\n")
+            w.write("%4d\n" % length)
+        elif kpoint is not None:
+            if isinstance(kpoint[0], numbers.Number):
+                w.write("Explicit k-point\n")
+                w.write("1\n")
+                w.write("Reciprocal\n")
+                w.write("%10.7f %10.7f %10.7f  1\n" % tuple(kpoint))
+            else:
+                w.write("Automatic mesh\n")
+                w.write("0\n")
+                w.write("Reciprocal\n")
+                for k in kpoint:
+                    w.write("%10.7f %10.7f %10.7f\n" % tuple(k))
+        elif mesh is not None:
+            w.write("Automatic mesh\n")
+            w.write("0\n")
+            if gamma:
+                w.write("Gamma\n")
+            else:
+                w.write("Monkhorst-pack\n")
+            w.write(" %5d %5d %5d\n" % tuple(mesh))
+            if shift == None:
+                w.write("     0.    0.    0.\n")
+            else:
+                w.write(" %5.3f %5.3f %5.3f\n" % tuple(shift))
 
 class Outcar:
     def __init__(self, filename="OUTCAR"):
@@ -760,37 +783,37 @@ class Outcar:
         return self._elastic_constants
 
     def parse_elastic_constants(self):
-        outcar = open(self._filename)
-        hooked = False
-        for line in outcar:
-            if line.strip() == 'TOTAL ELASTIC MODULI (kBar)':
-                hooked = True
-                break
+        with open(self._filename) as outcar:
+            hooked = False
+            for line in outcar:
+                if line.strip() == 'TOTAL ELASTIC MODULI (kBar)':
+                    hooked = True
+                    break
+    
+            if hooked:
+                outcar.next()
+                outcar.next()
+                ec = []
+                for i in range(6):
+                    pos = 8
+                    line = outcar.next()
+                    for j in range(6):
+                        try:
+                            elem = float(line[pos:(pos+12)])
+                        except ValueError:
+                            return False
+    
+                        ec.append(elem)
+                        pos += 12
+    
+                self._elastic_constants = np.array(np.reshape(ec, (6, 6)),
+                                                   dtype='double', order='C')
+                return True
+            else:
+                return False
 
-        if hooked:
-            outcar.next()
-            outcar.next()
-            ec = []
-            for i in range(6):
-                pos = 8
-                line = outcar.next()
-                for j in range(6):
-                    try:
-                        elem = float(line[pos:(pos+12)])
-                    except ValueError:
-                        return False
 
-                    ec.append(elem)
-                    pos += 12
-
-            self._elastic_constants = np.array(np.reshape(ec, (6, 6)),
-                                               dtype='double', order='C')
-            return True
-        else:
-            return False
-
-
-class Vasprunxml:
+class Vasprunxml(object):
     def __init__(self, filename="vasprun.xml"):
         self._filename = filename
         self._forces = None
@@ -808,6 +831,8 @@ class Vasprunxml:
         self._epsilon = None
         self._nbands = None
         self._efermi = None
+
+        self._log = ""
 
     def get_forces(self):
         return self._forces
@@ -857,6 +882,12 @@ class Vasprunxml:
     def get_nbands(self):
         return self._nbands
 
+    @property
+    def log(self):
+        log = self._log
+        self._log = ""
+        return log
+
     def parse_calculation(self):
         forces = []
         stress = []
@@ -905,6 +936,7 @@ class Vasprunxml:
             return True
 
         except:
+            self._log += "    [Vasprunxml] Failed parse_calculation\n"
             return False
 
     def parse_parameters(self):
@@ -921,6 +953,7 @@ class Vasprunxml:
                                 self._nbands = int(i.text)
             return True
         except:
+            self._log += "    [Vasprunxml] Failed parse_parameters\n"
             return False
 
     def parse_efermi(self):
@@ -937,6 +970,7 @@ class Vasprunxml:
             self._efermi = efermi
             return True
         except:
+            self._log += "    [Vasprunxml] Failed parse_efermi\n"
             return False
 
     def parse_eigenvalues(self):
@@ -968,6 +1002,7 @@ class Vasprunxml:
             return self._parse_kpoints()
 
         except:
+            self._log += "    [Vasprunxml] Failed parse_eigenvalues\n"
             return False
 
     def _parse_kpoints(self):
@@ -994,6 +1029,7 @@ class Vasprunxml:
             return True
 
         except:
+            self._log += "    [Vasprunxml] Failed parse_kpoints\n"
             return False
 
     def _parse_eigenvalues_spin(self, array, eigenvals, occupancies):
@@ -1070,14 +1106,19 @@ class VasprunxmlExpat:
         self._is_symbols = False
         self._is_basis = False
         self._is_energy = False
+        self._is_k_weights = False
+        self._is_eigenvalues = False
 
         self._is_v = False
         self._is_i = False
         self._is_rc = False
         self._is_c = False
+        self._is_r = False
 
         self._is_scstep = False
         self._is_structure = False
+        self._is_projected = False
+        self._is_proj_eig = False
 
         self._all_forces = []
         self._all_stress = []
@@ -1090,6 +1131,11 @@ class VasprunxmlExpat:
         self._points = None
         self._lattice = None
         self._energies = None
+        self._k_weights = None
+        self._eigenvalues = None
+        self._eig_state = [0, 0]
+        self._projectors = None
+        self._proj_state = [0, 0, 0]
 
         self._p = xml.parsers.expat.ParserCreate()
         self._p.buffer_text = True
@@ -1097,13 +1143,18 @@ class VasprunxmlExpat:
         self._p.EndElementHandler = self._end_element
         self._p.CharacterDataHandler = self._char_data
 
+        self._log = ""
+
     def parse(self):
-        try:
-            self._p.ParseFile(open(self._filename))
-        except:
-            return False
-        else:
-            return True
+        from io import open
+        with open(self._filename, 'rb') as f:
+            try:
+                self._p.ParseFile(f)
+            except:
+                self._log += "    [VasprunxmlExpat] ParseFile failed.\n"
+                return False
+            else:
+                return True
 
     def get_forces(self):
         return np.array(self._all_forces)
@@ -1132,6 +1183,21 @@ class VasprunxmlExpat:
     def get_energies(self):
         return np.array(self._all_energies)
 
+    def get_k_weights(self):
+        return self._k_weights
+
+    def get_eigenvalues(self):
+        return self._eigenvalues
+
+    def get_projectors(self):
+        return self._projectors
+
+    @property
+    def log(self):
+        log = self._log
+        self._log = ""
+        return log
+
     def _start_element(self, name, attrs):
         # Used not to collect energies in <scstep>
         if name == 'scstep':
@@ -1147,7 +1213,8 @@ class VasprunxmlExpat:
         if (self._is_forces or
             self._is_stress or
             self._is_positions or
-            self._is_basis):
+            self._is_basis or
+            self._is_k_weights):
             if name == 'v':
                 self._is_v = True
 
@@ -1160,6 +1227,10 @@ class VasprunxmlExpat:
                 if attrs['name'] == 'stress':
                     self._is_stress = True
                     self._stress = []
+
+                if attrs['name'] == 'weights':
+                    self._is_k_weights = True
+                    self._k_weights = []
 
                 if not self._is_structure:
                     if attrs['name'] == 'positions':
@@ -1188,6 +1259,49 @@ class VasprunxmlExpat:
                 if attrs['name'] == 'atoms':
                     self._is_symbols = True
 
+        if self._is_projected and not self._is_proj_eig:
+            if name == 'set':
+                if 'comment' in attrs.keys():
+                    if 'spin' in attrs['comment']:
+                        self._projectors.append([])
+                        spin_num = int(attrs['comment'].replace("spin", ''))
+                        self._proj_state = [spin_num - 1, -1, -1]
+                    if 'kpoint' in attrs['comment']:
+                        self._projectors[self._proj_state[0]].append([])
+                        k_num = int(attrs['comment'].split()[1])
+                        self._proj_state[1:3] = k_num - 1, -1
+                    if 'band' in attrs['comment']:
+                        s, k = self._proj_state[:2]
+                        self._projectors[s][k].append([])
+                        b_num = int(attrs['comment'].split()[1])
+                        self._proj_state[2] = b_num - 1
+            if name == 'r':
+                self._is_r = True
+
+        if self._is_eigenvalues:
+            if name == 'set':
+                if 'comment' in attrs.keys():
+                    if 'spin' in attrs['comment']:
+                        self._eigenvalues.append([])
+                        spin_num = int(attrs['comment'].split()[1])
+                        self._eig_state = [spin_num - 1, -1]
+                    if 'kpoint' in attrs['comment']:
+                        self._eigenvalues[self._eig_state[0]].append([])
+                        k_num = int(attrs['comment'].split()[1])
+                        self._eig_state[1] = k_num - 1
+            if name == 'r':
+                self._is_r = True
+
+        if name == 'projected':
+            self._is_projected = True
+            self._projectors = []
+
+        if name == 'eigenvalues':
+            if self._is_projected:
+                self._is_proj_eig = True
+            else:
+                self._is_eigenvalues = True
+                self._eigenvalues = []
 
     def _end_element(self, name):
         if name == 'scstep':
@@ -1205,6 +1319,9 @@ class VasprunxmlExpat:
                 self._is_stress = False
                 self._all_stress.append(self._stress)
 
+            if self._is_k_weights:
+                self._is_k_weights = False
+
             if self._is_positions:
                 self._is_positions = False
                 self._all_points.append(np.transpose(self._points))
@@ -1216,7 +1333,6 @@ class VasprunxmlExpat:
         if name == 'array':
             if self._is_symbols:
                 self._is_symbols = False
-
 
         if name == 'energy' and (not self._is_scstep):
             self._is_energy = False
@@ -1236,6 +1352,18 @@ class VasprunxmlExpat:
         if name == 'c':
             self._is_c = False
 
+        if name == 'r':
+            self._is_r = False
+
+        if name == 'projected':
+            self._is_projected = False
+
+        if name == 'eigenvalues':
+            if self._is_projected:
+                self._is_proj_eig = False
+            else:
+                self._is_eigenvalues = False
+
     def _char_data(self, data):
         if self._is_v:
             if self._is_forces:
@@ -1254,6 +1382,9 @@ class VasprunxmlExpat:
                 self._lattice.append(
                     [float(x) for x in data.split()])
 
+            if self._is_k_weights:
+                self._k_weights.append(float(data))
+
         if self._is_i:
             if self._is_energy:
                 self._energies.append(float(data.strip()))
@@ -1261,3 +1392,13 @@ class VasprunxmlExpat:
         if self._is_c:
             if self._is_symbols:
                 self._symbols.append(str(data.strip()))
+
+        if self._is_r:
+            if self._is_projected and not self._is_proj_eig:
+                s, k, b = self._proj_state
+                vals = [float(x) for x in data.split()]
+                self._projectors[s][k][b].append(vals)
+            elif self._is_eigenvalues:
+                s, k = self._eig_state
+                vals = [float(x) for x in data.split()]
+                self._eigenvalues[s][k].append(vals)

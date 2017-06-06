@@ -4,7 +4,7 @@ from cogue.crystal.utility import get_oriented_lattice
 # V_sim ascii
 #    
 def write_v_sim(cell, filename=None):
-    lat = get_oriented_lattice(cell.get_lattice())
+    lat = get_oriented_lattice(cell.lattice)
     text  = "# cogue generated file\n"
     # text += "%15.9f%15.9f%15.9f\n" % tuple(get_lattice_parameters(lattice))
     # text += "%15.9f%15.9f%15.9f\n" % tuple(get_angles(lattice))

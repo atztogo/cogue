@@ -34,6 +34,7 @@ class PhononFC3Base(TaskElement):
                  supercell_matrix=None,
                  primitive_matrix=None,
                  distance=None,
+                 is_diagonal=True,
                  cutoff_frequency=None,
                  lattice_tolerance=None,
                  force_tolerance=None,
@@ -56,6 +57,7 @@ class PhononFC3Base(TaskElement):
         self._supercell_matrix = supercell_matrix
         self._primitive_matrix = primitive_matrix
         self._distance = distance
+        self._is_diagonal = is_diagonal
         self._cutoff_frequency = cutoff_frequency # determine imaginary freq.
         self._lattice_tolerance = lattice_tolerance
         self._pressure_target = pressure_target
@@ -136,6 +138,9 @@ class PhononFC3Base(TaskElement):
                 self._status == "max_iteration" or
                 self._status == "next" or
                 self._status == "imaginary_mode")
+
+    def __next__(self):
+        return self.next()
 
     def next(self):
         if self._stage == 0:
@@ -255,7 +260,8 @@ class PhononFC3Base(TaskElement):
         self._phonon_fc3 = Phono3py(phonopy_cell,
                                     self._supercell_matrix,
                                     primitive_matrix=self._primitive_matrix)
-        self._phonon_fc3.generate_displacements(distance=self._distance)
+        self._phonon_fc3.generate_displacements(distance=self._distance,
+                                                is_diagonal=self._is_diagonal)
         supercell = self._phonon_fc3.get_supercell()
         disp_dataset = self._phonon_fc3.get_displacement_dataset()
         self._phonon.set_displacement_dataset(disp_dataset)
