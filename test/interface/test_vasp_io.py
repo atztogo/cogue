@@ -1,3 +1,4 @@
+import io
 import unittest
 
 from cogue.interface.vasp_io import (write_poscar, read_poscar_yaml,
@@ -20,7 +21,8 @@ class TestVASPIO(unittest.TestCase):
         print poscar_order
 
     def test_VasprunxmlExpat(self):
-        vxml = VasprunxmlExpat("vasprun-stropt.xml")
+        with io.open(vasprun-stropt.xml, 'rb') as f:
+            vxml = VasprunxmlExpat()
         vxml.parse()
 
         print "VasprunxmlExpat"

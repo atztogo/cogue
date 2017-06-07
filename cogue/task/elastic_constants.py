@@ -121,7 +121,6 @@ class ElasticConstantsBase(TaskElement, ElasticConstantsYaml):
                 self._status = "done"
             elif self._status == "terminate" and self._traverse == "restart":
                 self._traverse = False
-                self._status = "elastic constants"
                 self._set_stage1()
                 return self._tasks
 

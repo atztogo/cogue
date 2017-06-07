@@ -1,9 +1,11 @@
 __all__ = ['incar', 'electronic_structure', 'structure_optimization',
            'bulk_modulus', 'phonon', 'elastic_constants',
-           'mode_gruneisen', 'quasiharmonic_phonon', 'phonon_relax',
+           'born_effective_charge', 'mode_gruneisen',
+           'quasiharmonic_phonon', 'phonon_relax',
            'band_structure', 'density_of_states']
 
 import os
+import io
 import numbers
 import numpy as np
 import shutil
@@ -17,7 +19,8 @@ from cogue.interface.vasp_io import (change_point_order, read_poscar,
                                      VasprunxmlExpat, VaspCell)
 from cogue.task.oneshot_calculation import (ElectronicStructureBase,
                                             StructureOptimizationElementBase,
-                                            ElasticConstantsElementBase)
+                                            ElasticConstantsElementBase,
+                                            BornEffectiveChargeElementBase)
 from cogue.task.structure_optimization import StructureOptimizationBase
 from cogue.task.bulk_modulus import BulkModulusBase
 from cogue.task.mode_gruneisen import ModeGruneisenBase
@@ -25,6 +28,7 @@ from cogue.task.phonon import PhononBase
 from cogue.task.phonon_fc3 import PhononFC3Base
 from cogue.task.phonon_relax import PhononRelaxBase, PhononRelaxElementBase
 from cogue.task.elastic_constants import ElasticConstantsBase
+from cogue.task.born_effective_charge import BornEffectiveChargeBase
 from cogue.task.quasiharmonic_phonon import QuasiHarmonicPhononBase
 from cogue.task.band_structure import BandStructureBase
 from cogue.task.density_of_states import DensityOfStatesBase
@@ -445,7 +449,50 @@ def elastic_constants(directory="elastic_constants",
 
     return ec
 
+def born_effective_charge(directory="born_effective_charge",
+                          name=None,
+                          job=None,
+                          lattice_tolerance=0.1,
+                          force_tolerance=1e-3,
+                          pressure_target=0,
+                          stress_tolerance=10,
+                          max_increase=None,
+                          max_iteration=4,
+                          min_iteration=1,
+                          is_cell_relaxed=False,
+                          traverse=False,
+                          cell=None,
+                          pseudo_potential_map=None,
+                          k_mesh=None,
+                          k_shift=None,
+                          k_gamma=None,
+                          k_length=None,
+                          k_point=None,
+                          incar=None):
 
+    bfc = BornEffectiveCharge(directory=directory,
+                              name=name,
+                              lattice_tolerance=lattice_tolerance,
+                              force_tolerance=force_tolerance,
+                              pressure_target=pressure_target,
+                              stress_tolerance=stress_tolerance,
+                              max_increase=max_increase,
+                              max_iteration=max_iteration,
+                              min_iteration=min_iteration,
+                              is_cell_relaxed=is_cell_relaxed,
+                              traverse=traverse)
+
+    bfc.set_configurations(cell=cell,
+                           pseudo_potential_map=pseudo_potential_map,
+                           k_mesh=k_mesh,
+                           k_shift=k_shift,
+                           k_gamma=k_gamma,
+                           k_length=k_length,
+                           k_point=k_point,
+                           incar=incar)
+    bfc.set_job(job)
+
+    return bfc
 
 def mode_gruneisen(directory="mode_gruneisen",
                    name=None,
@@ -1051,14 +1098,17 @@ class StructureOptimizationElement(TaskVasp,
             self._log += "    vasprun.xml not exists.\n"
             self._status = "terminate"
         else:
-            vxml = VasprunxmlExpat("vasprun.xml")
-            is_success = vxml.parse()
+            with io.open("vasprun.xml", 'rb') as f:
+                vxml = VasprunxmlExpat(f)
+                is_success = vxml.parse()
 
-            lattice = vxml.get_lattice()   # [num_geomopt, 3, 3]
-            points = vxml.get_points()     # [num_geomopt, 3, num_atoms]
-            forces = vxml.get_forces()     # [num_geomopt, num_atoms, 3]
-            stress = vxml.get_stress()     # [num_geomopt, 3, 3]
-            energies = vxml.get_energies() # [num_geomopt, 3]
+            # [num_geomopt, 3, 3]
+            lattice = np.array([lat.T for lat in vxml.get_lattice()])
+            # [num_geomopt, 3, num_atoms]
+            points = np.array([pos.T for pos in vxml.get_points()])
+            forces = vxml.get_forces()       # [num_geomopt, num_atoms, 3]
+            stress = vxml.get_stress()       # [num_geomopt, 3, 3]
+            energies = vxml.get_energies()   # [num_geomopt, 3]
 
             max_iter = len(lattice)
             if len(points) < max_iter:
@@ -1763,6 +1813,100 @@ class ElasticConstantsElement(TaskVasp, ElasticConstantsElementBase):
                 self._log += "    Failed to parse OUTCAR.\n"
                 self._status = "terminate"
 
+class BornEffectiveCharge(TaskVasp, BornEffectiveChargeBase):
+    def __init__(self,
+                 directory="born_effective_charge",
+                 name=None,
+                 lattice_tolerance=0.1,
+                 force_tolerance=1e-3,
+                 pressure_target=0,
+                 stress_tolerance=10,
+                 max_increase=None,
+                 max_iteration=4,
+                 min_iteration=1,
+                 is_cell_relaxed=False,
+                 traverse=False):
+        
+        BornEffectiveChargeBase.__init__(
+            self,
+            directory=directory,
+            name=name,
+            lattice_tolerance=lattice_tolerance,
+            force_tolerance=force_tolerance,
+            pressure_target=pressure_target,
+            stress_tolerance=stress_tolerance,
+            max_increase=max_increase,
+            max_iteration=max_iteration,
+            min_iteration=min_iteration,
+            is_cell_relaxed=is_cell_relaxed,
+            traverse=traverse)
+    
+    def _get_bfc_task(self, cell):
+        job, incar, kpoints = self._choose_configuration(index=1)
+        k_mesh = kpoints['mesh']
+        k_shift = kpoints['shift']
+        k_gamma = kpoints['gamma']
+        k_length = kpoints['length']
+        incar.set_ibrion(-1)
+        incar.set_lepsilon(True)
+
+        directory = "born_effective_charge"
+        task = BornEffectiveChargeElement(directory=directory,
+                                          traverse=self._traverse)
+        task.set_configurations(
+            cell=cell,
+            pseudo_potential_map=self._pseudo_potential_map,
+            k_mesh=k_mesh,
+            k_shift=k_shift,
+            k_gamma=k_gamma,
+            k_length=k_length,
+            incar=incar)
+        task.set_job(job.copy("%s-%s" %
+                              (job.get_jobname(), directory)))
+        return task
+    
+class BornEffectiveChargeElement(TaskVasp, BornEffectiveChargeElementBase):
+    """ """
+    def __init__(self,
+                 directory="elastic_constants",
+                 name=None,
+                 traverse=False):
+
+        ElasticConstantsElementBase.__init__(
+            self,
+            directory=directory,
+            name=name,
+            traverse=traverse)
+
+        self._pseudo_potential_map = None
+        self._k_mesh = None
+        self._k_shift = None
+        self._k_gamma = None
+        self._k_point = None
+        self._incar = None
+        self._copy_files = []
+        
+    def _collect(self):
+        """Collect information from output files of VASP.
+
+        self._status of "done" or "terminate"  is stored.
+        self._log: Terminate log is stored.
+
+        """
+
+        if not os.path.exists("OUTCAR"):
+            self._log += "    OUTCAR not exists.\n"
+            self._status = "terminate"
+        else:
+            outcar = Outcar("OUTCAR")
+            elastic_constants = outcar.get_elastic_constants()
+            if outcar.parse_elastic_constants():
+                self._elastic_constants = outcar.get_elastic_constants()
+                self._status = "done"
+            else:
+                self._log += "    Failed to parse OUTCAR.\n"
+                self._status = "terminate"
+                
 class ModeGruneisen(TaskVasp, TaskVaspQHA, ModeGruneisenBase):
     """Task to calculate mode Gruneisen parameters by VASP."""
     
