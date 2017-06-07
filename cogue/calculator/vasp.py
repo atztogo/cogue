@@ -294,6 +294,7 @@ def phonon(directory="phonon",
            job=None,
            supercell_matrix=None,
            primitive_matrix=None,
+           is_nac=False,
            distance=0.01,
            displace_plusminus='auto',
            displace_diagonal=False,
@@ -321,6 +322,7 @@ def phonon(directory="phonon",
                 name=name,
                 supercell_matrix=supercell_matrix,
                 primitive_matrix=primitive_matrix,
+                is_nac=is_nac,
                 distance=distance,
                 displace_plusminus=displace_plusminus,
                 displace_diagonal=displace_diagonal,
@@ -1545,6 +1547,48 @@ class TaskVaspPhonon:
 
         return task
 
+    def _get_nac_task(self, is_cell_relaxed=True, directory="nac"):
+        task = BornEffectiveCharge(directory="nac",
+                                   lattice_tolerance=self._lattice_tolerance,
+                                   force_tolerance=self._force_tolerance,
+                                   pressure_target=self._pressure_target,
+                                   stress_tolerance=None,
+                                   max_increase=self._max_increase,
+                                   max_iteration=self._max_iteration,
+                                   min_iteration=self._min_iteration,
+                                   is_cell_relaxed=is_cell_relaxed,
+                                   traverse=self._traverse)
+        job, incar, kpoints = self._choose_configuration(index=2)
+        k_mesh = kpoints['mesh']
+        k_shift = kpoints['shift']
+        k_gamma = kpoints['gamma']
+        k_length = kpoints['length']
+        k_point = kpoints['kpoint']
+
+        if not is_cell_relaxed:
+            incar_rx = incar.copy()
+            incar_rx.set_ibrion(2)
+            incar_rx.set_nsw(10)
+            incar_rx.set_isif(2)
+            incar_rx.set_ediffg(-1.0e-8)
+            incar = [incar_rx, incar]
+            job_rx = job.copy(job.get_jobname() + "-rx")
+            job = [job_rx, job]
+        
+        task.set_configurations(
+            cell=self.get_cell(),
+            pseudo_potential_map=self._pseudo_potential_map,
+            k_mesh=k_mesh,
+            k_shift=k_shift,
+            k_gamma=k_gamma,
+            k_length=k_length,
+            k_point=k_point,
+            incar=incar)
+        
+        task.set_job(job)
+
+        return task
+
 class TaskVaspQHA:
     """QHA calculation configuration class
 
@@ -1635,6 +1679,7 @@ class Phonon(TaskVasp, TaskVaspPhonon, PhononBase):
                  name=None,
                  supercell_matrix=None,
                  primitive_matrix=None,
+                 is_nac=False,
                  distance=0.01,
                  displace_plusminus='auto',
                  displace_diagonal=False,
@@ -1656,6 +1701,7 @@ class Phonon(TaskVasp, TaskVaspPhonon, PhononBase):
             name=name,
             supercell_matrix=supercell_matrix,
             primitive_matrix=primitive_matrix,
+            is_nac=is_nac,
             distance=distance,
             displace_plusminus=displace_plusminus,
             displace_diagonal=displace_diagonal,
@@ -1848,7 +1894,7 @@ class BornEffectiveCharge(TaskVasp, BornEffectiveChargeBase):
         k_gamma = kpoints['gamma']
         k_length = kpoints['length']
         incar.set_ibrion(-1)
-        incar.set_nsw(1)
+        incar.set_nsw(None)
         incar.set_lepsilon(True)
 
         directory = "born_effective_charge"

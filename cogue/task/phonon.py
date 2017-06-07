@@ -47,6 +47,7 @@ class PhononBase(TaskElement, PhononYaml):
                  name=None,
                  supercell_matrix=None,
                  primitive_matrix=None,
+                 is_nac=False,
                  distance=None,
                  displace_plusminus='auto',
                  displace_diagonal=False,
@@ -75,6 +76,7 @@ class PhononBase(TaskElement, PhononYaml):
             self._primitive_matrix = np.eye(3, dtype='double')
         else:
             self._primitive_matrix = primitive_matrix
+        self._is_nac = is_nac
         self._distance = distance
         self._displace_plusminus = displace_plusminus
         self._displace_diagonal = displace_diagonal
@@ -180,10 +182,14 @@ class PhononBase(TaskElement, PhononYaml):
                 self._set_stage0()
                 return self._tasks
                 
-        else: # task 1..n: displaced supercells
+        elif self._stage == 1: # task 1..n: displaced supercells
             if self._status == "next":
                 if self._collect_forces():
-                    self._status = "done"
+                    if self._is_nac:
+                        self._set_stage2()
+                        return self._tasks
+                    else:
+                        self._status = "done"
                 else:
                     if self._try_collect_forces:
                         self._status = "displacements"
@@ -206,6 +212,8 @@ class PhononBase(TaskElement, PhononYaml):
                     self._all_tasks[i + 1] = tasks[i]
                 self._status = "displacements"
                 return self._tasks
+        else: # NAC
+            pass
 
         self._tasks = []
         self._write_yaml()
@@ -222,6 +230,12 @@ class PhononBase(TaskElement, PhononYaml):
         self._status = "displacements"
         self._set_phonon()
         self._tasks = self._get_displacement_tasks()
+        self._all_tasks += self._tasks
+
+    def _set_stage2(self):
+        self._stage = 2
+        self._status = "nac"
+        self._tasks = [self._get_nac_task()]
         self._all_tasks += self._tasks
 
     def _collect_forces(self):
