@@ -1,12 +1,26 @@
 from cogue.task import TaskElement
+from cogue.task.structure_optimization import StructureOptimizationYaml
 
-class ElasticConstantsBase(TaskElement):
+class ElasticConstantsYaml(StructureOptimizationYaml):
+    def _get_ec_yaml_lines(self, cell):
+        lines = self._get_structopt_yaml_lines()
+        if self._elastic_constants is not None:
+            lines.append("elastic_constants:")
+            for v in self._elastic_constants:
+                lines.append(
+                    "- [ %12.4f, %12.4f, %12.4f, %12.4f, %12.4f, %12.4f ]"
+                    % tuple(v))
+        if cell:
+            lines += cell.get_yaml_lines()
+
+        return lines
+
+class ElasticConstantsBase(TaskElement, ElasticConstantsYaml):
     """ElasticConstantsBase class
 
     Calculate elastic constants
     1. Structure optimization to obtain equilibrium structure
-    2. Calculate elastic constants by
-    a task that returns elastic constants.
+    2. Calculate elastic constants by a task that returns elastic constants.
 
     """
 
@@ -45,11 +59,18 @@ class ElasticConstantsBase(TaskElement):
         self._tasks = None
 
         self._cell = None
-        self._ec_tasks = None
+        self._all_tasks = None
         self._elastic_constants = None
+        self._energy = None
 
     def get_elastic_constants(self):
         return self._elastic_constants
+
+    def get_cell(self):
+        if self._is_cell_relaxed:
+            return self._cell
+        else:
+            return self._all_tasks[0].get_cell()
 
     def set_status(self):
         done = True
@@ -70,12 +91,10 @@ class ElasticConstantsBase(TaskElement):
             raise RuntimeError
 
         if self._is_cell_relaxed:
-            self._ec_tasks = [None]
-            self._prepare_next(self._cell)
+            self._all_tasks = [None]
+            self._set_stage1()
         else:
-            self._status = "equilibrium"
-            self._ec_tasks = [self._get_equilibrium_task()]
-            self._tasks = [self._ec_tasks[0]]
+            self._set_stage0()
 
     def done(self):
         return (self._status == "done" or
@@ -88,66 +107,49 @@ class ElasticConstantsBase(TaskElement):
     def next(self):
         if self._stage == 0:
             if self._status == "next":
-                self._prepare_next(self._ec_tasks[0].get_cell())
+                self._energy = self._tasks[0].get_energy()
+                self._set_stage1()
+                return self._tasks
+            elif (self._status == "terminate" and self._traverse == "restart"):
+                self._traverse = False
+                self._set_stage0()
                 return self._tasks
         else:
             if self._status == "next":
                 self._elastic_constants = \
-                    self._ec_tasks[1].get_elastic_constants()
+                    self._all_tasks[1].get_elastic_constants()
                 self._status = "done"
+            elif self._status == "terminate" and self._traverse == "restart":
+                self._traverse = False
+                self._status = "elastic constants"
+                self._set_stage1()
+                return self._tasks
 
         self._write_yaml()
         raise StopIteration
 
-    def _prepare_next(self, cell):
+    def _set_stage0(self):
+        self._status = "equilibrium"
+        task = self._get_equilibrium_task()
+        self._all_tasks = [task]
+        self._tasks = [task]
+
+    def _set_stage1(self):
         self._stage = 1
         self._status = "elastic constants"
-        self._ec_tasks.append(self._get_ec_task(cell ))
-        self._tasks = [self._ec_tasks[1]]
-
-    def _write_yaml(self):
-        w = open("%s.yaml" % self._directory, 'w')
-        if self._lattice_tolerance is not None:
-            w.write("lattice_tolerance: %f\n" % self._lattice_tolerance)
-        if self._stress_tolerance is not None:
-            w.write("pressure_target: %f\n" % self._pressure_target)
-            w.write("stress_tolerance: %f\n" % self._stress_tolerance)
-        w.write("force_tolerance: %f\n" % self._force_tolerance)
-        if self._max_increase is None:
-            w.write("max_increase: unset\n")
+        ec_task = self._get_ec_task(self.get_cell())
+        if len(self._all_tasks) == 2:
+            self._all_tasks[1] = ec_task
         else:
-            w.write("max_increase: %f\n" % self._max_increase)
-        w.write("max_iteration: %d\n" % self._max_iteration)
-        if self._ec_tasks[0] is not None:
-            w.write("iteration: %d\n" % self._ec_tasks[0].get_stage())
-        w.write("status: %s\n" % self._status)
-        if self._is_cell_relaxed:
-            cell = self._cell
-        else:
-            cell = self._ec_tasks[0].get_cell()
+            self._all_tasks.append(ec_task)
+        self._tasks = [self._all_tasks[1]]
 
-        if cell:
-            lattice = cell.lattice.T
-            points = cell.get_points().T
-            symbols = cell.get_symbols()
+    def get_yaml_lines(self):
+        lines = TaskElement.get_yaml_lines(self)
+        cell = self.get_cell()
+        lines += self._get_ec_yaml_lines(cell)
+        if self._all_tasks[0] is not None:
+            if self._energy:
+                lines.append("electric_total_energy: %20.10f" % self._energy)
 
-            w.write("lattice:\n")
-            for v, a in zip(lattice, ('a', 'b', 'c')) :
-                w.write("- [ %22.16f, %22.16f, %22.16f ] # %s\n" %
-                        (v[0], v[1], v[2], a))
-
-            w.write("points:\n")
-            for i, v in enumerate(points):
-                w.write("- [ %20.16f, %20.16f, %20.16f ] # %d\n" %
-                        (v[0], v[1], v[2], i + 1))
-
-            w.write("symbols:\n")
-            for i, v in enumerate(symbols):
-                w.write("- %2s # %d\n" % (v, i + 1))
-
-        if self._elastic_constants is not None:
-            w.write("elastic_constants:\n")
-            for v in self._elastic_constants:
-                w.write("- [ %12.4f, %12.4f, %12.4f, %12.4f, %12.4f, %12.4f ]\n"
-                        % tuple(v))
-        w.close()
+        return lines

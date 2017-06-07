@@ -791,12 +791,12 @@ class Outcar:
                     break
     
             if hooked:
-                outcar.next()
-                outcar.next()
+                next(outcar)
+                next(outcar)
                 ec = []
                 for i in range(6):
                     pos = 8
-                    line = outcar.next()
+                    line = next(outcar)
                     for j in range(6):
                         try:
                             elem = float(line[pos:(pos+12)])

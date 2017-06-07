@@ -97,7 +97,7 @@ class PhononBase(TaskElement, PhononYaml):
         self._space_group = None
         self._cell = None
         self._phonon = None # Phonopy object
-        self._all_tasks = None # Phonopy object
+        self._all_tasks = None
 
         self._try_collect_forces = True
 

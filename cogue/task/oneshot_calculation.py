@@ -212,8 +212,45 @@ class ElasticConstantsElementBase(OneShotCalculation):
 
             w.write("elastic_constants:\n")
             for v in self._elastic_constants:
-                w.write("- [ %12.4f, %12.4f, %12.4f, %12.4f, %12.4f, %12.4f ]\n" % tuple(v))
+                w.write("- [ %12.4f, %12.4f, %12.4f, %12.4f, %12.4f, %12.4f ]\n"
+                        % tuple(v))
         w.close()
 
-        
+class BornEffectiveChargeElementBase(OneShotCalculation):
+    def __init__(self,
+                 directory="born_effective_charge_element",
+                 name=None,
+                 traverse=False):
 
+        OneShotCalculation.__init__(self,
+                                    directory=directory,
+                                    name=name,
+                                    traverse=traverse)
+
+        self._task_type = "born_effective_charge_element"
+        self._born = None
+        self._dielectric = None
+
+    def get_born_effective_charge(self):
+        return self._born
+
+    def get_dielectric_constant(self):
+        return self._dielectric
+
+    def _write_yaml(self):
+        w = open("%s.yaml" % self._directory, 'w')
+        w.write("status: %s\n" % self._status)
+        if self._born is not None:
+            if self._cell:
+                for line in self._cell.get_yaml_lines():
+                    w.write(line + "\n")
+
+            w.write("dielectric_constant:\n")
+            for v in self._dielectric:
+                w.write("- [ %12.4f, %12.4f, %12.4f ]\n" % tuple(v))
+            w.write("born_effective_charge:\n")
+            for i, born in enumerate(self._born):
+                w.write("- # %d\n" % (i + 1))
+                for v in born:
+                    w.write("  - [ %12.4f, %12.4f, %12.4f ]\n" % tuple(v))
+        w.close()

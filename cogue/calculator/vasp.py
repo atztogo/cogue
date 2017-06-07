@@ -1473,7 +1473,7 @@ class TaskVaspPhonon:
             k_gamma = True
             k_shift = [0.0, 0.0, 0.0]
         
-        # For Gamma-only VASP, take third element of self._job
+        # For Gamma-only VASP, take secon element of job
         if isinstance(job, list) or isinstance(job, tuple):
             job_disp = job[0]
             if (np.array(k_mesh) == 1).all() and k_shift:
