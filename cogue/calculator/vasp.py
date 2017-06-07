@@ -470,7 +470,7 @@ def born_effective_charge(directory="born_effective_charge",
                           k_point=None,
                           incar=None):
 
-    bfc = BornEffectiveCharge(directory=directory,
+    bec = BornEffectiveCharge(directory=directory,
                               name=name,
                               lattice_tolerance=lattice_tolerance,
                               force_tolerance=force_tolerance,
@@ -482,7 +482,7 @@ def born_effective_charge(directory="born_effective_charge",
                               is_cell_relaxed=is_cell_relaxed,
                               traverse=traverse)
 
-    bfc.set_configurations(cell=cell,
+    bec.set_configurations(cell=cell,
                            pseudo_potential_map=pseudo_potential_map,
                            k_mesh=k_mesh,
                            k_shift=k_shift,
@@ -490,9 +490,9 @@ def born_effective_charge(directory="born_effective_charge",
                            k_length=k_length,
                            k_point=k_point,
                            incar=incar)
-    bfc.set_job(job)
+    bec.set_job(job)
 
-    return bfc
+    return bec
 
 def mode_gruneisen(directory="mode_gruneisen",
                    name=None,
@@ -1841,13 +1841,14 @@ class BornEffectiveCharge(TaskVasp, BornEffectiveChargeBase):
             is_cell_relaxed=is_cell_relaxed,
             traverse=traverse)
     
-    def _get_bfc_task(self, cell):
+    def _get_bec_task(self, cell):
         job, incar, kpoints = self._choose_configuration(index=1)
         k_mesh = kpoints['mesh']
         k_shift = kpoints['shift']
         k_gamma = kpoints['gamma']
         k_length = kpoints['length']
         incar.set_ibrion(-1)
+        incar.set_nsw(1)
         incar.set_lepsilon(True)
 
         directory = "born_effective_charge"
@@ -1868,11 +1869,11 @@ class BornEffectiveCharge(TaskVasp, BornEffectiveChargeBase):
 class BornEffectiveChargeElement(TaskVasp, BornEffectiveChargeElementBase):
     """ """
     def __init__(self,
-                 directory="elastic_constants",
+                 directory="born_effective_charge",
                  name=None,
                  traverse=False):
 
-        ElasticConstantsElementBase.__init__(
+        BornEffectiveChargeElementBase.__init__(
             self,
             directory=directory,
             name=name,
@@ -1887,24 +1888,32 @@ class BornEffectiveChargeElement(TaskVasp, BornEffectiveChargeElementBase):
         self._copy_files = []
         
     def _collect(self):
-        """Collect information from output files of VASP.
+        """Collect information from vasprun.xml
 
         self._status of "done" or "terminate"  is stored.
         self._log: Terminate log is stored.
 
         """
 
-        if not os.path.exists("OUTCAR"):
-            self._log += "    OUTCAR not exists.\n"
+        if not os.path.exists("vasprun.xml"):
+            self._log += "    vasprun.xml not exists.\n"
             self._status = "terminate"
         else:
-            outcar = Outcar("OUTCAR")
-            elastic_constants = outcar.get_elastic_constants()
-            if outcar.parse_elastic_constants():
-                self._elastic_constants = outcar.get_elastic_constants()
+            with io.open("vasprun.xml", 'rb') as f:
+                vxml = VasprunxmlExpat(f)
+                is_success = vxml.parse()
+            if is_success:
+                self._born = vxml.get_born()
+                self._epsilon = vxml.get_epsilon()
+                
+            if (is_success and
+                self._born is not None and
+                self._epsilon is not None):
                 self._status = "done"
             else:
-                self._log += "    Failed to parse OUTCAR.\n"
+                self._log += "    Failed to parse vasprun.xml for\n"
+                self._log += "    Born effective charge and dielectric constant"
+                self._log += ".\n"
                 self._status = "terminate"
                 
 class ModeGruneisen(TaskVasp, TaskVaspQHA, ModeGruneisenBase):

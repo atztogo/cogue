@@ -220,13 +220,13 @@ class BornEffectiveChargeElementBase(OneShotCalculation):
 
         self._task_type = "born_effective_charge_element"
         self._born = None
-        self._dielectric = None
+        self._epsilon = None
 
     def get_born_effective_charge(self):
         return self._born
 
     def get_dielectric_constant(self):
-        return self._dielectric
+        return self._epsilon
 
     def get_yaml_lines(self):
         lines = TaskElement.get_yaml_lines(self)
