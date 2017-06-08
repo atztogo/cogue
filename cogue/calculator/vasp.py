@@ -462,6 +462,7 @@ def born_effective_charge(directory="born_effective_charge",
                           max_iteration=4,
                           min_iteration=1,
                           is_cell_relaxed=False,
+                          symmetry_tolerance=1.0e-5,
                           traverse=False,
                           cell=None,
                           pseudo_potential_map=None,
@@ -482,6 +483,7 @@ def born_effective_charge(directory="born_effective_charge",
                               max_iteration=max_iteration,
                               min_iteration=min_iteration,
                               is_cell_relaxed=is_cell_relaxed,
+                              symmetry_tolerance=symmetry_tolerance,
                               traverse=traverse)
 
     bec.set_configurations(cell=cell,
@@ -1009,9 +1011,9 @@ class ElectronicStructure(TaskVasp, ElectronicStructureBase):
         """
 
         if os.path.exists("POSCAR.yaml"):
-            self._atom_order = get_atom_order_from_poscar_yaml("POSCAR.yaml")
+            atom_order = get_atom_order_from_poscar_yaml("POSCAR.yaml")
         else:
-            self._atom_order = None
+            atom_order = None
 
         if not os.path.exists("vasprun.xml"):
             self._log += "    vasprun.xml not exists.\n"
@@ -1023,8 +1025,8 @@ class ElectronicStructure(TaskVasp, ElectronicStructureBase):
                 vxml.parse_efermi() and
                 vxml.parse_parameters()):
                 kpoints, weights = vxml.get_kpoints()
-                if self._atom_order:
-                    force_sets = vxml.get_forces()[:, self._atom_order, :]
+                if atom_order:
+                    force_sets = vxml.get_forces()[:, atom_order, :]
                 else:
                     force_sets = vxml.get_forces()
                 self._properties = {'stress': vxml.get_stress(),
@@ -1165,7 +1167,8 @@ class StructureOptimizationElement(TaskVasp,
             try:
                 self._current_cell = read_poscar("CONTCAR")
                 if self._atom_order:
-                    self._current_cell = change_point_order(cell, self._atom_order)
+                    self._current_cell = change_point_order(cell,
+                                                            self._atom_order)
                 else:
                     self._current_cell = current_cell
                 self._current_cell.set_masses(masses)
@@ -1885,6 +1888,7 @@ class BornEffectiveCharge(TaskVasp, BornEffectiveChargeBase):
                  max_iteration=4,
                  min_iteration=1,
                  is_cell_relaxed=False,
+                 symmetry_tolerance=1.0e-5,
                  traverse=False):
 
         BornEffectiveChargeBase.__init__(
@@ -1899,6 +1903,7 @@ class BornEffectiveCharge(TaskVasp, BornEffectiveChargeBase):
             max_iteration=max_iteration,
             min_iteration=min_iteration,
             is_cell_relaxed=is_cell_relaxed,
+            symmetry_tolerance=symmetry_tolerance,
             traverse=traverse)
 
     def _get_bec_task(self, cell):
@@ -1963,12 +1968,18 @@ class BornEffectiveChargeElement(TaskVasp, BornEffectiveChargeElementBase):
                 vxml = VasprunxmlExpat(f)
                 is_success = vxml.parse()
             if is_success:
-                self._born = vxml.get_born()
-                self._epsilon = vxml.get_epsilon()
+                born = vxml.get_born()
+                epsilon = vxml.get_epsilon()
 
             if (is_success and
-                self._born is not None and
-                self._epsilon is not None):
+                born is not None and
+                epsilon is not None):
+                if os.path.exists("POSCAR.yaml"):
+                    atom_order = get_atom_order_from_poscar_yaml("POSCAR.yaml")
+                    self._born = born[atom_order]
+                else:
+                    self._born = born
+                self._epsilon = epsilon
                 self._status = "done"
             else:
                 self._log += "    Failed to parse vasprun.xml for\n"
