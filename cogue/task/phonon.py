@@ -47,7 +47,7 @@ class PhononBase(TaskElement, PhononYaml):
                  name=None,
                  supercell_matrix=None,
                  primitive_matrix=None,
-                 is_nac=False,
+                 nac=False,
                  distance=None,
                  displace_plusminus='auto',
                  displace_diagonal=False,
@@ -76,7 +76,7 @@ class PhononBase(TaskElement, PhononYaml):
             self._primitive_matrix = np.eye(3, dtype='double')
         else:
             self._primitive_matrix = primitive_matrix
-        self._is_nac = is_nac
+        self._nac = nac
         self._distance = distance
         self._displace_plusminus = displace_plusminus
         self._displace_diagonal = displace_diagonal
@@ -185,7 +185,7 @@ class PhononBase(TaskElement, PhononYaml):
         elif self._stage == 1: # task 1..n: displaced supercells
             if self._status == "next":
                 if self._collect_forces():
-                    if self._is_nac:
+                    if self._nac:
                         self._set_stage2()
                         return self._tasks
                     else:
@@ -235,7 +235,11 @@ class PhononBase(TaskElement, PhononYaml):
     def _set_stage2(self):
         self._stage = 2
         self._status = "nac"
-        self._tasks = [self._get_nac_task()]
+        if self._nac == "relax":
+            nac_task = self._get_nac_task(is_cell_relaxed=False)
+        else:
+            nac_task = self._get_nac_task()
+        self._tasks = [nac_task]
         self._all_tasks += self._tasks
 
     def _collect_forces(self):
