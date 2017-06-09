@@ -9,6 +9,7 @@ try:
                                             get_pointgroup_operations)
 except ImportError:
     print("You need to install phonopy.")
+    import sys
     sys.exit(1)
 
 
