@@ -216,13 +216,16 @@ class PhononBase(TaskElement, PhononYaml):
                     self._all_tasks[i + 1] = tasks[i]
                 self._status = "displacements"
                 return self._tasks
-        else: # NAC
+        elif self._stage == 2:
             if self._status == "next":
+                self._status = "done"
                 self._set_born_and_epsilon()
             elif self._status == "terminate" and self._traverse == "restart":
                 self._traverse = False
                 self._all_tasks.pop()
                 self._set_stage2()
+        else:
+            pass    
 
         self._tasks = []
         self._write_yaml()
