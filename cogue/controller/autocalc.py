@@ -184,14 +184,18 @@ class AutoCalc:
         if status is None:
             f_dot.write("n%d [label=\"%s\"] ;\n" % (tid, name))
         else:
-            if comment:
+            if comment and name:
                 f_dot.write("n%d [color=%s, style=filled, "
                             "shape=box, label=\"[%d] %s\\n%s\\n%s\"] ;\n" %
                             (tid, color, tid, status, name, comment))
-            else:
+            elif name:
                 f_dot.write("n%d [color=%s, style=filled, "
                             "shape=box, label=\"[%d] %s\\n%s\"] ;\n" %
                             (tid, color, tid, status, name))
+            else:
+                f_dot.write("n%d [color=%s, style=filled, "
+                            "shape=box, label=\"[%d] %s\"] ;\n" %
+                            (tid, color, tid, status))
         if task.get_tasks():
             for t in task.get_tasks():
                 self._write_dot_labels(t, f_dot)
