@@ -82,10 +82,13 @@ def get_Z(numbers):
             count[n] = 1
     values  = list(count.values())
     
-    import math
+    try:
+        from math import gcd
+    except ImportError:
+        from fractions import gcd
 
     x = values[0]
     for v in values[1:]:
-        x = math.gcd(x, v)
+        x = gcd(x, v)
 
     return x
