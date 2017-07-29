@@ -1099,6 +1099,17 @@ class Vasprunxml(object):
 
 class VasprunxmlExpat(object):
     def __init__(self, fileptr):
+        """Parsing vasprun.xml by Expat
+
+        Args:
+           fileptr: binary stream. Considering compatibility between python2.7
+               and 3.x, it is prepared as follows:
+
+               import io
+               io.open(filename, "rb")    
+
+        """
+
         import xml.parsers.expat
 
         self._fileptr = fileptr
