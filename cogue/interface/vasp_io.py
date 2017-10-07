@@ -6,6 +6,8 @@ import xml.parsers.expat
 import xml.etree.cElementTree as etree
 from cogue.crystal.atom import atomic_symbols, atomic_weights
 from cogue.crystal.cell import Cell
+from phonopy.interface.vasp import VasprunxmlExpat as PhonopyVasprunExpat
+
 try:
     from StringIO import StringIO
 except ImportError:
@@ -224,9 +226,9 @@ def read_poscar_yaml(filename="POSCAR.yaml"):
             masses = None
         if len(symbols) != len(data['points']):
             symbols = None
-    
+
         poscar_order = data['poscar_order']
-    
+
         return Cell(lattice=lattice,
                     points=points,
                     symbols=symbols,
@@ -789,7 +791,7 @@ class Outcar:
                 if line.strip() == 'TOTAL ELASTIC MODULI (kBar)':
                     hooked = True
                     break
-    
+
             if hooked:
                 next(outcar)
                 next(outcar)
@@ -802,10 +804,10 @@ class Outcar:
                             elem = float(line[pos:(pos+12)])
                         except ValueError:
                             return False
-    
+
                         ec.append(elem)
                         pos += 12
-    
+
                 self._elastic_constants = np.array(np.reshape(ec, (6, 6)),
                                                    dtype='double', order='C')
                 return True
@@ -1097,7 +1099,7 @@ class Vasprunxml(object):
             vectors.append([float(x) for x in v.text.strip().split()])
 
 
-class VasprunxmlExpat(object):
+class VasprunxmlExpat(PhonopyVasprunExpat):
     def __init__(self, fileptr):
         """Parsing vasprun.xml by Expat
 
@@ -1106,347 +1108,15 @@ class VasprunxmlExpat(object):
                and 3.x, it is prepared as follows:
 
                import io
-               io.open(filename, "rb")    
+               io.open(filename, "rb")
 
         """
 
-        import xml.parsers.expat
-
-        self._fileptr = fileptr
-
-        self._is_forces = False
-        self._is_stress = False
-        self._is_positions = False
-        self._is_symbols = False
-        self._is_basis = False
-        self._is_energy = False
-        self._is_k_weights = False
-        self._is_eigenvalues = False
-        self._is_epsilon = False
-        self._is_born = False
-
-        self._is_v = False
-        self._is_i = False
-        self._is_rc = False
-        self._is_c = False
-        self._is_set = False
-        self._is_r = False
-
-        self._is_scstep = False
-        self._is_structure = False
-        self._is_projected = False
-        self._is_proj_eig = False
-
-        self._all_forces = []
-        self._all_stress = []
-        self._all_points = []
-        self._all_lattice = []
-        self._symbols = []
-        self._all_energies = []
-        self._born = []
-        self._forces = None
-        self._stress = None
-        self._points = None
-        self._lattice = None
-        self._energies = None
-        self._epsilon = None
-        self._born_atom = None
-        self._k_weights = None
-        self._eigenvalues = None
-        self._eig_state = [0, 0]
-        self._projectors = None
-        self._proj_state = [0, 0, 0]
-
-        self._p = xml.parsers.expat.ParserCreate()
-        self._p.buffer_text = True
-        self._p.StartElementHandler = self._start_element
-        self._p.EndElementHandler = self._end_element
-        self._p.CharacterDataHandler = self._char_data
-
+        PhonopyVasprunExpat.__init__(self, fileptr)
         self._log = ""
-        
-    def parse(self):
-        try:
-            self._p.ParseFile(self._fileptr)
-        except:
-            self._log += "    [VasprunxmlExpat] Parse failed.\n"
-            return False
-        else:
-            return True
-
-    def get_forces(self):
-        return np.array(self._all_forces)
-
-    def get_stress(self):
-        return np.array(self._all_stress)
-
-    def get_epsilon(self):
-        return np.array(self._epsilon)
-
-    def get_born(self):
-        return np.array(self._born)
-
-    def get_points(self):
-        return np.array(self._all_points)
-
-    def get_lattice(self):
-        return np.array(self._all_lattice)
-
-    def get_symbols(self):
-        return self._symbols
-
-    def get_energies(self):
-        return np.array(self._all_energies)
-
-    def get_k_weights(self):
-        return self._k_weights
-
-    def get_eigenvalues(self):
-        return self._eigenvalues
-
-    def get_projectors(self):
-        return self._projectors
 
     @property
     def log(self):
         log = self._log
         self._log = ""
         return log
-
-    def _start_element(self, name, attrs):
-        # Used not to collect energies in <scstep>
-        if name == 'scstep':
-            self._is_scstep = True
-
-        # Used not to collect basis and positions in
-        # <structure name="initialpos" >
-        # <structure name="finalpos" >
-        if name == 'structure':
-            if 'name' in attrs.keys():
-                self._is_structure = True
-
-        if (self._is_forces or
-            self._is_stress or
-            self._is_epsilon or
-            self._is_born or
-            self._is_positions or
-            self._is_basis,
-            self._is_k_weights):
-            if name == 'v':
-                self._is_v = True
-
-        if name == 'varray':
-            if 'name' in attrs.keys():
-                if attrs['name'] == 'forces':
-                    self._is_forces = True
-                    self._forces = []
-
-                if attrs['name'] == 'stress':
-                    self._is_stress = True
-                    self._stress = []
-
-                if attrs['name'] == 'weights':
-                    self._is_k_weights = True
-                    self._k_weights = []
-
-                if attrs['name'] == 'epsilon':
-                    self._is_epsilon = True
-                    self._epsilon = []
-
-                if not self._is_structure:
-                    if attrs['name'] == 'positions':
-                        self._is_positions = True
-                        self._points = []
-
-                    if attrs['name'] == 'basis':
-                        self._is_basis = True
-                        self._lattice = []
-
-        if self._is_energy and name == 'i':
-            self._is_i = True
-
-        if name == 'energy' and (not self._is_scstep):
-            self._is_energy = True
-            self._energies = []
-
-        if self._is_symbols and name == 'rc':
-            self._is_rc = True
-
-        if self._is_symbols and self._is_rc and name == 'c':
-            self._is_c = True
-
-        if self._is_born and name == 'set':
-            self._is_set = True
-            self._born_atom = []
-
-        if name == 'array':
-            if 'name' in attrs.keys():
-                if attrs['name'] == 'atoms':
-                    self._is_symbols = True
-
-                if attrs['name'] == 'born_charges':
-                    self._is_born = True
-
-        if self._is_projected and not self._is_proj_eig:
-            if name == 'set':
-                if 'comment' in attrs.keys():
-                    if 'spin' in attrs['comment']:
-                        self._projectors.append([])
-                        spin_num = int(attrs['comment'].replace("spin", ''))
-                        self._proj_state = [spin_num - 1, -1, -1]
-                    if 'kpoint' in attrs['comment']:
-                        self._projectors[self._proj_state[0]].append([])
-                        k_num = int(attrs['comment'].split()[1])
-                        self._proj_state[1:3] = k_num - 1, -1
-                    if 'band' in attrs['comment']:
-                        s, k = self._proj_state[:2]
-                        self._projectors[s][k].append([])
-                        b_num = int(attrs['comment'].split()[1])
-                        self._proj_state[2] = b_num - 1
-            if name == 'r':
-                self._is_r = True
-
-        if self._is_eigenvalues:
-            if name == 'set':
-                if 'comment' in attrs.keys():
-                    if 'spin' in attrs['comment']:
-                        self._eigenvalues.append([])
-                        spin_num = int(attrs['comment'].split()[1])
-                        self._eig_state = [spin_num - 1, -1]
-                    if 'kpoint' in attrs['comment']:
-                        self._eigenvalues[self._eig_state[0]].append([])
-                        k_num = int(attrs['comment'].split()[1])
-                        self._eig_state[1] = k_num - 1
-            if name == 'r':
-                self._is_r = True
-
-        if name == 'projected':
-            self._is_projected = True
-            self._projectors = []
-
-        if name == 'eigenvalues':
-            if self._is_projected:
-                self._is_proj_eig = True
-            else:
-                self._is_eigenvalues = True
-                self._eigenvalues = []
-
-    def _end_element(self, name):
-        if name == 'scstep':
-            self._is_scstep = False
-
-        if name == 'structure' and self._is_structure:
-            self._is_structure = False
-
-        if name == 'varray':
-            if self._is_forces:
-                self._is_forces = False
-                self._all_forces.append(self._forces)
-
-            if self._is_stress:
-                self._is_stress = False
-                self._all_stress.append(self._stress)
-
-            if self._is_k_weights:
-                self._is_k_weights = False
-
-            if self._is_positions:
-                self._is_positions = False
-                self._all_points.append(self._points)
-
-            if self._is_basis:
-                self._is_basis = False
-                self._all_lattice.append(self._lattice)
-
-            if self._is_epsilon:
-                self._is_epsilon = False
-
-        if name == 'array':
-            if self._is_symbols:
-                self._is_symbols = False
-
-            if self._is_born:
-                self._is_born = False
-
-        if name == 'energy' and (not self._is_scstep):
-            self._is_energy = False
-            self._all_energies.append(self._energies)
-
-        if name == 'v':
-            self._is_v = False
-
-        if name == 'i':
-            self._is_i = False
-
-        if name == 'rc':
-            self._is_rc = False
-            if self._is_symbols:
-                self._symbols.pop(-1)
-
-        if name == 'c':
-            self._is_c = False
-
-        if name == 'r':
-            self._is_r = False
-
-        if name == 'projected':
-            self._is_projected = False
-
-        if name == 'eigenvalues':
-            if self._is_projected:
-                self._is_proj_eig = False
-            else:
-                self._is_eigenvalues = False
-
-        if name == 'set':
-            self._is_set = False
-            if self._is_born:
-                self._born.append(self._born_atom)
-                self._born_atom = None
-
-    def _char_data(self, data):
-        if self._is_v:
-            if self._is_forces:
-                self._forces.append(
-                    [float(x) for x in data.split()])
-
-            if self._is_stress:
-                self._stress.append(
-                    [float(x) for x in data.split()])
-
-            if self._is_epsilon:
-                self._epsilon.append(
-                    [float(x) for x in data.split()])
-
-            if self._is_positions:
-                self._points.append(
-                    [float(x) for x in data.split()])
-
-            if self._is_basis:
-                self._lattice.append(
-                    [float(x) for x in data.split()])
-
-            if self._is_k_weights:
-                self._k_weights.append(float(data))
-
-            if self._is_born:
-                self._born_atom.append(
-                    [float(x) for x in data.split()])
-
-        if self._is_i:
-            if self._is_energy:
-                self._energies.append(float(data.strip()))
-
-        if self._is_c:
-            if self._is_symbols:
-                self._symbols.append(str(data.strip()))
-
-        if self._is_r:
-            if self._is_projected and not self._is_proj_eig:
-                s, k, b = self._proj_state
-                vals = [float(x) for x in data.split()]
-                self._projectors[s][k][b].append(vals)
-            elif self._is_eigenvalues:
-                s, k = self._eig_state
-                vals = [float(x) for x in data.split()]
-                self._eigenvalues[s][k].append(vals)
