@@ -1120,3 +1120,12 @@ class VasprunxmlExpat(PhonopyVasprunExpat):
         log = self._log
         self._log = ""
         return log
+
+    def get_cells(self):
+        cells = []
+        if len(self._all_points) == len(self._all_lattice):
+            for p, l in zip(self._all_points, self._all_lattice):
+                cells.append(Cell(lattice=l.T,
+                                  points=p.T,
+                                  symbols=self._symbols))
+        return cells
