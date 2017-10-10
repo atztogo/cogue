@@ -6,7 +6,8 @@ from cogue.interface.vasp_io import write_poscar, write_poscar_yaml
 from cogue.crystal.cell import sort_cell_by_symbols
 from cogue.crystal.converter import cell2atoms
 from cogue.crystal.supercell import estimate_supercell_matrix
-from cogue.crystal.symmetry import get_crystallographic_cell
+from cogue.crystal.symmetry import (get_crystallographic_cell,
+                                    get_symmetry_dataset)
 
 try:
     from phonopy import Phonopy
@@ -47,6 +48,7 @@ class PhononBase(TaskElement, PhononYaml):
                  name=None,
                  supercell_matrix=None,
                  primitive_matrix=None,
+                 nac=False,
                  distance=None,
                  displace_plusminus='auto',
                  displace_diagonal=False,
@@ -75,6 +77,7 @@ class PhononBase(TaskElement, PhononYaml):
             self._primitive_matrix = np.eye(3, dtype='double')
         else:
             self._primitive_matrix = primitive_matrix
+        self._nac = nac
         self._distance = distance
         self._displace_plusminus = displace_plusminus
         self._displace_diagonal = displace_diagonal
@@ -94,10 +97,13 @@ class PhononBase(TaskElement, PhononYaml):
         self._tasks = []
 
         self._energy = None
+        self._born = None
+        self._epsilon = None
+
         self._space_group = None
         self._cell = None
         self._phonon = None # Phonopy object
-        self._all_tasks = None # Phonopy object
+        self._all_tasks = None
 
         self._try_collect_forces = True
 
@@ -180,10 +186,14 @@ class PhononBase(TaskElement, PhononYaml):
                 self._set_stage0()
                 return self._tasks
                 
-        else: # task 1..n: displaced supercells
+        elif self._stage == 1: # task 1..n: displaced supercells
             if self._status == "next":
                 if self._collect_forces():
-                    self._status = "done"
+                    if self._nac:
+                        self._set_stage2()
+                        return self._tasks
+                    else:
+                        self._status = "done"
                 else:
                     if self._try_collect_forces:
                         self._status = "displacements"
@@ -206,6 +216,16 @@ class PhononBase(TaskElement, PhononYaml):
                     self._all_tasks[i + 1] = tasks[i]
                 self._status = "displacements"
                 return self._tasks
+        elif self._stage == 2:
+            if self._status == "next":
+                self._status = "done"
+                self._set_born_and_epsilon()
+            elif self._status == "terminate" and self._traverse == "restart":
+                self._traverse = False
+                self._all_tasks.pop()
+                self._set_stage2()
+        else:
+            pass    
 
         self._tasks = []
         self._write_yaml()
@@ -224,6 +244,16 @@ class PhononBase(TaskElement, PhononYaml):
         self._tasks = self._get_displacement_tasks()
         self._all_tasks += self._tasks
 
+    def _set_stage2(self):
+        self._stage = 2
+        self._status = "nac"
+        if self._nac == "relax":
+            nac_task = self._get_nac_task(is_cell_relaxed=False)
+        else:
+            nac_task = self._get_nac_task()
+        self._tasks = [nac_task]
+        self._all_tasks += self._tasks
+
     def _collect_forces(self):
         forces = []
         for task in self._tasks:
@@ -234,6 +264,29 @@ class PhononBase(TaskElement, PhononYaml):
         else:
             # This can be due to delay of writting file to file system.
             return False
+
+    def _set_born_and_epsilon(self):
+        nac_task = self._tasks[0]
+        born = nac_task.get_born_effective_charge()
+        epsilon = nac_task.get_dielectric_constant()
+
+        indep_atoms = self._phonon.get_symmetry().get_independent_atoms()
+        supercell = self._phonon.get_supercell()
+        s2u = supercell.get_supercell_to_unitcell_map()
+        u2u = supercell.get_unitcell_to_unitcell_map()
+        indep_atoms_u = [u2u[i] for i in s2u[indep_atoms]]
+        
+        if born is not None and epsilon is not None:
+            self._born = born
+            self._epsilon = epsilon
+            header = "# epsilon and Z* of atoms "
+            header += ' '.join(["%d" % (n + 1) for n in indep_atoms_u])
+            lines = [header]
+            lines.append(("%13.8f" * 9) % tuple(epsilon.flatten()))
+            for z in born[indep_atoms_u]:
+                lines.append(("%13.8f" * 9) % tuple(z.flatten()))
+            with open("BORN", 'w') as w:
+                w.write('\n'.join(lines))
 
     def _evaluate_stop_condition(self):
         if self._stop_condition:

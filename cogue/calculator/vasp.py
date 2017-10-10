@@ -1,9 +1,11 @@
 __all__ = ['incar', 'electronic_structure', 'structure_optimization',
            'bulk_modulus', 'phonon', 'elastic_constants',
-           'mode_gruneisen', 'quasiharmonic_phonon', 'phonon_relax',
+           'born_effective_charge', 'mode_gruneisen',
+           'quasiharmonic_phonon', 'phonon_relax',
            'band_structure', 'density_of_states']
 
 import os
+import io
 import numbers
 import numpy as np
 import shutil
@@ -17,7 +19,8 @@ from cogue.interface.vasp_io import (change_point_order, read_poscar,
                                      VasprunxmlExpat, VaspCell)
 from cogue.task.oneshot_calculation import (ElectronicStructureBase,
                                             StructureOptimizationElementBase,
-                                            ElasticConstantsElementBase)
+                                            ElasticConstantsElementBase,
+                                            BornEffectiveChargeElementBase)
 from cogue.task.structure_optimization import StructureOptimizationBase
 from cogue.task.bulk_modulus import BulkModulusBase
 from cogue.task.mode_gruneisen import ModeGruneisenBase
@@ -25,6 +28,7 @@ from cogue.task.phonon import PhononBase
 from cogue.task.phonon_fc3 import PhononFC3Base
 from cogue.task.phonon_relax import PhononRelaxBase, PhononRelaxElementBase
 from cogue.task.elastic_constants import ElasticConstantsBase
+from cogue.task.born_effective_charge import BornEffectiveChargeBase
 from cogue.task.quasiharmonic_phonon import QuasiHarmonicPhononBase
 from cogue.task.band_structure import BandStructureBase
 from cogue.task.density_of_states import DensityOfStatesBase
@@ -290,6 +294,7 @@ def phonon(directory="phonon",
            job=None,
            supercell_matrix=None,
            primitive_matrix=None,
+           nac=False,
            distance=0.01,
            displace_plusminus='auto',
            displace_diagonal=False,
@@ -317,6 +322,7 @@ def phonon(directory="phonon",
                 name=name,
                 supercell_matrix=supercell_matrix,
                 primitive_matrix=primitive_matrix,
+                nac=nac,
                 distance=distance,
                 displace_plusminus=displace_plusminus,
                 displace_diagonal=displace_diagonal,
@@ -445,7 +451,52 @@ def elastic_constants(directory="elastic_constants",
 
     return ec
 
+def born_effective_charge(directory="born_effective_charge",
+                          name=None,
+                          job=None,
+                          lattice_tolerance=0.1,
+                          force_tolerance=1e-3,
+                          pressure_target=0,
+                          stress_tolerance=10,
+                          max_increase=None,
+                          max_iteration=4,
+                          min_iteration=1,
+                          is_cell_relaxed=False,
+                          symmetry_tolerance=1.0e-5,
+                          traverse=False,
+                          cell=None,
+                          pseudo_potential_map=None,
+                          k_mesh=None,
+                          k_shift=None,
+                          k_gamma=None,
+                          k_length=None,
+                          k_point=None,
+                          incar=None):
 
+    bec = BornEffectiveCharge(directory=directory,
+                              name=name,
+                              lattice_tolerance=lattice_tolerance,
+                              force_tolerance=force_tolerance,
+                              pressure_target=pressure_target,
+                              stress_tolerance=stress_tolerance,
+                              max_increase=max_increase,
+                              max_iteration=max_iteration,
+                              min_iteration=min_iteration,
+                              is_cell_relaxed=is_cell_relaxed,
+                              symmetry_tolerance=symmetry_tolerance,
+                              traverse=traverse)
+
+    bec.set_configurations(cell=cell,
+                           pseudo_potential_map=pseudo_potential_map,
+                           k_mesh=k_mesh,
+                           k_shift=k_shift,
+                           k_gamma=k_gamma,
+                           k_length=k_length,
+                           k_point=k_point,
+                           incar=incar)
+    bec.set_job(job)
+
+    return bec
 
 def mode_gruneisen(directory="mode_gruneisen",
                    name=None,
@@ -747,7 +798,7 @@ class TaskVasp:
     def _prepare(self):
         """
         Create input files for VASP
-        
+
         We can suppose we are in the calculation directory.
         """
         if os.path.exists("vasprun.xml"):
@@ -771,7 +822,7 @@ class TaskVasp:
             k_mesh = self._k_mesh
             k_gamma = self._k_gamma
             k_shift = self._k_shift
-            
+
         write_kpoints(mesh=k_mesh,
                       shift=k_shift,
                       gamma=k_gamma,
@@ -779,7 +830,7 @@ class TaskVasp:
         self._incar.write()
 
         for (fsrc, fdst) in self._copy_files:
-            shutil.copy(fsrc, fdst)            
+            shutil.copy(fsrc, fdst)
 
     def _choose_configuration(self, index=0):
         # incar
@@ -930,7 +981,7 @@ class TaskVasp:
 
         return task
 
-    
+
 class ElectronicStructure(TaskVasp, ElectronicStructureBase):
     """ """
     def __init__(self,
@@ -950,7 +1001,7 @@ class ElectronicStructure(TaskVasp, ElectronicStructureBase):
         self._k_gamma = None
         self._incar = None
         self._copy_files = []
-        
+
     def _collect(self):
         """Collect information from output files of VASP.
 
@@ -960,22 +1011,22 @@ class ElectronicStructure(TaskVasp, ElectronicStructureBase):
         """
 
         if os.path.exists("POSCAR.yaml"):
-            self._atom_order = get_atom_order_from_poscar_yaml("POSCAR.yaml")
+            atom_order = get_atom_order_from_poscar_yaml("POSCAR.yaml")
         else:
-            self._atom_order = None
+            atom_order = None
 
         if not os.path.exists("vasprun.xml"):
             self._log += "    vasprun.xml not exists.\n"
             self._status = "terminate"
         else:
             vxml = Vasprunxml("vasprun.xml")
-            if (vxml.parse_calculation() and 
+            if (vxml.parse_calculation() and
                 vxml.parse_eigenvalues() and
                 vxml.parse_efermi() and
                 vxml.parse_parameters()):
                 kpoints, weights = vxml.get_kpoints()
-                if self._atom_order:
-                    force_sets = vxml.get_forces()[:, self._atom_order, :]
+                if atom_order:
+                    force_sets = vxml.get_forces()[:, atom_order, :]
                 else:
                     force_sets = vxml.get_forces()
                 self._properties = {'stress': vxml.get_stress(),
@@ -1015,7 +1066,7 @@ class StructureOptimizationElement(TaskVasp,
             stress_tolerance=stress_tolerance,
             max_increase=max_increase,
             traverse=traverse)
-        
+
         self._pseudo_potential_map = None
         self._k_mesh = None
         self._k_shift = None
@@ -1046,19 +1097,22 @@ class StructureOptimizationElement(TaskVasp,
             else:
                 self._current_cell = cell
             self._current_cell.set_masses(masses)
-    
+
         if not os.path.exists("vasprun.xml"):
             self._log += "    vasprun.xml not exists.\n"
             self._status = "terminate"
         else:
-            vxml = VasprunxmlExpat("vasprun.xml")
-            is_success = vxml.parse()
+            with io.open("vasprun.xml", 'rb') as f:
+                vxml = VasprunxmlExpat(f)
+                is_success = vxml.parse()
 
-            lattice = vxml.get_lattice()   # [num_geomopt, 3, 3]
-            points = vxml.get_points()     # [num_geomopt, 3, num_atoms]
-            forces = vxml.get_forces()     # [num_geomopt, num_atoms, 3]
-            stress = vxml.get_stress()     # [num_geomopt, 3, 3]
-            energies = vxml.get_energies() # [num_geomopt, 3]
+            # [num_geomopt, 3, 3]
+            lattice = np.array([lat.T for lat in vxml.get_lattice()])
+            # [num_geomopt, 3, num_atoms]
+            points = np.array([pos.T for pos in vxml.get_points()])
+            forces = vxml.get_forces()       # [num_geomopt, num_atoms, 3]
+            stress = vxml.get_stress()       # [num_geomopt, 3, 3]
+            energies = vxml.get_energies()   # [num_geomopt, 3]
 
             max_iter = len(lattice)
             if len(points) < max_iter:
@@ -1113,7 +1167,8 @@ class StructureOptimizationElement(TaskVasp,
             try:
                 self._current_cell = read_poscar("CONTCAR")
                 if self._atom_order:
-                    self._current_cell = change_point_order(cell, self._atom_order)
+                    self._current_cell = change_point_order(cell,
+                                                            self._atom_order)
                 else:
                     self._current_cell = current_cell
                 self._current_cell.set_masses(masses)
@@ -1206,7 +1261,7 @@ class StructureOptimization(TaskVasp, StructureOptimizationBase):
             stress_tolerance=self._stress_tolerance,
             max_increase=self._max_increase,
             traverse=self._traverse)
-        
+
         task.set_configurations(
             cell=cell.copy(),
             pseudo_potential_map=self._pseudo_potential_map,
@@ -1223,7 +1278,7 @@ class StructureOptimization(TaskVasp, StructureOptimizationBase):
 
 class BulkModulus(TaskVasp, BulkModulusBase):
     """Task to calculate bulk modulus by VASP."""
-    
+
     def __init__(self,
                  directory="bulk_modulus",
                  name=None,
@@ -1286,7 +1341,7 @@ class BulkModulus(TaskVasp, BulkModulusBase):
 
 class BandStructure(TaskVasp, BandStructureBase):
     """Task to calculate band structure by VASP."""
-    
+
     def __init__(self,
                  directory="band_structure",
                  name=None,
@@ -1420,18 +1475,19 @@ class DensityOfStates(TaskVasp, DensityOfStatesBase):
         task.set_copy_files([("../%s/CHGCAR" % chgcar_dir, "CHGCAR")])
 
         return task
-        
+
 class TaskVaspPhonon:
     """Phonon calculation configuration class
 
     Normally the configurations are stored in a list. Each index is
     fixed for specific type of calculation in the task list.
-    
+
     index:
         0: Structure optimization
         1: Displacement. For job configuration, if this is a list and k_mesh is
            Gamma-only, the second one is used.
-        2: Born effective charge
+        2: Born effective charge. If incar is given as a list, structure
+           optimization is with fixed lattice is executed.
 
     """
     def _get_vasp_displacement_tasks(self,
@@ -1457,7 +1513,7 @@ class TaskVaspPhonon:
         incar = self._incar[1].copy()
         supercell = phonon.get_supercell()
         task = self._get_disp_task(atoms2cell(supercell), incar, "perfect")
-    
+
     def _get_disp_task(self, cell, incar, disp_number, digit_number=3):
         job, incar, kpoints = self._choose_configuration(index=1)
         k_mesh = kpoints['mesh']
@@ -1465,22 +1521,22 @@ class TaskVaspPhonon:
         k_gamma = kpoints['gamma']
         k_length = kpoints['length']
         k_point = kpoints['kpoint']
-        
+
         directory = ("disp-%0" + "%d" % digit_number + "d") % disp_number
 
         if k_length:
             k_mesh = klength2mesh(k_length, cell.lattice)
             k_gamma = True
             k_shift = [0.0, 0.0, 0.0]
-        
-        # For Gamma-only VASP, take third element of self._job
-        if isinstance(job, list) or isinstance(job, tuple):
+
+        # For Gamma-only VASP, take secon element of job
+        if isinstance(job, list):
             job_disp = job[0]
             if (np.array(k_mesh) == 1).all() and k_shift:
                 if (np.abs(k_shift) < 1e-10).all():
                     job_disp = job[1]
             job = job_disp
-                    
+
         task = ElectronicStructure(directory=directory,
                                    traverse=self._traverse)
         task.set_configurations(
@@ -1495,18 +1551,73 @@ class TaskVaspPhonon:
 
         return task
 
+    def _get_nac_task(self, is_cell_relaxed=True, directory="nac"):
+        job, incar, kpoints = self._choose_configuration(index=2)
+        k_mesh = kpoints['mesh']
+        k_shift = kpoints['shift']
+        k_gamma = kpoints['gamma']
+        k_length = kpoints['length']
+        k_point = kpoints['kpoint']
+
+        _is_cell_relaxed = is_cell_relaxed
+
+        if isinstance(incar, list):
+            _is_cell_relaxed = False
+            incar[0].set_isif(2)
+            incar[0].set_lepsilon(None)
+            if incar[0].get_nsw() is None:
+                incar[0].set_nsw(10)
+                incar[0].set_ediffg(-1.0e-8)
+        elif not is_cell_relaxed:
+            _is_cell_relaxed = False
+            incar_rx = incar.copy()
+            incar_rx.set_ibrion(2)
+            incar_rx.set_nsw(10)
+            incar_rx.set_isif(2)
+            incar_rx.set_ediffg(-1.0e-8)
+            incar = [incar_rx, incar]
+
+        if not _is_cell_relaxed:
+            job_rx = job.copy(job.get_jobname() + "-rx")
+            job = [job_rx, job]
+
+        task = BornEffectiveCharge(directory="nac",
+                                   lattice_tolerance=self._lattice_tolerance,
+                                   force_tolerance=self._force_tolerance,
+                                   pressure_target=self._pressure_target,
+                                   stress_tolerance=None,
+                                   max_increase=self._max_increase,
+                                   max_iteration=self._max_iteration,
+                                   min_iteration=self._min_iteration,
+                                   is_cell_relaxed=_is_cell_relaxed,
+                                   traverse=self._traverse)
+
+        task.set_configurations(
+            cell=self.get_cell(),
+            pseudo_potential_map=self._pseudo_potential_map,
+            k_mesh=k_mesh,
+            k_shift=k_shift,
+            k_gamma=k_gamma,
+            k_length=k_length,
+            k_point=k_point,
+            incar=incar)
+
+        task.set_job(job)
+
+        return task
+
 class TaskVaspQHA:
     """QHA calculation configuration class
 
     Normally the configurations are stored in a list. Each index is
     fixed for specific type of calculation in the task list.
-    
+
     index:
         0: Structure optimization
         0-1: Mapped to Bulk modulus configuration
              ISIF=4 is forced for index=1.
         1-3: Mapped to 0-2 of Phonon configuration
-    
+
     """
     def _get_phonon_task(self,
                          cell,
@@ -1578,13 +1689,14 @@ class TaskVaspQHA:
         task.set_job(job)
 
         return task
-    
+
 class Phonon(TaskVasp, TaskVaspPhonon, PhononBase):
     def __init__(self,
                  directory="phonon",
                  name=None,
                  supercell_matrix=None,
                  primitive_matrix=None,
+                 nac=False,
                  distance=0.01,
                  displace_plusminus='auto',
                  displace_diagonal=False,
@@ -1606,6 +1718,7 @@ class Phonon(TaskVasp, TaskVaspPhonon, PhononBase):
             name=name,
             supercell_matrix=supercell_matrix,
             primitive_matrix=primitive_matrix,
+            nac=nac,
             distance=distance,
             displace_plusminus=displace_plusminus,
             displace_diagonal=displace_diagonal,
@@ -1667,7 +1780,7 @@ class PhononFC3(TaskVasp, TaskVaspPhonon, PhononFC3Base):
         return self._get_vasp_displacement_tasks(
             self._phonon_fc3, start=start, stop=stop, digit_number=5)
 
-    
+
 class ElasticConstants(TaskVasp, ElasticConstantsBase):
     def __init__(self,
                  directory="elastic_constants",
@@ -1681,7 +1794,7 @@ class ElasticConstants(TaskVasp, ElasticConstantsBase):
                  min_iteration=1,
                  is_cell_relaxed=False,
                  traverse=False):
-        
+
         ElasticConstantsBase.__init__(
             self,
             directory=directory,
@@ -1695,7 +1808,7 @@ class ElasticConstants(TaskVasp, ElasticConstantsBase):
             min_iteration=min_iteration,
             is_cell_relaxed=is_cell_relaxed,
             traverse=traverse)
-    
+
     def _get_ec_task(self, cell):
         job, incar, kpoints = self._choose_configuration(index=1)
         k_mesh = kpoints['mesh']
@@ -1720,7 +1833,7 @@ class ElasticConstants(TaskVasp, ElasticConstantsBase):
         task.set_job(job.copy("%s-%s" %
                               (job.get_jobname(), directory)))
         return task
-    
+
 class ElasticConstantsElement(TaskVasp, ElasticConstantsElementBase):
     """ """
     def __init__(self,
@@ -1741,7 +1854,7 @@ class ElasticConstantsElement(TaskVasp, ElasticConstantsElementBase):
         self._k_point = None
         self._incar = None
         self._copy_files = []
-        
+
     def _collect(self):
         """Collect information from output files of VASP.
 
@@ -1763,9 +1876,120 @@ class ElasticConstantsElement(TaskVasp, ElasticConstantsElementBase):
                 self._log += "    Failed to parse OUTCAR.\n"
                 self._status = "terminate"
 
+class BornEffectiveCharge(TaskVasp, BornEffectiveChargeBase):
+    def __init__(self,
+                 directory="born_effective_charge",
+                 name=None,
+                 lattice_tolerance=0.1,
+                 force_tolerance=1e-3,
+                 pressure_target=0,
+                 stress_tolerance=10,
+                 max_increase=None,
+                 max_iteration=4,
+                 min_iteration=1,
+                 is_cell_relaxed=False,
+                 symmetry_tolerance=1.0e-5,
+                 traverse=False):
+
+        BornEffectiveChargeBase.__init__(
+            self,
+            directory=directory,
+            name=name,
+            lattice_tolerance=lattice_tolerance,
+            force_tolerance=force_tolerance,
+            pressure_target=pressure_target,
+            stress_tolerance=stress_tolerance,
+            max_increase=max_increase,
+            max_iteration=max_iteration,
+            min_iteration=min_iteration,
+            is_cell_relaxed=is_cell_relaxed,
+            symmetry_tolerance=symmetry_tolerance,
+            traverse=traverse)
+
+    def _get_bec_task(self, cell):
+        job, incar, kpoints = self._choose_configuration(index=1)
+        k_mesh = kpoints['mesh']
+        k_shift = kpoints['shift']
+        k_gamma = kpoints['gamma']
+        k_length = kpoints['length']
+        incar.set_ibrion(-1)
+        incar.set_nsw(None)
+        incar.set_lepsilon(True)
+
+        directory = "born_effective_charge"
+        task = BornEffectiveChargeElement(directory=directory,
+                                          traverse=self._traverse)
+        task.set_configurations(
+            cell=cell,
+            pseudo_potential_map=self._pseudo_potential_map,
+            k_mesh=k_mesh,
+            k_shift=k_shift,
+            k_gamma=k_gamma,
+            k_length=k_length,
+            incar=incar)
+        task.set_job(job.copy("%s-%s" %
+                              (job.get_jobname(), directory)))
+        return task
+
+class BornEffectiveChargeElement(TaskVasp, BornEffectiveChargeElementBase):
+    """ """
+    def __init__(self,
+                 directory="born_effective_charge",
+                 name=None,
+                 traverse=False):
+
+        BornEffectiveChargeElementBase.__init__(
+            self,
+            directory=directory,
+            name=name,
+            traverse=traverse)
+
+        self._pseudo_potential_map = None
+        self._k_mesh = None
+        self._k_shift = None
+        self._k_gamma = None
+        self._k_point = None
+        self._incar = None
+        self._copy_files = []
+
+    def _collect(self):
+        """Collect information from vasprun.xml
+
+        self._status of "done" or "terminate"  is stored.
+        self._log: Terminate log is stored.
+
+        """
+
+        if not os.path.exists("vasprun.xml"):
+            self._log += "    vasprun.xml not exists.\n"
+            self._status = "terminate"
+        else:
+            with io.open("vasprun.xml", 'rb') as f:
+                vxml = VasprunxmlExpat(f)
+                is_success = vxml.parse()
+            if is_success:
+                born = vxml.get_born()
+                epsilon = vxml.get_epsilon()
+
+            if (is_success and
+                born is not None and
+                epsilon is not None):
+                if os.path.exists("POSCAR.yaml"):
+                    atom_order = get_atom_order_from_poscar_yaml("POSCAR.yaml")
+                    self._born = born[atom_order]
+                else:
+                    self._born = born
+                self._epsilon = epsilon
+                self._status = "done"
+            else:
+                self._log += "    Failed to parse vasprun.xml for\n"
+                self._log += "    Born effective charge and dielectric constant"
+                self._log += ".\n"
+                self._status = "terminate"
+
 class ModeGruneisen(TaskVasp, TaskVaspQHA, ModeGruneisenBase):
     """Task to calculate mode Gruneisen parameters by VASP."""
-    
+
     def __init__(self,
                  directory="mode_gruneisen",
                  name=None,
@@ -1807,7 +2031,7 @@ class ModeGruneisen(TaskVasp, TaskVaspQHA, ModeGruneisenBase):
 
 class QuasiHarmonicPhonon(TaskVasp, TaskVaspQHA, QuasiHarmonicPhononBase):
     """Task to calculate quasi-harmonic phonons by VASP."""
-    
+
     def __init__(self,
                  directory="quasiharmonic_phonon",
                  name=None,
@@ -1908,7 +2132,7 @@ class QuasiHarmonicPhonon(TaskVasp, TaskVaspQHA, QuasiHarmonicPhononBase):
             k_point = self._k_point[:2]
         else:
             k_point = self._k_point
-            
+
         if isinstance(self._incar, list):
             incar = [x.copy() for x in self._incar[:2]]
         else:
@@ -2106,4 +2330,3 @@ class PhononRelaxElement(TaskVasp, PhononRelaxElementBase):
         task.set_job(self._job)
 
         return task
-

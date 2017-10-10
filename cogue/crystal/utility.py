@@ -1,5 +1,6 @@
 import numpy as np
-from cogue.crystal.symmetry import get_symmetry_dataset, get_crystallographic_cell
+from cogue.crystal.symmetry import (get_symmetry_dataset,
+                                    get_crystallographic_cell)
 
 #####################
 # Utility functions #
@@ -71,3 +72,23 @@ def klength2mesh(k_length, lattice):
     rec_lat_lengths = np.sqrt(np.diagonal(np.dot(rec_lattice.T, rec_lattice)))
     k_mesh = (rec_lat_lengths * k_length + 0.5).astype(int)
     return np.maximum(k_mesh, [1, 1, 1])
+
+def get_Z(numbers):
+    count = {}
+    for n in numbers:
+        if n in count:
+            count[n] += 1
+        else:
+            count[n] = 1
+    values  = list(count.values())
+    
+    try:
+        from math import gcd
+    except ImportError:
+        from fractions import gcd
+
+    x = values[0]
+    for v in values[1:]:
+        x = gcd(x, v)
+
+    return x
