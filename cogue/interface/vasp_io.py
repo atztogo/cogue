@@ -336,6 +336,7 @@ class Incar:
                  ispin=None,
                  isym=None,
                  ivdw=None,
+                 kpar=None,
                  lcharg=None,
                  lepsilon=None,
                  lorbit=None,
@@ -372,6 +373,7 @@ class Incar:
             'ispin'   : "ISPIN",
             'isym'    : "ISYM",
             'ivdw'    : "IVDW",
+            'kpar'    : "KPAR",
             'lcharg'  : "LCHARG",
             'lepsilon': "LEPSILON",
             'lorbit'  : "LORBIT",
@@ -408,6 +410,7 @@ class Incar:
             'ispin'   : ispin,
             'isym'    : isym,
             'ivdw'    : ivdw,
+            'kpar'    : kpar,
             'lcharg'  : lcharg,
             'lepsilon': lepsilon,
             'lorbit'  : lorbit,
@@ -458,6 +461,7 @@ class Incar:
                           'lcharg',
                           'lepsilon',
                           'npar',
+                          'kpar',
                           'isym',
                           'symprec']
 
@@ -576,6 +580,12 @@ class Incar:
 
     def get_ivdw(self):
         return self._tagvals['ivdw']
+
+    def set_kpar(self, x):
+        self._tagvals['kpar'] = x
+
+    def get_kpar(self):
+        return self._tagvals['kpar']
 
     def set_lcharg(self, x):
         self._tagvals['lcharg'] = x
