@@ -3,8 +3,7 @@ from cogue.task.structure_optimization import StructureOptimizationYaml
 from cogue.crystal.symmetry import get_symmetry_dataset
 
 try:
-    from phonopy.interface.vasp import (symmetrize_borns,
-                                        symmetrize_2nd_rank_tensor)
+    from phonopy.interface.vasp import symmetrize_borns_and_epsilon
     from phonopy.structure.symmetry import (get_site_symmetry,
                                             get_pointgroup_operations)
 except ImportError:
@@ -25,7 +24,7 @@ class BornEffectiveChargeYaml(StructureOptimizationYaml):
                 lines.append("- # %d" % (i + 1))
                 for v in z_ion:
                     lines.append("  - [ %13.8f, %13.8f, %13.8f ]" % tuple(v))
-                
+
         if cell:
             lines += cell.get_yaml_lines()
 
@@ -166,23 +165,15 @@ class BornEffectiveChargeBase(TaskElement, BornEffectiveChargeYaml):
         self._tasks = [self._all_tasks[1]]
 
     def _set_born_and_epsilon(self):
-        born = self._all_tasks[1].get_born_effective_charge()
+        borns = self._all_tasks[1].get_born_effective_charge()
         epsilon = self._all_tasks[1].get_dielectric_constant()
         cell = self.get_cell()
-        sym_dataset = get_symmetry_dataset(cell, self._symmetry_tolerance)
-        rotations = sym_dataset['rotations']
-        translations = sym_dataset['translations']
-        ptg_ops = get_pointgroup_operations(rotations)
-        self._epsilon = symmetrize_2nd_rank_tensor(epsilon,
-                                                   ptg_ops,
-                                                   cell.lattice.T)
-        self._born = symmetrize_borns(born,
-                                      rotations,
-                                      translations,
-                                      cell.lattice.T,
-                                      cell.get_points().T,
-                                      self._symmetry_tolerance)
-        
+        self._born, self._epsilon = symmetrize_borns_and_epsilon(
+            borns,
+            epsilon,
+            cell,
+            symprec=self._symmetry_tolerance)
+
     def get_yaml_lines(self):
         lines = TaskElement.get_yaml_lines(self)
         cell = self.get_cell()
@@ -192,5 +183,3 @@ class BornEffectiveChargeBase(TaskElement, BornEffectiveChargeYaml):
                 lines.append("electric_total_energy: %20.10f" % self._energy)
 
         return lines
-
-
