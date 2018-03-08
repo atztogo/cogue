@@ -104,7 +104,7 @@ def atoms2cell(phonopy_cell):
 #########################
 def cell2atoms(cell):
     try:
-        from phonopy.structure.atoms import Atoms
+        from phonopy.structure.atoms import PhonopyAtoms as Atoms
     except ImportError:
         print("You need to install phonopy.")
         sys.exit(1)

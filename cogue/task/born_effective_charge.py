@@ -1,11 +1,10 @@
 from cogue.task import TaskElement
 from cogue.task.structure_optimization import StructureOptimizationYaml
 from cogue.crystal.symmetry import get_symmetry_dataset
+from cogue.crystal.converter import cell2atoms
 
 try:
-    from phonopy.interface.vasp import symmetrize_borns_and_epsilon
-    from phonopy.structure.symmetry import (get_site_symmetry,
-                                            get_pointgroup_operations)
+    from phonopy.structure.symmetry import symmetrize_borns_and_epsilon
 except ImportError:
     print("You need to install phonopy.")
     import sys
@@ -167,7 +166,7 @@ class BornEffectiveChargeBase(TaskElement, BornEffectiveChargeYaml):
     def _set_born_and_epsilon(self):
         borns = self._all_tasks[1].get_born_effective_charge()
         epsilon = self._all_tasks[1].get_dielectric_constant()
-        cell = self.get_cell()
+        cell = cell2atoms(self.get_cell())
         self._born, self._epsilon = symmetrize_borns_and_epsilon(
             borns,
             epsilon,

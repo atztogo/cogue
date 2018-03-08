@@ -66,7 +66,7 @@ class Cell:
             self._lattice = None
         else:
             self._lattice = np.array(lattice, dtype='double', order='C')
-            
+
         if points is None:
             self._points = None
         else:
@@ -94,7 +94,7 @@ class Cell:
 
         if self._numbers is None and self._symbols is not None:
             self._set_numbers_from_symbols()
-            
+
         if self._symbols is None and self._numbers is not None:
             self._set_symbols_from_numbers()
 
@@ -132,7 +132,7 @@ class Cell:
         self._symbols = symbols[:]
         self._set_numbers_from_symbols()
         self._set_masses_from_numbers()
-        
+
     def get_symbols(self):
         """ """
         return self._symbols[:]
@@ -185,7 +185,7 @@ class Cell:
         for v, a in zip(self._lattice.T, ('a', 'b', 'c')):
             lines.append("- [ %22.16f, %22.16f, %22.16f ] # %s" %
                          (v[0], v[1], v[2], a))
-    
+
         lines.append("points:")
         for i, (s, v, m) in enumerate(zip(self._symbols,
                                           self._points.T,
@@ -199,7 +199,7 @@ class Cell:
 
     def __str__(self):
         return "\n".join(self.get_yaml_lines())
-    
+
     def _set_numbers_from_symbols(self):
         self._numbers = np.array([atomic_symbols[s] for s in self._symbols],
                                  dtype='intc')
@@ -210,5 +210,3 @@ class Cell:
     def _set_masses_from_numbers(self):
         self._masses = np.array([atomic_weights[x][3] for x in self._numbers],
                                 dtype='double')
-
-
