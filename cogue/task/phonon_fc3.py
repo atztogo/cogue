@@ -105,10 +105,10 @@ class PhononFC3Base(TaskElement):
                     self._status = status
         else:
             done = True
-            terminate = True
-            for task in self._tasks:
+            terminate = False
+            for i, task in enumerate(self._tasks):
                 done &= task.done()
-                terminate &= (task.get_status() == "terminate")
+                terminate |= (task.get_status() == "terminate")
                 
             if done:
                 if terminate:
