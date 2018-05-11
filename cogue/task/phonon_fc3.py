@@ -77,7 +77,7 @@ class PhononFC3Base(TaskElement):
         self._phonon = None # Phonopy object
         self._phonon_fc3 = None # Phono3py object
         self._phonon_fc3_tasks = None
-        
+
     def get_phonon(self):
         return self._phonon
 
@@ -109,7 +109,7 @@ class PhononFC3Base(TaskElement):
             for i, task in enumerate(self._tasks):
                 done &= task.done()
                 terminate |= (task.get_status() == "terminate")
-                
+
             if done:
                 if terminate:
                     self._status = "terminate"
@@ -181,8 +181,13 @@ class PhononFC3Base(TaskElement):
         elif self._stage == 2:
             if "next" in self._status:
                 self._status = "done"
-                forces_fc3 = [task.get_properties()['forces'][-1]
-                              for task in self._phonon_fc3_tasks[1:]]
+                forces_fc3 = []
+                for i, task in enumerate(self._phonon_fc3_tasks[1:]):
+                    print(i + 1)
+                    forces_fc3.append(task.get_properties()['forces'][-1])
+
+                # forces_fc3 = [task.get_properties()['forces'][-1]
+                #               for task in self._phonon_fc3_tasks[1:]]
                 disp_dataset = self._phonon_fc3.get_displacement_dataset()
                 write_FORCES_FC3(disp_dataset, forces_fc3)
                 self._phonon_fc3.produce_fc3(forces_fc3)
@@ -201,7 +206,7 @@ class PhononFC3Base(TaskElement):
         task = self._get_equilibrium_task()
         self._phonon_fc3_tasks = [task]
         self._tasks = [task]
-        
+
     def _set_stage1(self):
         self._stage = 1
         self._status = "fc2_displacements"
@@ -246,9 +251,9 @@ class PhononFC3Base(TaskElement):
         self._tasks = []
         for i in disp_terminated:
             self._tasks.append(tasks[i])
-            self._phonon_fc3_tasks[i + 1] = tasks[i]
+            self._phonon_fc3_tasks[i + 1 + num_fc2_displacements] = tasks[i]
         self._status = "fc3_displacements"
-        
+
     def _set_phonon_fc3(self):
         cell = self.get_cell()
         phonopy_cell = cell2atoms(cell)
@@ -293,7 +298,7 @@ class PhononFC3Base(TaskElement):
             return True
         else:
             return False
-        
+
     def _write_yaml(self):
         w = open("%s.yaml" % self._directory, 'w')
         if self._lattice_tolerance is not None:
@@ -327,5 +332,3 @@ class PhononFC3Base(TaskElement):
                 w.write("- name:   %s\n" % task.get_name())
                 w.write("  status: %s\n" % task.get_status())
         w.close()
-
-
