@@ -15,7 +15,6 @@ except ImportError:
     print("You need to install phono3py.")
     sys.exit(1)
 
-from phonopy.structure.atoms import Atoms
 from phonopy.file_IO import write_FORCE_SETS
 from phonopy.file_IO import write_disp_yaml
 from phono3py.file_IO import write_disp_fc3_yaml
