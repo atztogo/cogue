@@ -35,6 +35,7 @@ class PhononFC3Base(TaskElement):
                  primitive_matrix=None,
                  distance=None,
                  is_diagonal=True,
+                 check_imaginary=True,
                  cutoff_frequency=None,
                  lattice_tolerance=None,
                  force_tolerance=None,
@@ -43,8 +44,8 @@ class PhononFC3Base(TaskElement):
                  max_increase=None,
                  max_iteration=None,
                  min_iteration=None,
-                 traverse=False,
-                 is_cell_relaxed=False):
+                 is_cell_relaxed=False,
+                 traverse=False):
 
         TaskElement.__init__(self)
 
@@ -58,6 +59,7 @@ class PhononFC3Base(TaskElement):
         self._primitive_matrix = primitive_matrix
         self._distance = distance
         self._is_diagonal = is_diagonal
+        self._check_imaginary = check_imaginary
         self._cutoff_frequency = cutoff_frequency # determine imaginary freq.
         self._lattice_tolerance = lattice_tolerance
         self._pressure_target = pressure_target
@@ -82,6 +84,11 @@ class PhononFC3Base(TaskElement):
         return self._phonon
 
     def get_phonon_fc3(self):
+        for i, task in enumerate(self._phonon_fc3_tasks[1:]):
+            forces_fc3.append(task.get_properties()['forces'][-1])
+        disp_dataset = self._phonon_fc3.get_displacement_dataset()
+        self._phonon_fc3.produce_fc3(forces_fc3)
+
         return self._phonon_fc3
 
     def get_cell(self):
@@ -164,7 +171,8 @@ class PhononFC3Base(TaskElement):
                     disp1['forces'] = task.get_properties()['forces'][-1]
                 write_FORCE_SETS(disp_dataset)
                 self._phonon.set_displacement_dataset(disp_dataset)
-                self._phonon.produce_force_constants()
+                self._phonon.produce_force_constants(
+                    calculate_full_force_constants=False)
                 if self._exist_imaginary_mode():
                     self._status = "imaginary_mode"
                     self._write_yaml()
@@ -183,14 +191,9 @@ class PhononFC3Base(TaskElement):
                 self._status = "done"
                 forces_fc3 = []
                 for i, task in enumerate(self._phonon_fc3_tasks[1:]):
-                    print(i + 1)
                     forces_fc3.append(task.get_properties()['forces'][-1])
-
-                # forces_fc3 = [task.get_properties()['forces'][-1]
-                #               for task in self._phonon_fc3_tasks[1:]]
                 disp_dataset = self._phonon_fc3.get_displacement_dataset()
                 write_FORCES_FC3(disp_dataset, forces_fc3)
-                self._phonon_fc3.produce_fc3(forces_fc3)
                 self._tasks = []
                 raise StopIteration
             elif "terminate" in self._status and self._traverse == "restart":
@@ -208,13 +211,16 @@ class PhononFC3Base(TaskElement):
         self._tasks = [task]
 
     def _set_stage1(self):
-        self._stage = 1
-        self._status = "fc2_displacements"
         self._set_phonon_fc3()
-        disp_dataset = self._phonon_fc3.get_displacement_dataset()
-        num_fc2_displacements = len(disp_dataset['first_atoms'])
-        self._tasks = self._get_displacement_tasks(stop=num_fc2_displacements)
-        self._phonon_fc3_tasks += self._tasks
+        if self._check_imaginary:
+            self._stage = 1
+            self._status = "fc2_displacements"
+            disp_dataset = self._phonon_fc3.get_displacement_dataset()
+            self._tasks = self._get_displacement_tasks(
+                stop=len(disp_dataset['first_atoms']))
+            self._phonon_fc3_tasks += self._tasks
+        else:
+            self._set_stage2()
 
     def _reset_stage1(self):
         self._traverse = False
@@ -223,8 +229,8 @@ class PhononFC3Base(TaskElement):
             if task.get_status() == "terminate":
                 disp_terminated.append(i)
         disp_dataset = self._phonon_fc3.get_displacement_dataset()
-        num_fc2_displacements = len(disp_dataset['first_atoms'])
-        tasks = self._get_displacement_tasks(stop=num_fc2_displacements)
+        tasks = self._get_displacement_tasks(
+            stop=len(disp_dataset['first_atoms']))
         self._tasks = []
         for i in disp_terminated:
             self._tasks.append(tasks[i])
@@ -234,9 +240,12 @@ class PhononFC3Base(TaskElement):
     def _set_stage2(self):
         self._stage = 2
         self._status = "fc3_displacements"
-        disp_dataset = self._phonon_fc3.get_displacement_dataset()
-        num_fc2_displacements = len(disp_dataset['first_atoms'])
-        self._tasks = self._get_displacement_tasks(start=num_fc2_displacements)
+        if self._check_imaginary:
+            disp_dataset = self._phonon_fc3.get_displacement_dataset()
+            start_index = len(disp_dataset['first_atoms'])
+        else:
+            start_index = 0
+        self._tasks = self._get_displacement_tasks(start=start_index)
         self._phonon_fc3_tasks += self._tasks
 
     def _reset_stage2(self):
@@ -245,13 +254,17 @@ class PhononFC3Base(TaskElement):
         for i, task in enumerate(self._tasks):
             if task.get_status() == "terminate":
                 disp_terminated.append(i)
-        disp_dataset = self._phonon_fc3.get_displacement_dataset()
-        num_fc2_displacements = len(disp_dataset['first_atoms'])
-        tasks = self._get_displacement_tasks(start=num_fc2_displacements)
+
+        if self._check_imaginary:
+            disp_dataset = self._phonon_fc3.get_displacement_dataset()
+            start_index = len(disp_dataset['first_atoms'])
+        else:
+            start_index = 0
+        tasks = self._get_displacement_tasks(start=start_index)
         self._tasks = []
         for i in disp_terminated:
             self._tasks.append(tasks[i])
-            self._phonon_fc3_tasks[i + 1 + num_fc2_displacements] = tasks[i]
+            self._phonon_fc3_tasks[i + 1 + start_index] = tasks[i]
         self._status = "fc3_displacements"
 
     def _set_phonon_fc3(self):

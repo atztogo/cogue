@@ -33,6 +33,22 @@ class AutoCalc:
         self._queue = queue
 
     def append(self, directory, task):
+        """Append task to autocalc instance
+
+        A task is appended to AtuoCalc instance. This task is first put in a new
+        TaskSet and this TaskSet instance is put in ``self._taskset`` of
+        AutoCalc instance.
+
+        Parameters
+        ----------
+        directory : str
+            Directory is created by this str under the autocalc project
+            directory. When ``None`` is given, no directory is created.
+            See AutoCalc._deep_begin.
+        task : Task
+            This task instance is appended.
+
+        """
         taskset = TaskSet(directory)
         taskset.append(task)
         self._taskset.append(taskset)
@@ -123,7 +139,7 @@ class AutoCalc:
                              os.getcwd().replace(self._cwd, '').lstrip('/'))
             return cwd
 
-    def _chdir_out(self, cwd, status): 
+    def _chdir_out(self, cwd, status):
        if cwd is not None:
            self._log.append("        [ %s ]" % status)
            directory = cwd.replace(self._cwd, '').lstrip('/')
@@ -206,7 +222,7 @@ class AutoCalc:
             for t in task.get_tasks():
                 f_dot.write("n%d -> n%d ;\n" % (tid, t.get_tid()))
                 self._write_dot_tids(t, f_dot)
-    
+
     def _write_qstatus(self):
         if self._verbose:
             self._queue.write_qstatus(self._log_name)
