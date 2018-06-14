@@ -149,6 +149,16 @@ class AutoCalc:
            os.chdir(cwd)
 
     def _overwrite_settings(self):
+        """'max_jobs' is updated by making a file.
+
+        The filename has to be "%s.cogue" % self._name. self._name is
+        found by "something" of "something.dot" filename.  The
+        location to be put this file is the same as that
+        "something.dot" is created.
+
+        """
+
+
         filename = "%s.cogue" % self._name
         if os.path.exists(filename):
             print("%s is found." % filename)
