@@ -18,9 +18,9 @@ class QuasiHarmonicPhononBase(TaskElement, PhononYaml):
        total energy calculations with  -2, -1, 0, +1, +2, +3, +4% volumes
     2. (optional) Mode Gruneisen parameter calculations with 0, +1% volumes
     3. Phonon calculations at specified strains or estimated volumes
-    
+
     """
-    
+
     def __init__(self,
                  directory=None,
                  name=None,
@@ -32,6 +32,7 @@ class QuasiHarmonicPhononBase(TaskElement, PhononYaml):
                  t_min=None,
                  supercell_matrix=None,
                  primitive_matrix=None,
+                 nac=False,
                  distance=None,
                  lattice_tolerance=None,
                  force_tolerance=None,
@@ -75,6 +76,7 @@ class QuasiHarmonicPhononBase(TaskElement, PhononYaml):
             self._t_min = t_min
         self._supercell_matrix = supercell_matrix
         self._primitive_matrix = primitive_matrix
+        self._nac = nac
         self._distance = distance
         self._lattice_tolerance = lattice_tolerance
         self._pressure_target = pressure_target
@@ -87,7 +89,7 @@ class QuasiHarmonicPhononBase(TaskElement, PhononYaml):
         self._is_cell_relaxed = is_cell_relaxed
         self._max_num_atoms = max_num_atoms
         self._first_phonon_index  = first_phonon_index
-        
+
         self._stage = 0
         self._tasks = None
 
@@ -125,11 +127,10 @@ class QuasiHarmonicPhononBase(TaskElement, PhononYaml):
             raise RuntimeError
 
         if self._is_cell_relaxed:
+            self._all_tasks = [None]
             if self._estimate_strain:
-                self._all_tasks = [None]
                 self._prepare_electric_eos()
             else:
-                self._all_tasks = [None, None]
                 self._prepare_phonons()
         else:
             self._set_stage0()
@@ -210,7 +211,7 @@ class QuasiHarmonicPhononBase(TaskElement, PhononYaml):
                             self._all_tasks[i + 2] = tasks[i]
                     self._status = "phonons"
                     return self._tasks
-                
+
         self._tasks = []
         self._write_yaml()
         raise StopIteration
@@ -223,7 +224,7 @@ class QuasiHarmonicPhononBase(TaskElement, PhononYaml):
         if self._estimate_strain:
             phonon_tasks = self._all_tasks[5:]
         else:
-            phonon_tasks = self._all_tasks[2:]
+            phonon_tasks = self._all_tasks[1:]
 
         for task in phonon_tasks:
             energies.append(task.get_energy())
@@ -452,7 +453,7 @@ class QuasiHarmonicPhononBase(TaskElement, PhononYaml):
                           "parameter calculation.\n")
             self._status = "phonon_for_gruneisen_failed"
             return []
-            
+
         vol = np.linalg.det(lattice)
         volumes = [vol * (1 + strain) for strain in _eos_strains]
         eos = self._all_tasks[1].get_equation_of_state()
