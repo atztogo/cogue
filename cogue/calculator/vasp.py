@@ -308,6 +308,7 @@ def phonon(directory="phonon",
            is_cell_relaxed=False,
            max_num_atoms=120,
            stop_condition=None,
+           symmetry_tolerance=None,
            traverse=False,
            cell=None,
            pseudo_potential_map=None,
@@ -336,6 +337,7 @@ def phonon(directory="phonon",
                 is_cell_relaxed=is_cell_relaxed,
                 max_num_atoms=max_num_atoms,
                 stop_condition=stop_condition,
+                symmetry_tolerance=symmetry_tolerance,
                 traverse=traverse)
 
     ph.set_configurations(cell=cell,
@@ -1715,6 +1717,7 @@ class Phonon(TaskVasp, TaskVaspPhonon, PhononBase):
                  is_cell_relaxed=False,
                  max_num_atoms=120,
                  stop_condition=None,
+                 symmetry_tolerance=None,
                  traverse=False):
 
         PhononBase.__init__(
@@ -1737,6 +1740,7 @@ class Phonon(TaskVasp, TaskVaspPhonon, PhononBase):
             is_cell_relaxed=is_cell_relaxed,
             max_num_atoms=max_num_atoms,
             stop_condition=stop_condition,
+            symmetry_tolerance=symmetry_tolerance,
             traverse=traverse)
 
     def _get_displacement_tasks(self, start=0, stop=None):
