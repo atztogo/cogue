@@ -11,7 +11,7 @@ class TaskBase:
         self._task_type = None
         self._directory = None
         self._tasks = None
-    
+
     def __iter__(self):
         return self
 
@@ -53,7 +53,7 @@ class TaskBase:
 
     def set_tid(self, tid):
         self._tid = tid
-        
+
     def get_tid(self):
         return self._tid
 
@@ -116,7 +116,7 @@ class TaskElement(TaskBase):
             self._job = list(job)
         else:
             self._job = job
-        
+
     def get_job(self):
         return self._job
 
@@ -138,6 +138,17 @@ class TaskSet(TaskBase):
     def __init__(self,
                  directory=None,
                  name=None):
+        """Container of tasks
+
+        Parameters
+        ----------
+        directory : str
+            Directory is created by this str under the autocalc project
+            directory. When ``None`` is given, no directory is created.
+        name : str
+            Name of taskset. When ``None``, directory str is used as the name.
+
+        """
 
         TaskBase.__init__(self)
 
@@ -187,5 +198,3 @@ class TaskSet(TaskBase):
                     lines.append("  " + line)
 
         return lines
-
-        

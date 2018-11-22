@@ -81,7 +81,7 @@ def get_Z(numbers):
         else:
             count[n] = 1
     values  = list(count.values())
-    
+
     try:
         from math import gcd
     except ImportError:

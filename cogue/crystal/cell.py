@@ -66,7 +66,7 @@ class Cell:
             self._lattice = None
         else:
             self._lattice = np.array(lattice, dtype='double', order='C')
-            
+
         if points is None:
             self._points = None
         else:
@@ -94,77 +94,147 @@ class Cell:
 
         if self._numbers is None and self._symbols is not None:
             self._set_numbers_from_symbols()
-            
+
         if self._symbols is None and self._numbers is not None:
             self._set_symbols_from_numbers()
 
         if self._masses is None:
             self._set_masses_from_numbers()
 
-    def set_lattice(self, lattice):
-        """ """
-        self._lattice = np.array(lattice, dtype='double', order='C')
-
     @property
     def lattice(self):
         """ """
         return self._lattice.copy()
 
+    @lattice.setter
+    def lattice(self, lattice):
+        self._lattice = np.array(lattice, dtype='double', order='C')
+
+    def set_lattice(self, lattice):
+        """ """
+        warnings.warn("set_lattice method is deprecated.", DeprecationWarning)
+        self.lattice = lattice
+
     def get_lattice(self):
         """ """
         warnings.warn("get_lattice method is deprecated.", DeprecationWarning)
-        return self._lattice.copy()
+        return self.lattice
 
-    def get_volume(self):
+    @property
+    def volume(self):
         """ """
         return np.linalg.det(self._lattice)
 
-    def set_points(self, points):
+    def get_volume(self):
         """ """
-        self._points = np.array(points, dtype='double', order='C')
+        warnings.warn("get_volume method is deprecated.", DeprecationWarning)
+        return self.volume
 
-    def get_points(self):
+    @property
+    def points(self):
         """ """
         return self._points.copy()
 
-    def set_symbols(self, symbols):
+    @points.setter
+    def points(self, points):
+        """ """
+        self._points = np.array(points, dtype='double', order='C')
+
+    def set_points(self, points):
+        """ """
+        warnings.warn("set_points method is deprecated.", DeprecationWarning)
+        self.points = points
+
+    def get_points(self):
+        """ """
+        warnings.warn("get_points method is deprecated.", DeprecationWarning)
+        return self.points
+
+    @property
+    def symbols(self):
+        """ """
+        return self._symbols[:]
+
+    @symbols.setter
+    def symbols(self, symbols):
         """ """
         self._symbols = symbols[:]
         self._set_numbers_from_symbols()
         self._set_masses_from_numbers()
-        
+
+    def set_symbols(self, symbols):
+        """ """
+        warnings.warn("set_symbols method is deprecated.", DeprecationWarning)
+        self.symbols = symbols
+
     def get_symbols(self):
         """ """
-        return self._symbols[:]
+        warnings.warn("get_symbols method is deprecated.", DeprecationWarning)
+        return self.symbols
 
-    def set_masses(self, masses):
-        """ """
-        self._masses = np.array(masses, dtype='double')
-
-    def get_masses(self):
+    @property
+    def masses(self):
         """ """
         return self._masses.copy()
 
-    def set_magnetic_moments(self, magmoms):
+    @masses.setter
+    def masses(self, masses):
         """ """
-        self._magmoms = np.array(magmoms, dtype='double')
+        self._masses = np.array(masses, dtype='double')
 
-    def get_magnetic_moments(self):
+    def set_masses(self, masses):
+        """ """
+        warnings.warn("set_masses method is deprecated.", DeprecationWarning)
+        self.masses = masses
+
+    def get_masses(self):
+        """ """
+        warnings.warn("get_masses method is deprecated.", DeprecationWarning)
+        return self.masses
+
+    @property
+    def magnetic_moments(self):
         """ """
         if self._magmoms is None:
             return None
         else:
             return self._magmoms.copy()
 
+    @magnetic_moments.setter
+    def magnetic_moments(self, magmoms):
+        """ """
+        if magmoms is None:
+            self._magmoms = None
+        else:
+            self._magmoms = np.array(magmoms, dtype='double')
+
+    def set_magnetic_moments(self, magmoms):
+        """ """
+        warnings.warn("set_magnetic_moments method is deprecated.",
+                      DeprecationWarning)
+        self.magnetic_moments = magmoms
+
+    def get_magnetic_moments(self):
+        """ """
+        warnings.warn("get_magnetic_moments method is deprecated.",
+                      DeprecationWarning)
+        return self.magnetic_moments
+
     @property
     def numbers(self):
         return self._numbers.copy()
 
-    def set_numbers(self, numbers):
+    @numbers.setter
+    def numbers(self, numbers):
         """ """
         self._numbers = np.array(numbers, dtype='intc')
         self._set_symbols_from_numbers()
         self._set_masses_from_numbers()
+
+    def set_numbers(self, numbers):
+        """ """
+        warnings.warn("set_numbers method is deprecated.", DeprecationWarning)
+        self.numbers = numbers
 
     def get_numbers(self):
         """ """
@@ -185,7 +255,7 @@ class Cell:
         for v, a in zip(self._lattice.T, ('a', 'b', 'c')):
             lines.append("- [ %22.16f, %22.16f, %22.16f ] # %s" %
                          (v[0], v[1], v[2], a))
-    
+
         lines.append("points:")
         for i, (s, v, m) in enumerate(zip(self._symbols,
                                           self._points.T,
@@ -199,7 +269,7 @@ class Cell:
 
     def __str__(self):
         return "\n".join(self.get_yaml_lines())
-    
+
     def _set_numbers_from_symbols(self):
         self._numbers = np.array([atomic_symbols[s] for s in self._symbols],
                                  dtype='intc')
@@ -210,5 +280,3 @@ class Cell:
     def _set_masses_from_numbers(self):
         self._masses = np.array([atomic_weights[x][3] for x in self._numbers],
                                 dtype='double')
-
-

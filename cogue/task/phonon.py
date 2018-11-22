@@ -33,7 +33,7 @@ class PhononYaml(StructureOptimizationYaml):
         lines.append("distance: %f" % self._distance)
         if cell:
             lines += cell.get_yaml_lines()
-    
+
         return lines
 
 class PhononBase(TaskElement, PhononYaml):
@@ -62,6 +62,7 @@ class PhononBase(TaskElement, PhononYaml):
                  is_cell_relaxed=False,
                  max_num_atoms=None,
                  stop_condition=None,
+                 symmetry_tolerance=None,
                  traverse=False):
 
         TaskElement.__init__(self)
@@ -91,6 +92,7 @@ class PhononBase(TaskElement, PhononYaml):
         self._is_cell_relaxed = is_cell_relaxed
         self._max_num_atoms = max_num_atoms
         self._stop_condition = stop_condition
+        self._symmetry_tolerance = symmetry_tolerance
         self._traverse = traverse
 
         self._stage = 0
@@ -122,7 +124,7 @@ class PhononBase(TaskElement, PhononYaml):
 
     def get_space_group(self):
         return self._space_group
-        
+
     def set_status(self):
         if self._stage == 0:
             task = self._tasks[0]
@@ -185,7 +187,7 @@ class PhononBase(TaskElement, PhononYaml):
                 self._traverse = False
                 self._set_stage0()
                 return self._tasks
-                
+
         elif self._stage == 1: # task 1..n: displaced supercells
             if self._status == "next":
                 if self._collect_forces():
@@ -225,7 +227,7 @@ class PhononBase(TaskElement, PhononYaml):
                 self._all_tasks.pop()
                 self._set_stage2()
         else:
-            pass    
+            pass
 
         self._tasks = []
         self._write_yaml()
@@ -236,7 +238,7 @@ class PhononBase(TaskElement, PhononYaml):
         task = self._get_equilibrium_task()
         self._all_tasks = [task]
         self._tasks = [task]
-        
+
     def _set_stage1(self):
         self._stage = 1
         self._status = "displacements"
@@ -275,7 +277,7 @@ class PhononBase(TaskElement, PhononYaml):
         s2u = supercell.get_supercell_to_unitcell_map()
         u2u = supercell.get_unitcell_to_unitcell_map()
         indep_atoms_u = [u2u[i] for i in s2u[indep_atoms]]
-        
+
         if born is not None and epsilon is not None:
             self._born = born
             self._epsilon = epsilon
@@ -296,9 +298,9 @@ class PhononBase(TaskElement, PhononYaml):
                     self._stop_condition['symmetry_operations']):
                     self._status = "low_symmetry"
                     return True
-                    
+
         return False
-        
+
     def _set_phonon(self):
         if self._supercell_matrix is None:
             cell = sort_cell_by_symbols(
@@ -314,7 +316,8 @@ class PhononBase(TaskElement, PhononYaml):
                                self._supercell_matrix,
                                primitive_matrix=self._primitive_matrix,
                                dynamical_matrix_decimals=14,
-                               force_constants_decimals=14)
+                               force_constants_decimals=14,
+                               symprec=self._symmetry_tolerance)
         self._phonon.generate_displacements(
             distance=self._distance,
             is_plusminus=self._displace_plusminus,
@@ -338,5 +341,3 @@ class PhononBase(TaskElement, PhononYaml):
                 lines.append("electric_total_energy: %20.10f" % self._energy)
 
         return lines
-
-        
