@@ -6,16 +6,16 @@ from cogue.interface.vasp_io import write_poscar, write_poscar_yaml
 from cogue.crystal.cell import sort_cell_by_symbols
 from cogue.crystal.converter import cell2atoms
 from cogue.crystal.supercell import estimate_supercell_matrix
-from cogue.crystal.symmetry import (get_crystallographic_cell,
-                                    get_symmetry_dataset)
+from cogue.crystal.symmetry import get_crystallographic_cell
 
 try:
     from phonopy import Phonopy
-    from phonopy.file_IO import write_disp_yaml
+    from phonopy.interface import PhonopyYaml
     from phonopy.file_IO import write_FORCE_SETS
 except ImportError:
     print("You need to install phonopy.")
     sys.exit(1)
+
 
 class PhononYaml(StructureOptimizationYaml):
     def _get_phonon_yaml_lines(self, cell):
@@ -35,6 +35,7 @@ class PhononYaml(StructureOptimizationYaml):
             lines += cell.get_yaml_lines()
 
         return lines
+
 
 class PhononBase(TaskElement, PhononYaml):
     """PhononBase class
@@ -104,7 +105,7 @@ class PhononBase(TaskElement, PhononYaml):
 
         self._space_group = None
         self._cell = None
-        self._phonon = None # Phonopy object
+        self._phonon = None  # Phonopy object
         self._all_tasks = None
 
         self._try_collect_forces = True
@@ -188,7 +189,7 @@ class PhononBase(TaskElement, PhononYaml):
                 self._set_stage0()
                 return self._tasks
 
-        elif self._stage == 1: # task 1..n: displaced supercells
+        elif self._stage == 1:  # task 1..n: displaced supercells
             if self._status == "next":
                 if self._collect_forces():
                     if self._nac:
@@ -322,12 +323,13 @@ class PhononBase(TaskElement, PhononYaml):
             distance=self._distance,
             is_plusminus=self._displace_plusminus,
             is_diagonal=self._displace_diagonal)
-        supercell = self._phonon.get_supercell()
-        displacements = self._phonon.get_displacements()
 
         write_poscar(cell, filename="POSCAR-unitcell")
         write_poscar_yaml(cell, filename="POSCAR-unitcell.yaml")
-        write_disp_yaml(displacements, supercell)
+        phpy_yaml = PhonopyYaml(show_displacements=True)
+        phpy_yaml.set_phonon_info(self._phonon)
+        with open("phonopy_disp.yaml", 'w') as w:
+            w.write(str(phpy_yaml))
 
     def get_yaml_lines(self):
         lines = TaskElement.get_yaml_lines(self)
