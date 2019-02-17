@@ -1,13 +1,20 @@
-import sys
 import numpy as np
 from tvtk.api import tvtk
 from mayavi.sources.vtk_data_source import VTKDataSource
-from mayavi.modules.surface import Surface
 from mayavi import mlab
 from scipy.spatial import Voronoi
 
+
 class VisualizeBrillouinZone:
-    def __init__(self, lattice, magnitude=10):
+    def __init__(self, lattice, magnitude=1):
+        """
+        Parameters
+        ----------
+        lattice : ndarray
+            Reciprocal basis vectors as row vectors.
+
+        """
+
         self._magnitude = magnitude
         self._lattice = lattice * self._magnitude
 
@@ -42,48 +49,49 @@ class VisualizeBrillouinZone:
                       color=color,
                       line_width=3,
                       scale_factor=1)
-    
+
         scale = shortest / 8
-        for c, v in zip(('a','b','c'), lat * (1 + scale / 2)):
+        for c, v in zip(('a', 'b', 'c'), lat * (1 + scale / 2)):
             x, y, z = v
             x += scale / 2
             y -= scale / 4
             z -= scale / 4
             mlab.text3d(x, y, z, c, color=color, scale=scale)
-    
+
     def _set_Brillouin_zone(self):
         points = np.dot(np.array(
-            list(np.ndindex(5, 5, 5))) - [2, 2, 2], self._lattice.T)
+            list(np.ndindex(5, 5, 5))) - [2, 2, 2], self._lattice)
         voronoi = Voronoi(points)
         voronoi_cells = [cell for cell in voronoi.regions
                          if cell and (-1 not in cell)]
-    
+
         if len(voronoi_cells) == 0:
             print("BZ is not unique.")
             return False
-    
+
         norm2s = np.sum(voronoi.vertices ** 2, axis=1)
         BZ_cell = voronoi_cells[
             np.argmin([np.sum(norm2s[vcell]) for vcell in voronoi_cells])]
         faces = [edge for edge in voronoi.ridge_vertices if -1 not in edge]
         BZ_faces = [face for face in faces
                     if np.all([x in BZ_cell for x in face])]
- 
+
         unique_points = np.unique([v for face in BZ_faces for v in face])
         unique_vertices = np.array(voronoi.vertices[unique_points])
         indices = {up: i for i, up in enumerate(unique_points)}
-        new_BZ_faces = [[indices[x] for x in one_face] for one_face in BZ_faces]
+        new_BZ_faces = [[indices[x] for x in one_face]
+                        for one_face in BZ_faces]
 
         self._vertices = unique_vertices
         self._faces = new_BZ_faces
 
         return True
-    
+
     def _draw_voronoi(self):
         faces = self._polydata()
         src = VTKDataSource(data=faces)
         mlab.pipeline.surface(src, opacity=0.5, representation='wireframe')
-    
+
     def _polydata(self):
         pointArr = self._vertices
         faceArr = self._faces
@@ -93,4 +101,3 @@ class VisualizeBrillouinZone:
         faces.point_data.scalars = [1] * len(pointArr)
         faces.point_data.scalars.name = 'Height'
         return faces
-

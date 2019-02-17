@@ -8,3 +8,5 @@
 .buildinfo
 /.doctrees
 MANIFEST
+*pyc
+*so
