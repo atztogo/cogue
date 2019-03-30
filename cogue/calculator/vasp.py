@@ -14,7 +14,7 @@ from cogue.crystal.converter import atoms2cell
 from cogue.crystal.utility import klength2mesh
 from cogue.interface.vasp_io import (change_point_order, read_poscar,
                                      get_atom_order_from_poscar_yaml,
-                                     write_poscar, write_potcar, Incar,
+                                     write_potcar, Incar,
                                      write_kpoints, Outcar, Vasprunxml,
                                      VasprunxmlExpat, VaspCell)
 from cogue.task.oneshot_calculation import (ElectronicStructureBase,
@@ -32,6 +32,7 @@ from cogue.task.born_effective_charge import BornEffectiveChargeBase
 from cogue.task.quasiharmonic_phonon import QuasiHarmonicPhononBase
 from cogue.task.band_structure import BandStructureBase
 from cogue.task.density_of_states import DensityOfStatesBase
+
 
 def incar(addgrid=None,
           ediff=None,
@@ -70,6 +71,7 @@ def incar(addgrid=None,
                  pstress=pstress,
                  sigma=sigma)
 
+
 def electronic_structure(directory="electronic_structure",
                          name=None,
                          job=None,
@@ -99,17 +101,17 @@ def electronic_structure(directory="electronic_structure",
 
     return es
 
+
 def structure_optimization(directory="structure_optimization",
                            name=None,
                            job=None,
                            lattice_tolerance=0.1,
                            force_tolerance=1e-3,
                            pressure_target=0,
-                           stress_tolerance=0.1, # GPa=kbar / 10
+                           stress_tolerance=0.1,  # GPa=kbar / 10
                            max_increase=None,
                            max_iteration=5,
                            min_iteration=1,
-                           find_symmetry=True,
                            impose_symmetry=False,
                            symmetry_tolerance=0.1,
                            traverse=False,
@@ -131,7 +133,6 @@ def structure_optimization(directory="structure_optimization",
                                max_increase=max_increase,
                                max_iteration=max_iteration,
                                min_iteration=min_iteration,
-                               find_symmetry=find_symmetry,
                                impose_symmetry=impose_symmetry,
                                symmetry_tolerance=symmetry_tolerance,
                                traverse=traverse)
@@ -147,6 +148,7 @@ def structure_optimization(directory="structure_optimization",
     so.set_job(job)
 
     return so
+
 
 def bulk_modulus(directory="bulk_modulus",
                  name=None,
@@ -195,6 +197,7 @@ def bulk_modulus(directory="bulk_modulus",
 
     return bk
 
+
 def band_structure(directory="band_structure",
                    name=None,
                    job=None,
@@ -241,6 +244,7 @@ def band_structure(directory="band_structure",
     bs.set_job(job)
 
     return bs
+
 
 def density_of_states(directory="density_of_states",
                       name=None,
@@ -289,6 +293,7 @@ def density_of_states(directory="density_of_states",
 
     return dos
 
+
 def phonon(directory="phonon",
            name=None,
            job=None,
@@ -307,6 +312,7 @@ def phonon(directory="phonon",
            min_iteration=1,
            is_cell_relaxed=False,
            max_num_atoms=120,
+           impose_symmetry=False,
            stop_condition=None,
            symmetry_tolerance=1e-5,
            traverse=False,
@@ -336,6 +342,7 @@ def phonon(directory="phonon",
                 min_iteration=min_iteration,
                 is_cell_relaxed=is_cell_relaxed,
                 max_num_atoms=max_num_atoms,
+                impose_symmetry=impose_symmetry,
                 stop_condition=stop_condition,
                 symmetry_tolerance=symmetry_tolerance,
                 traverse=traverse)
@@ -351,6 +358,7 @@ def phonon(directory="phonon",
     ph.set_job(job)
 
     return ph
+
 
 def phonon_fc3(directory="phonon_fc3",
                name=None,
@@ -409,7 +417,6 @@ def phonon_fc3(directory="phonon_fc3",
     return ph3
 
 
-
 def elastic_constants(directory="elastic_constants",
                       name=None,
                       job=None,
@@ -454,6 +461,7 @@ def elastic_constants(directory="elastic_constants",
     ec.set_job(job)
 
     return ec
+
 
 def born_effective_charge(directory="born_effective_charge",
                           name=None,
@@ -501,6 +509,7 @@ def born_effective_charge(directory="born_effective_charge",
     bec.set_job(job)
 
     return bec
+
 
 def mode_gruneisen(directory="mode_gruneisen",
                    name=None,
@@ -558,6 +567,7 @@ def mode_gruneisen(directory="mode_gruneisen",
     mg.set_job(job)
 
     return mg
+
 
 def quasiharmonic_phonon(directory="quasiharmonic_phonon",
                          name=None,
@@ -626,6 +636,7 @@ def quasiharmonic_phonon(directory="quasiharmonic_phonon",
 
     return qh
 
+
 def phonon_relax_element(directory="phonon_relax_element",
                          name=None,
                          job=None,
@@ -680,6 +691,7 @@ def phonon_relax_element(directory="phonon_relax_element",
     phre.set_job(job)
 
     return phre
+
 
 def phonon_relax(directory="phonon_relax",
                  name=None,
@@ -739,6 +751,7 @@ def phonon_relax(directory="phonon_relax",
     phr.set_job(job)
 
     return phr
+
 
 class TaskVasp:
     def set_configurations(self,
@@ -934,7 +947,7 @@ class TaskVasp:
                 impose_symmetry=impose_symmetry,
                 symmetry_tolerance=symmetry_tolerance,
                 traverse=self._traverse)
-        else: # Use default symmetry_tolerance
+        else:  # Use default symmetry_tolerance
             task = StructureOptimization(
                 directory=directory,
                 lattice_tolerance=self._lattice_tolerance,
@@ -1037,7 +1050,7 @@ class ElectronicStructure(TaskVasp, ElectronicStructureBase):
                     force_sets = vxml.get_forces()
                 self._properties = {'stress': vxml.get_stress(),
                                     'forces': force_sets,
-                                    'energies': vxml.get_energies()[:,1],
+                                    'energies': vxml.get_energies()[:, 1],
                                     'eigenvalues': vxml.get_eigenvalues(),
                                     'occupancies': vxml.get_occupancies(),
                                     'kpoints': kpoints,
@@ -1049,6 +1062,7 @@ class ElectronicStructure(TaskVasp, ElectronicStructureBase):
                 self._log += vxml.log
                 self._log += "    Failed to parse vasprun.xml.\n"
                 self._status = "terminate"
+
 
 class StructureOptimizationElement(TaskVasp,
                                    StructureOptimizationElementBase):
@@ -1134,7 +1148,7 @@ class StructureOptimizationElement(TaskVasp,
                 self._stress = stress[max_iter - 1] / 10
                 self._energy = energies[max_iter - 1, 1]
                 if self._atom_order:
-                    _points = points[max_iter - 1][: , self._atom_order]
+                    _points = points[max_iter - 1][:, self._atom_order]
                     self._forces = forces[max_iter - 1][self._atom_order, :]
                 else:
                     _points = points[max_iter - 1]
@@ -1145,7 +1159,7 @@ class StructureOptimizationElement(TaskVasp,
                 self._stress = stress[max_iter - 3] / 10
                 self._energy = energies[max_iter - 3, 1]
                 if self._atom_order:
-                    _points = points[max_iter - 3][: , self._atom_order]
+                    _points = points[max_iter - 3][:, self._atom_order]
                     self._forces = forces[max_iter - 3][self._atom_order, :]
                 else:
                     _points = points[max_iter - 3]
@@ -1176,7 +1190,7 @@ class StructureOptimizationElement(TaskVasp,
                     self._current_cell = change_point_order(cell,
                                                             self._atom_order)
                 else:
-                    self._current_cell = current_cell
+                    self._current_cell = cell
                 self._current_cell.set_masses(masses)
             except:
                 self._current_cell = cell
@@ -1230,7 +1244,6 @@ class StructureOptimization(TaskVasp, StructureOptimizationBase):
                  max_increase=None,
                  max_iteration=5,
                  min_iteration=1,
-                 find_symmetry=True,
                  impose_symmetry=False,
                  symmetry_tolerance=0.1,
                  traverse=False):
@@ -1246,7 +1259,6 @@ class StructureOptimization(TaskVasp, StructureOptimizationBase):
             max_increase=max_increase,
             max_iteration=max_iteration,
             min_iteration=min_iteration,
-            find_symmetry=find_symmetry,
             impose_symmetry=impose_symmetry,
             symmetry_tolerance=symmetry_tolerance,
             traverse=traverse)
@@ -1281,6 +1293,7 @@ class StructureOptimization(TaskVasp, StructureOptimizationBase):
         task.set_job(self._job.copy(
                 "%s-%s" % (self._job.get_jobname(), self._stage)))
         return task
+
 
 class BulkModulus(TaskVasp, BulkModulusBase):
     """Task to calculate bulk modulus by VASP."""
@@ -1322,7 +1335,7 @@ class BulkModulus(TaskVasp, BulkModulusBase):
         k_length = kpoints['length']
         incar.set_isif(4)
 
-        task=StructureOptimization(
+        task = StructureOptimization(
             directory=directory,
             lattice_tolerance=self._lattice_tolerance,
             force_tolerance=self._force_tolerance,
@@ -1344,6 +1357,7 @@ class BulkModulus(TaskVasp, BulkModulusBase):
         task.set_job(job.copy("%s-%s" % (job.get_jobname(), directory)))
 
         return task
+
 
 class BandStructure(TaskVasp, BandStructureBase):
     """Task to calculate band structure by VASP."""
@@ -1409,6 +1423,7 @@ class BandStructure(TaskVasp, BandStructureBase):
             tasks.append(task)
 
         return tasks
+
 
 class DensityOfStates(TaskVasp, DensityOfStatesBase):
     """Task to calculate density of states by VASP."""
@@ -1481,6 +1496,7 @@ class DensityOfStates(TaskVasp, DensityOfStatesBase):
         task.set_copy_files([("../%s/CHGCAR" % chgcar_dir, "CHGCAR")])
 
         return task
+
 
 class TaskVaspPhonon:
     """Phonon calculation configuration class
@@ -1612,6 +1628,7 @@ class TaskVaspPhonon:
 
         return task
 
+
 class TaskVaspQHA:
     """QHA calculation configuration class
 
@@ -1697,6 +1714,7 @@ class TaskVaspQHA:
 
         return task
 
+
 class Phonon(TaskVasp, TaskVaspPhonon, PhononBase):
     def __init__(self,
                  directory="phonon",
@@ -1716,6 +1734,7 @@ class Phonon(TaskVasp, TaskVaspPhonon, PhononBase):
                  min_iteration=1,
                  is_cell_relaxed=False,
                  max_num_atoms=120,
+                 impose_symmetry=False,
                  stop_condition=None,
                  symmetry_tolerance=None,
                  traverse=False):
@@ -1739,6 +1758,7 @@ class Phonon(TaskVasp, TaskVaspPhonon, PhononBase):
             min_iteration=min_iteration,
             is_cell_relaxed=is_cell_relaxed,
             max_num_atoms=max_num_atoms,
+            impose_symmetry=impose_symmetry,
             stop_condition=stop_condition,
             symmetry_tolerance=symmetry_tolerance,
             traverse=traverse)
@@ -1746,6 +1766,7 @@ class Phonon(TaskVasp, TaskVaspPhonon, PhononBase):
     def _get_displacement_tasks(self, start=0, stop=None):
         return self._get_vasp_displacement_tasks(
             self._phonon, start=start, stop=stop)
+
 
 class PhononFC3(TaskVasp, TaskVaspPhonon, PhononFC3Base):
     def __init__(self,
@@ -1845,6 +1866,7 @@ class ElasticConstants(TaskVasp, ElasticConstantsBase):
                               (job.get_jobname(), directory)))
         return task
 
+
 class ElasticConstantsElement(TaskVasp, ElasticConstantsElementBase):
     """ """
     def __init__(self,
@@ -1886,6 +1908,7 @@ class ElasticConstantsElement(TaskVasp, ElasticConstantsElementBase):
             else:
                 self._log += "    Failed to parse OUTCAR.\n"
                 self._status = "terminate"
+
 
 class BornEffectiveCharge(TaskVasp, BornEffectiveChargeBase):
     def __init__(self,
@@ -1941,6 +1964,7 @@ class BornEffectiveCharge(TaskVasp, BornEffectiveChargeBase):
         task.set_job(job.copy("%s-%s" %
                               (job.get_jobname(), directory)))
         return task
+
 
 class BornEffectiveChargeElement(TaskVasp, BornEffectiveChargeElementBase):
     """ """
@@ -1998,6 +2022,7 @@ class BornEffectiveChargeElement(TaskVasp, BornEffectiveChargeElementBase):
                 self._log += ".\n"
                 self._status = "terminate"
 
+
 class ModeGruneisen(TaskVasp, TaskVaspQHA, ModeGruneisenBase):
     """Task to calculate mode Gruneisen parameters by VASP."""
 
@@ -2039,6 +2064,7 @@ class ModeGruneisen(TaskVasp, TaskVaspQHA, ModeGruneisenBase):
             min_iteration=min_iteration,
             is_cell_relaxed=is_cell_relaxed,
             traverse=traverse)
+
 
 class QuasiHarmonicPhonon(TaskVasp, TaskVaspQHA, QuasiHarmonicPhononBase):
     """Task to calculate quasi-harmonic phonons by VASP."""
@@ -2163,6 +2189,7 @@ class QuasiHarmonicPhonon(TaskVasp, TaskVaspQHA, QuasiHarmonicPhononBase):
         task.set_job(job)
 
         return task
+
 
 class PhononRelax(TaskVasp, PhononRelaxBase):
     def __init__(self,

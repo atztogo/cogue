@@ -6,6 +6,7 @@ import numpy as np
 import spglib
 from cogue.crystal.cell import Cell
 
+
 def get_symmetry_dataset(cell, tolerance=1e-5):
     lattice = cell.lattice.T
     positions = cell.get_points().T
@@ -21,6 +22,7 @@ def get_symmetry_dataset(cell, tolerance=1e-5):
                                       dtype='double', order='C')
     return dataset
 
+
 def get_crystallographic_cell(cell, tolerance=1e-5):
     numbers = cell.numbers
     (std_lattice,
@@ -34,6 +36,7 @@ def get_crystallographic_cell(cell, tolerance=1e-5):
                 points=std_positions.T,
                 numbers=std_numbers,
                 masses=std_masses)
+
 
 def get_primitive_cell(cell, tolerance=1e-5):
     numbers = cell.numbers
@@ -49,11 +52,13 @@ def get_primitive_cell(cell, tolerance=1e-5):
                 numbers=prim_numbers,
                 masses=prim_masses)
 
+
 def _transfer_masses_by_numbers(numbers_new, numbers, masses):
     masses_new = []
     for n in numbers_new:
         masses_new.append(masses[list(numbers).index(n)])
     return masses_new
+
 
 standard_HM_symbols = [
     "",
@@ -287,4 +292,3 @@ standard_HM_symbols = [
     "Fd-3c",      # 228
     "Im-3m",      # 229
     "Ia-3d"]      # 230
-

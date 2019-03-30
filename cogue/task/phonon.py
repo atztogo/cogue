@@ -62,6 +62,7 @@ class PhononBase(TaskElement, PhononYaml):
                  min_iteration=None,
                  is_cell_relaxed=False,
                  max_num_atoms=None,
+                 impose_symmetry=False,
                  stop_condition=None,
                  symmetry_tolerance=None,
                  traverse=False):
@@ -92,6 +93,7 @@ class PhononBase(TaskElement, PhononYaml):
         self._min_iteration = min_iteration
         self._is_cell_relaxed = is_cell_relaxed
         self._max_num_atoms = max_num_atoms
+        self._impose_symmetry = impose_symmetry
         self._stop_condition = stop_condition
         self._symmetry_tolerance = symmetry_tolerance
         self._traverse = traverse
@@ -236,7 +238,8 @@ class PhononBase(TaskElement, PhononYaml):
 
     def _set_stage0(self):
         self._status = "equilibrium"
-        task = self._get_equilibrium_task()
+        task = self._get_equilibrium_task(
+            impose_symmetry=self._impose_symmetry)
         self._all_tasks = [task]
         self._tasks = [task]
 
@@ -295,8 +298,7 @@ class PhononBase(TaskElement, PhononYaml):
         if self._stop_condition:
             if "symmetry_operations" in self._stop_condition:
                 num_ops = len(self._space_group['rotations'])
-                if (num_ops <
-                    self._stop_condition['symmetry_operations']):
+                if num_ops < self._stop_condition['symmetry_operations']:
                     self._status = "low_symmetry"
                     return True
 
@@ -305,7 +307,8 @@ class PhononBase(TaskElement, PhononYaml):
     def _set_phonon(self):
         if self._supercell_matrix is None:
             cell = sort_cell_by_symbols(
-                get_crystallographic_cell(self.get_cell()))
+                get_crystallographic_cell(self.get_cell(),
+                                          tolerance=self._symmetry_tolerance))
             self._supercell_matrix = estimate_supercell_matrix(
                 cell,
                 max_num_atoms=self._max_num_atoms)
@@ -326,7 +329,7 @@ class PhononBase(TaskElement, PhononYaml):
 
         write_poscar(cell, filename="POSCAR-unitcell")
         write_poscar_yaml(cell, filename="POSCAR-unitcell.yaml")
-        phpy_yaml = PhonopyYaml(show_displacements=True)
+        phpy_yaml = PhonopyYaml(settings={'displacements': True})
         phpy_yaml.set_phonon_info(self._phonon)
         with open("phonopy_disp.yaml", 'w') as w:
             w.write(str(phpy_yaml))

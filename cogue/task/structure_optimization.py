@@ -1,9 +1,8 @@
-import os
 from cogue.task import TaskElement
 from cogue.task.oneshot_calculation import OneShotCalculationYaml
-from cogue.crystal.symmetry import (get_crystallographic_cell,
-                                    get_symmetry_dataset,
-                                    get_primitive_cell)
+from cogue.crystal.symmetry import (get_symmetry_dataset, get_primitive_cell,
+                                    get_crystallographic_cell)
+
 
 class StructureOptimizationYaml(OneShotCalculationYaml):
     def _get_structopt_yaml_lines(self):
@@ -33,6 +32,7 @@ class StructureOptimizationYaml(OneShotCalculationYaml):
 
         return lines
 
+
 class StructureOptimizationBase(TaskElement, StructureOptimizationYaml):
     def __init__(self,
                  directory="structopt",
@@ -44,7 +44,6 @@ class StructureOptimizationBase(TaskElement, StructureOptimizationYaml):
                  max_increase=None,
                  max_iteration=None,
                  min_iteration=None,
-                 find_symmetry=True,
                  impose_symmetry=False,
                  symmetry_tolerance=None,
                  traverse=False):
@@ -65,7 +64,6 @@ class StructureOptimizationBase(TaskElement, StructureOptimizationYaml):
         self._max_increase = max_increase
         self._max_iteration = max_iteration
         self._min_iteration = min_iteration
-        self._find_symmetry = find_symmetry
         self._impose_symmetry = impose_symmetry
         self._symmetry_tolerance = symmetry_tolerance
         self._traverse = traverse
@@ -124,10 +122,9 @@ class StructureOptimizationBase(TaskElement, StructureOptimizationYaml):
             self._space_group = get_symmetry_dataset(prim_cell)
             task = self._get_next_task(prim_cell)
         else:
-            if self._find_symmetry:
-                self._space_group = get_symmetry_dataset(
-                    self._cell,
-                    self._symmetry_tolerance)
+            self._space_group = get_symmetry_dataset(
+                self._cell,
+                self._symmetry_tolerance)
             task = self._get_next_task(self._cell)
         if self._space_group:
             self._comment = self._space_group['international']
@@ -176,21 +173,14 @@ class StructureOptimizationBase(TaskElement, StructureOptimizationYaml):
                 self._stage = 0
                 self._next_cell = self._cell
             self._status = "next"
-                
+
         if self._next_cell:
-            if self._impose_symmetry:
-                self._next_cell = get_primitive_cell(
-                    self._next_cell,
-                    tolerance=self._symmetry_tolerance)
-                self._space_group = get_symmetry_dataset(self._next_cell)
-            else:
-                if self._find_symmetry:
-                    self._space_group = get_symmetry_dataset(
-                        self._next_cell,
-                        tolerance=self._symmetry_tolerance)
-            if self._space_group:
-                self._comment = self._space_group['international']
-            
+            self._next_cell = self._get_symmetrized_cell(self._next_cell)
+            self._space_group = get_symmetry_dataset(
+                self._next_cell,
+                tolerance=self._symmetry_tolerance)
+            self._comment = self._space_group['international']
+
         if self._status == "done":
             if self._stage < self._min_iteration:
                 self._status = "next"
@@ -230,3 +220,17 @@ class StructureOptimizationBase(TaskElement, StructureOptimizationYaml):
         task = self._get_next_task(self._next_cell)
         self._all_tasks.append(task)
         self._tasks = [task]
+
+    def _get_symmetrized_cell(self, cell):
+        if (type(self._impose_symmetry) is bool and self._impose_symmetry or
+            type(self._impose_symmetry) is str and
+            self._impose_symmetry.lower() == 'primitive'):
+            next_cell = get_primitive_cell(
+                cell, tolerance=self._symmetry_tolerance)
+        elif (type(self._impose_symmetry) is str and
+              self._impose_symmetry.lower() == 'starndardized'):
+            next_cell = get_crystallographic_cell(
+                cell, tolerance=self._symmetry_tolerance)
+        else:
+            next_cell = cell.copy()
+        return next_cell

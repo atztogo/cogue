@@ -3,6 +3,7 @@ import numpy as np
 from cogue.crystal.atom import atomic_symbols, atomic_weights
 import warnings
 
+
 def symbols2formula(symbols):
     counts = {}
     formula = ""
@@ -13,6 +14,7 @@ def symbols2formula(symbols):
     for s in counts:
         formula += "%s%d" % (s, counts[s])
     return formula
+
 
 def sort_cell_by_symbols(cell):
     symbols = cell.get_symbols()
@@ -38,6 +40,7 @@ def sort_cell_by_symbols(cell):
                 magmoms=magmoms,
                 masses=cell.get_masses()[atom_order])
 
+
 def get_strained_cells(cell_orig, strains):
     cells = []
     lattice = cell_orig.lattice
@@ -52,7 +55,8 @@ def get_strained_cells(cell_orig, strains):
 
     return cells
 
-class Cell:
+
+class Cell(object):
     """ """
     def __init__(self,
                  lattice=None,
