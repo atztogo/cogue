@@ -264,10 +264,11 @@ class PhononBase(TaskElement, PhononYaml):
         forces = []
         for task in self._tasks:
             forces.append(task.get_properties()['forces'][-1])
-        if self._phonon.produce_force_constants(forces=forces):
+        try:
+            self._phonon.produce_force_constants(forces=forces)
             write_FORCE_SETS(self._phonon.get_displacement_dataset())
             return True
-        else:
+        except RuntimeError:
             # This can be due to delay of writting file to file system.
             return False
 

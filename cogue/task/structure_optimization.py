@@ -116,18 +116,9 @@ class StructureOptimizationBase(TaskElement, StructureOptimizationYaml):
             raise RuntimeError
 
         self._status = "stage 1"
-        if self._impose_symmetry:
-            prim_cell = get_primitive_cell(self._cell,
-                                           tolerance=self._symmetry_tolerance)
-            self._space_group = get_symmetry_dataset(prim_cell)
-            task = self._get_next_task(prim_cell)
-        else:
-            self._space_group = get_symmetry_dataset(
-                self._cell,
-                self._symmetry_tolerance)
-            task = self._get_next_task(self._cell)
-        if self._space_group:
-            self._comment = self._space_group['international']
+
+        cell = self._get_symmetrized_cell(self._cell)
+        task = self._get_next_task(cell)
 
         self._all_tasks = [task]
         self._tasks = [task]
@@ -176,10 +167,6 @@ class StructureOptimizationBase(TaskElement, StructureOptimizationYaml):
 
         if self._next_cell:
             self._next_cell = self._get_symmetrized_cell(self._next_cell)
-            self._space_group = get_symmetry_dataset(
-                self._next_cell,
-                tolerance=self._symmetry_tolerance)
-            self._comment = self._space_group['international']
 
         if self._status == "done":
             if self._stage < self._min_iteration:
@@ -222,15 +209,25 @@ class StructureOptimizationBase(TaskElement, StructureOptimizationYaml):
         self._tasks = [task]
 
     def _get_symmetrized_cell(self, cell):
-        if (type(self._impose_symmetry) is bool and self._impose_symmetry or
-            type(self._impose_symmetry) is str and
-            self._impose_symmetry.lower() == 'primitive'):
+        if ((type(self._impose_symmetry) is bool and
+             self._impose_symmetry is True) or
+            (type(self._impose_symmetry) is str and
+             self._impose_symmetry.lower() == 'primitive')):
             next_cell = get_primitive_cell(
                 cell, tolerance=self._symmetry_tolerance)
+            self._comment = "primitive cell\n"
         elif (type(self._impose_symmetry) is str and
-              self._impose_symmetry.lower() == 'starndardized'):
+              self._impose_symmetry.lower() == 'standardized'):
             next_cell = get_crystallographic_cell(
                 cell, tolerance=self._symmetry_tolerance)
+            self._comment = "standardized cell\n"
         else:
             next_cell = cell.copy()
+            self._comment = ""
+
+        self._space_group = get_symmetry_dataset(
+            next_cell, self._symmetry_tolerance)
+
+        self._comment += self._space_group['international']
+
         return next_cell
