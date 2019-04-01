@@ -283,9 +283,7 @@ class PhononFC3Base(TaskElement):
         disp_dataset = self._phonon_fc3.get_displacement_dataset()
         self._phonon.set_displacement_dataset(disp_dataset)
         write_poscar(cell, "POSCAR-unitcell")
-        write_disp_yaml(self._phonon.get_displacements(),
-                        supercell,
-                        directions=self._phonon.get_displacement_directions())
+        write_disp_yaml(self._phonon.get_displacements(), supercell)
         write_disp_fc3_yaml(disp_dataset, supercell)
 
     def _exist_imaginary_mode(self):
