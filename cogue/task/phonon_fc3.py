@@ -32,6 +32,7 @@ class PhononFC3Base(TaskElement):
                  name=None,
                  supercell_matrix=None,
                  primitive_matrix=None,
+                 with_perfect=True,
                  distance=None,
                  is_diagonal=True,
                  check_imaginary=True,
@@ -56,10 +57,11 @@ class PhononFC3Base(TaskElement):
         self._task_type = "anharmonic_phonon"
         self._supercell_matrix = supercell_matrix
         self._primitive_matrix = primitive_matrix
+        self._with_perfect = with_perfect
         self._distance = distance
         self._is_diagonal = is_diagonal
         self._check_imaginary = check_imaginary
-        self._cutoff_frequency = cutoff_frequency # determine imaginary freq.
+        self._cutoff_frequency = cutoff_frequency  # determine imaginary freq.
         self._lattice_tolerance = lattice_tolerance
         self._pressure_target = pressure_target
         self._stress_tolerance = stress_tolerance

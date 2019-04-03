@@ -50,6 +50,7 @@ class PhononBase(TaskElement, PhononYaml):
                  supercell_matrix=None,
                  primitive_matrix=None,
                  nac=False,
+                 with_perfect=True,
                  distance=None,
                  displace_plusminus='auto',
                  displace_diagonal=False,
@@ -81,6 +82,7 @@ class PhononBase(TaskElement, PhononYaml):
         else:
             self._primitive_matrix = primitive_matrix
         self._nac = nac
+        self._with_perfect = with_perfect
         self._distance = distance
         self._displace_plusminus = displace_plusminus
         self._displace_diagonal = displace_diagonal
@@ -264,6 +266,10 @@ class PhononBase(TaskElement, PhononYaml):
         forces = []
         for task in self._tasks:
             forces.append(task.get_properties()['forces'][-1])
+        if self._with_perfect:
+            f_per = forces.pop(0)
+            for f in forces:
+                f -= f_per
         try:
             self._phonon.produce_force_constants(forces=forces)
             write_FORCE_SETS(self._phonon.get_displacement_dataset())

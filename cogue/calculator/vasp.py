@@ -300,6 +300,7 @@ def phonon(directory="phonon",
            supercell_matrix=None,
            primitive_matrix=None,
            nac=False,
+           with_perfect=True,
            distance=0.01,
            displace_plusminus='auto',
            displace_diagonal=False,
@@ -330,6 +331,7 @@ def phonon(directory="phonon",
                 supercell_matrix=supercell_matrix,
                 primitive_matrix=primitive_matrix,
                 nac=nac,
+                with_perfect=with_perfect,
                 distance=distance,
                 displace_plusminus=displace_plusminus,
                 displace_diagonal=displace_diagonal,
@@ -365,6 +367,7 @@ def phonon_fc3(directory="phonon_fc3",
                job=None,
                supercell_matrix=None,
                primitive_matrix=None,
+               with_perfect=True,
                distance=0.03,
                is_diagonal=True,
                check_imaginary=True,
@@ -391,6 +394,7 @@ def phonon_fc3(directory="phonon_fc3",
                     name=name,
                     supercell_matrix=supercell_matrix,
                     primitive_matrix=primitive_matrix,
+                    with_perfect=with_perfect,
                     distance=distance,
                     is_diagonal=is_diagonal,
                     check_imaginary=check_imaginary,
@@ -1514,27 +1518,34 @@ class TaskVaspPhonon:
     """
     def _get_vasp_displacement_tasks(self,
                                      phonon,
-                                     start=0,
+                                     start=None,
                                      stop=None,
                                      digit_number=3):
         incar = self._incar[1].copy()
-        if stop is None:
-            disp_cells = phonon.get_supercells_with_displacements()[start:]
+        if start is None:
+            istart = 0
         else:
-            disp_cells = phonon.get_supercells_with_displacements()[start:stop]
+            istart = start
+        supercells = phonon.supercells_with_displacements
+        if stop is None:
+            disp_cells = supercells[istart:]
+        else:
+            disp_cells = supercells[istart:stop]
 
         tasks = []
+        if start is None and self._with_perfect:
+            tasks.append(
+                self._get_disp_task(atoms2cell(phonon.supercell),
+                                    incar,
+                                    0,
+                                    digit_number=digit_number))
+
         for i, disp in enumerate(disp_cells):
             tasks.append(self._get_disp_task(atoms2cell(disp),
                                              incar,
-                                             i + 1 + start,
+                                             i + 1 + istart,
                                              digit_number=digit_number))
         return tasks
-
-    def _get_vasp_supercell_task(self, phonon):
-        incar = self._incar[1].copy()
-        supercell = phonon.get_supercell()
-        task = self._get_disp_task(atoms2cell(supercell), incar, "perfect")
 
     def _get_disp_task(self, cell, incar, disp_number, digit_number=3):
         job, incar, kpoints = self._choose_configuration(index=1)
@@ -1722,6 +1733,7 @@ class Phonon(TaskVasp, TaskVaspPhonon, PhononBase):
                  supercell_matrix=None,
                  primitive_matrix=None,
                  nac=False,
+                 with_perfect=True,
                  distance=0.01,
                  displace_plusminus='auto',
                  displace_diagonal=False,
@@ -1746,6 +1758,7 @@ class Phonon(TaskVasp, TaskVaspPhonon, PhononBase):
             supercell_matrix=supercell_matrix,
             primitive_matrix=primitive_matrix,
             nac=nac,
+            with_perfect=with_perfect,
             distance=distance,
             displace_plusminus=displace_plusminus,
             displace_diagonal=displace_diagonal,
@@ -1763,7 +1776,7 @@ class Phonon(TaskVasp, TaskVaspPhonon, PhononBase):
             symmetry_tolerance=symmetry_tolerance,
             traverse=traverse)
 
-    def _get_displacement_tasks(self, start=0, stop=None):
+    def _get_displacement_tasks(self, start=None, stop=None):
         return self._get_vasp_displacement_tasks(
             self._phonon, start=start, stop=stop)
 
@@ -1774,6 +1787,7 @@ class PhononFC3(TaskVasp, TaskVaspPhonon, PhononFC3Base):
                  name=None,
                  supercell_matrix=None,
                  primitive_matrix=None,
+                 with_perfect=True,
                  distance=0.03,
                  is_diagonal=True,
                  check_imaginary=True,
@@ -1794,6 +1808,7 @@ class PhononFC3(TaskVasp, TaskVaspPhonon, PhononFC3Base):
             name=name,
             supercell_matrix=supercell_matrix,
             primitive_matrix=primitive_matrix,
+            with_perfect=with_perfect,
             distance=distance,
             is_diagonal=is_diagonal,
             check_imaginary=check_imaginary,
@@ -1808,7 +1823,7 @@ class PhononFC3(TaskVasp, TaskVaspPhonon, PhononFC3Base):
             is_cell_relaxed=is_cell_relaxed,
             traverse=traverse)
 
-    def _get_displacement_tasks(self, start=0, stop=None):
+    def _get_displacement_tasks(self, start=None, stop=None):
         return self._get_vasp_displacement_tasks(
             self._phonon_fc3, start=start, stop=stop, digit_number=5)
 
