@@ -10,7 +10,7 @@ from cogue.crystal.symmetry import get_crystallographic_cell
 
 try:
     from phonopy import Phonopy
-    from phonopy.interface import PhonopyYaml
+    from phonopy.interface.phonopy_yaml import PhonopyYaml
     from phonopy.file_IO import write_FORCE_SETS
 except ImportError:
     print("You need to install phonopy.")

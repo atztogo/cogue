@@ -10,7 +10,7 @@ except ImportError:
     print("You need to install phonopy.")
     sys.exit(1)
 try:
-    from phono3py.phonon3 import Phono3py
+    from phono3py import Phono3py
 except ImportError:
     print("You need to install phono3py.")
     sys.exit(1)
