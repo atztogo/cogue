@@ -1,23 +1,31 @@
 #!/usr/bin/python
 
 import sys
+
 import numpy as np
-import cogue.interface.mayavi2 as mayavi2
+
 import cogue.crystal.symmetry as symmetry
-import cogue.interface.vasp_io as vasp_io
+import cogue.interface.mayavi2 as mayavi2
 import cogue.interface.ui_utils as ui_utils
+import cogue.interface.vasp_io as vasp_io
 from cogue.crystal.utility import frac2val
 
 parser = ui_utils.get_parser()
-parser.set_defaults(symprec=1e-5,
-                    position_margin=None)
-parser.add_option("-s", "--tolerance", dest="symprec", type="float",
-                  help="Symmetry tolerance to search")
-parser.add_option("--margin",
-                  dest="position_margin",
-                  action="store",
-                  type="string",                      
-                  help="Margin to plot atoms within crystal lattice")
+parser.set_defaults(symprec=1e-5, position_margin=None)
+parser.add_option(
+    "-s",
+    "--tolerance",
+    dest="symprec",
+    type="float",
+    help="Symmetry tolerance to search",
+)
+parser.add_option(
+    "--margin",
+    dest="position_margin",
+    action="store",
+    type="string",
+    help="Margin to plot atoms within crystal lattice",
+)
 options, args = ui_utils.get_options(parser)
 
 cell = vasp_io.read_poscar(args[0])

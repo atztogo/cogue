@@ -1,28 +1,35 @@
+"""Entropy related methods."""
 # Entropy of non-interacting electrons
 # S=-gk_{\mathrm{B}}\Sigma_i\[f_i \ln f_i + (1-f_i)\ln (1-f_i)\]
 # g: degree of degeneracy
-# f_i:probability that a state is occpied f_i = \left[1+\exp\left(\frac{E-\mu}{T}\right)\right\]^{-1}
+# f_i:probability that a state is occpied
+#     where f_i = \left[1+\exp\left(\frac{E-\mu}{T}\right)\right\]^{-1}
 
 import numpy as np
+
 from cogue.units import Kb
 
+
 def get_entropy(energies, weights, chemical_potential, temperature):
+    """Return entropy."""
     mu = chemical_potential
     T = temperature
     # Degeneracy of electrons
     # Spin components 1 and 2 are stored in tuple as
     # (spin1, spin2) or (spin1,) if no spin polarized.
     # if len(energies) == 1, g = 2 (doubly degenerate)
-    g = 3 - len(energies) 
+    g = 3 - len(energies)
     S = 0
     for energies_spin in energies:
         for E, w in zip(np.array(energies_spin), weights):
             f = 1.0 / (1 + np.exp((E - mu) / T))
             f = np.extract((f > 1e-10) * (f < 1 - 1e-10), f)
-            S += - np.sum(f * np.log(f) + (1 - f) * np.log(1 - f)) * w
+            S += -np.sum(f * np.log(f) + (1 - f) * np.log(1 - f)) * w
     return S * g
 
+
 def get_chemical_potential(energies, weights, temperature, num_electrons):
+    """Return chemical potential."""
     T = temperature
     emax = np.max(energies)
     emin = np.min(energies)
@@ -32,12 +39,13 @@ def get_chemical_potential(energies, weights, temperature, num_electrons):
         n = _get_number_of_electrons(energies, weights, mu, T)
         if abs(n - num_electrons) < 1e-8:
             break
-        elif (n < num_electrons):
+        elif n < num_electrons:
             emin = mu
         else:
             emax = mu
 
     return mu
+
 
 def _get_number_of_electrons(energies, weights, chemical_potential, temperature):
     T = temperature
@@ -49,10 +57,12 @@ def _get_number_of_electrons(energies, weights, chemical_potential, temperature)
             n += np.sum(1.0 / (1 + np.exp((E - mu) / T))) * w
     return n * g
 
-if __name__ == '__main__':
-    from cogue.interface.vasp_io import Vasprunxml
+
+if __name__ == "__main__":
     import sys
-    
+
+    from cogue.interface.vasp_io import Vasprunxml
+
     T = 0.4
     print("Temperature %f K (%f eV)" % (T / Kb, T))
 

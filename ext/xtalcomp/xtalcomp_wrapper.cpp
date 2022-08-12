@@ -27,7 +27,7 @@ extern "C" {
     xcpositions2.reserve(num_atom);
     xctypes1.reserve(num_atom);
     xctypes2.reserve(num_atom);
-  
+
 
     for (i = 0; i < num_atom; i++) {
       xcpositions1.push_back(XcVector(positions1[i][0],

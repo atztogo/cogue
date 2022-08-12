@@ -1,12 +1,16 @@
+import datetime
 import os
 import time
+
 import yaml
-import datetime
-from cogue.task import TaskSet
+
 from cogue.qsystem.queue import EmptyQueue
+from cogue.task import TaskSet
+
 
 def date():
     return datetime.datetime.today().strftime("%Y-%m-%d %H:%M:%S")
+
 
 class AutoCalc:
     def __init__(self, name=None, log_name=None, verbose=False):
@@ -95,10 +99,10 @@ class AutoCalc:
         self._tid_count += 1
         task.begin()
         subtasks = task.get_tasks()
-        if subtasks: # Task-set
+        if subtasks:  # Task-set
             for subtask in task.get_tasks():
                 self._deep_begin(subtask)
-        else: # Execution task
+        else:  # Execution task
             self._queue.register(task)
 
         self._chdir_out(cwd, task.get_status())
@@ -108,11 +112,11 @@ class AutoCalc:
         task.overwrite_settings()
 
         subtasks = task.get_tasks()
-        if subtasks: # Task-set
+        if subtasks:  # Task-set
             for subtask in subtasks:
                 if not subtask.done():
                     self._deep_run(subtask)
-        else: # Execution task
+        else:  # Execution task
             self._queue.submit(task)
 
         task.set_status()
@@ -135,18 +139,17 @@ class AutoCalc:
         else:
             cwd = os.getcwd()
             os.chdir(directory_in)
-            self._log.append("--> %s" %
-                             os.getcwd().replace(self._cwd, '').lstrip('/'))
+            self._log.append("--> %s" % os.getcwd().replace(self._cwd, "").lstrip("/"))
             return cwd
 
     def _chdir_out(self, cwd, status):
-       if cwd is not None:
-           self._log.append("        [ %s ]" % status)
-           directory = cwd.replace(self._cwd, '').lstrip('/')
-           if directory == "":
-               directory = '.'
-           self._log.append("    %s <--" % directory)
-           os.chdir(cwd)
+        if cwd is not None:
+            self._log.append("        [ %s ]" % status)
+            directory = cwd.replace(self._cwd, "").lstrip("/")
+            if directory == "":
+                directory = "."
+            self._log.append("    %s <--" % directory)
+            os.chdir(cwd)
 
     def _overwrite_settings(self):
         """'max_jobs' is updated by making a file.
@@ -158,15 +161,14 @@ class AutoCalc:
 
         """
 
-
         filename = "%s.cogue" % self._name
         if os.path.exists(filename):
             print("%s is found." % filename)
 
             with open(filename) as f:
                 data = yaml.load(f)
-                if 'max_jobs' in data:
-                    max_jobs = data['max_jobs']
+                if "max_jobs" in data:
+                    max_jobs = data["max_jobs"]
                     self._queue.set_max_jobs(max_jobs)
                     print("Overwrite max number of jobs by %d." % max_jobs)
 
@@ -177,18 +179,19 @@ class AutoCalc:
 
     def _write_log(self):
         if self._verbose > 1:
-            with open("%s.log" % self._log_name, 'a') as w:
+            with open("%s.log" % self._log_name, "a") as w:
                 w.write("\n".join(self._log))
                 w.write("\n")
                 self._log = []
 
     def _write_dot(self):
         if self._verbose:
-            with open("%s.dot" % self._log_name, 'w') as f_dot:
+            with open("%s.dot" % self._log_name, "w") as f_dot:
                 self._dot_count += 1
-                f_dot.write("digraph %s {\n" %
-                            self._name.replace('-', '_').replace('.', '_'))
-                f_dot.write("graph [ rankdir = \"LR\" ] ;\n")
+                f_dot.write(
+                    "digraph %s {\n" % self._name.replace("-", "_").replace(".", "_")
+                )
+                f_dot.write('graph [ rankdir = "LR" ] ;\n')
                 for task in self._taskset.get_tasks():
                     self._write_dot_labels(task, f_dot)
                     self._write_dot_tids(task, f_dot)
@@ -208,20 +211,25 @@ class AutoCalc:
 
         f_dot.write("n%d ;\n" % tid)
         if status is None:
-            f_dot.write("n%d [label=\"%s\"] ;\n" % (tid, name))
+            f_dot.write('n%d [label="%s"] ;\n' % (tid, name))
         else:
             if comment and name:
-                f_dot.write("n%d [color=%s, style=filled, "
-                            "shape=box, label=\"[%d] %s\\n%s\\n%s\"] ;\n" %
-                            (tid, color, tid, status, name, comment))
+                f_dot.write(
+                    "n%d [color=%s, style=filled, "
+                    'shape=box, label="[%d] %s\\n%s\\n%s"] ;\n'
+                    % (tid, color, tid, status, name, comment)
+                )
             elif name:
-                f_dot.write("n%d [color=%s, style=filled, "
-                            "shape=box, label=\"[%d] %s\\n%s\"] ;\n" %
-                            (tid, color, tid, status, name))
+                f_dot.write(
+                    "n%d [color=%s, style=filled, "
+                    'shape=box, label="[%d] %s\\n%s"] ;\n'
+                    % (tid, color, tid, status, name)
+                )
             else:
-                f_dot.write("n%d [color=%s, style=filled, "
-                            "shape=box, label=\"[%d] %s\"] ;\n" %
-                            (tid, color, tid, status))
+                f_dot.write(
+                    "n%d [color=%s, style=filled, "
+                    'shape=box, label="[%d] %s"] ;\n' % (tid, color, tid, status)
+                )
         if task.get_tasks():
             for t in task.get_tasks():
                 self._write_dot_labels(t, f_dot)

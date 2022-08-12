@@ -1,14 +1,13 @@
 import random
+
 import numpy as np
+
 from cogue.crystal.cell import Cell
 from cogue.crystal.pair_distance import get_distance
 
+
 class RandomBuilder:
-    def __init__(self,
-                 symbols,
-                 volume=None,
-                 min_distance=None,
-                 max_distance=None):
+    def __init__(self, symbols, volume=None, min_distance=None, max_distance=None):
 
         self._symbols = symbols
         self._min_distance = min_distance
@@ -23,7 +22,9 @@ class RandomBuilder:
             self._max_distance = max_distance
 
         if not min_distance:
-            self._min_distance = (self._volume / len(self._symbols) / (4.0 / 3 * np.pi)) ** (1.0 / 3) * 1.3
+            self._min_distance = (
+                self._volume / len(self._symbols) / (4.0 / 3 * np.pi)
+            ) ** (1.0 / 3) * 1.3
         else:
             self._min_distance = min_distance
 
@@ -54,15 +55,13 @@ class RandomBuilder:
         random.shuffle(indices)
         points = np.zeros(cell.get_points().shape, dtype=float)
         for i, j in enumerate(indices):
-            points[:,i] = cell.get_points()[:,j]
-            
-        return Cell(lattice = cell.get_lattice(),
-                    points = points,
-                    symbols = self._symbols)
+            points[:, i] = cell.get_points()[:, j]
+
+        return Cell(lattice=cell.get_lattice(), points=points, symbols=self._symbols)
 
     def _random(self):
-        lattice = np.eye(3, dtype=float) * self._volume ** (1.0/3)
-        points = [[0., 0., 0.]]
+        lattice = np.eye(3, dtype=float) * self._volume ** (1.0 / 3)
+        points = [[0.0, 0.0, 0.0]]
         for i in range(len(self._symbols) - 1):
             x = self._get_random_point(lattice, points)
             if x:
@@ -73,22 +72,19 @@ class RandomBuilder:
         if len(points) < len(self._symbols):
             return None
         else:
-            return Cell(lattice = lattice,
-                        points = np.transpose(points),
-                        symbols = self._symbols)
+            return Cell(
+                lattice=lattice, points=np.transpose(points), symbols=self._symbols
+            )
 
     def _get_random_point(self, lattice, points):
         attempt = 0
         while True:
-            x = [random.random(),
-                 random.random(),
-                 random.random()]
+            x = [random.random(), random.random(), random.random()]
 
             all_ok = True
             for p in points:
                 d = get_distance(lattice, x, p)
-                if (d < self._min_distance or
-                    d > self._max_distance):
+                if d < self._min_distance or d > self._max_distance:
                     all_ok = False
                     break
 
@@ -98,5 +94,3 @@ class RandomBuilder:
             attempt += 1
             if attempt == 20:
                 return False
-
-

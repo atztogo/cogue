@@ -124,6 +124,6 @@ static PyObject * py_xtalcomp(PyObject *self, PyObject *args)
 			positions2,
 			tolerance,
 			angle_tolerance);
-	       
+
   return PyLong_FromLong((long) result);
 }

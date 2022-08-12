@@ -1,5 +1,6 @@
-import numpy as np
+"""Phonon density of states."""
 from cogue.task import TaskElement
+
 
 class DensityOfStatesBase(TaskElement):
     """DensityOfStates class
@@ -11,19 +12,21 @@ class DensityOfStatesBase(TaskElement):
 
     """
 
-    def __init__(self,
-                 directory=None,
-                 name=None,
-                 is_partial_dos=False,
-                 lattice_tolerance=None,
-                 force_tolerance=None,
-                 pressure_target=None,
-                 stress_tolerance=None,
-                 max_increase=None,
-                 max_iteration=None,
-                 min_iteration=None,
-                 is_cell_relaxed=False,
-                 traverse=False):
+    def __init__(
+        self,
+        directory=None,
+        name=None,
+        is_partial_dos=False,
+        lattice_tolerance=None,
+        force_tolerance=None,
+        pressure_target=None,
+        stress_tolerance=None,
+        max_increase=None,
+        max_iteration=None,
+        min_iteration=None,
+        is_cell_relaxed=False,
+        traverse=False,
+    ):
 
         TaskElement.__init__(self)
 
@@ -91,10 +94,12 @@ class DensityOfStatesBase(TaskElement):
             self._tasks = [self._dos_tasks[0]]
 
     def done(self):
-        return (self._status == "done" or
-                self._status == "terminate" or
-                self._status == "max_iteration" or
-                self._status == "next")
+        return (
+            self._status == "done"
+            or self._status == "terminate"
+            or self._status == "max_iteration"
+            or self._status == "next"
+        )
 
     def __next__(self):
         return self.next()
@@ -146,7 +151,7 @@ class DensityOfStatesBase(TaskElement):
         self._tasks = [task]
 
     def _write_yaml(self):
-        w = open("%s.yaml" % self._directory, 'w')
+        w = open("%s.yaml" % self._directory, "w")
         if self._lattice_tolerance is not None:
             w.write("lattice_tolerance: %f\n" % self._lattice_tolerance)
         if self._stress_tolerance is not None:
@@ -173,14 +178,16 @@ class DensityOfStatesBase(TaskElement):
             symbols = cell.get_symbols()
 
             w.write("lattice:\n")
-            for v, a in zip(lattice, ('a', 'b', 'c')) :
-                w.write("- [ %22.16f, %22.16f, %22.16f ] # %s\n" %
-                        (v[0], v[1], v[2], a))
+            for v, a in zip(lattice, ("a", "b", "c")):
+                w.write(
+                    "- [ %22.16f, %22.16f, %22.16f ] # %s\n" % (v[0], v[1], v[2], a)
+                )
 
             w.write("points:\n")
             for i, v in enumerate(points):
-                w.write("- [ %20.16f, %20.16f, %20.16f ] # %d\n" %
-                        (v[0], v[1], v[2], i + 1))
+                w.write(
+                    "- [ %20.16f, %20.16f, %20.16f ] # %d\n" % (v[0], v[1], v[2], i + 1)
+                )
 
             w.write("symbols:\n")
             for i, v in enumerate(symbols):

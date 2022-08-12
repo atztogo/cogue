@@ -40,4 +40,3 @@ The code is mainly written in Python.
 
 For the crystal structure comparison, Xtalcomp
 (https://github.com/dlonie/XtalComp) by David Lonie is used.
-

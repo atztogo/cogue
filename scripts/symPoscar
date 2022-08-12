@@ -1,111 +1,144 @@
 #!/usr/bin/env python
 
 import sys
+
 import numpy as np
-import cogue.interface.vasp_io as vasp_io
+
 import cogue.crystal.symmetry as symmetry
 import cogue.interface.ui_utils as ui_utils
+import cogue.interface.vasp_io as vasp_io
 from cogue.interface.cif import write_cif_P1
+
 
 def get_parser():
     from optparse import OptionParser
+
     parser = OptionParser()
-    parser.set_defaults(symprec=1e-5,
-                        orbits=None,
-                        output_filename=None,
-                        show_details=False,
-                        show_operations=False,
-                        is_bravais=False,
-                        is_primitive=False)
-    parser.add_option("-s", "--tolerance", dest="symprec", type="float",
-                      help="Symmetry tolerance to search")
-    parser.add_option("--orbits", dest="orbits", type="int",
-                      help="Centring point where orbits are searched")
-    parser.add_option("-d", "--detail",
-                      dest="show_details",
-                      action="store_true",
-                      help="Show detailed information.")
-    parser.add_option("--op", "--operations",
-                      dest="show_operations",
-                      action="store_true",
-                      help="Show symmetry operations.")
-    parser.add_option("-o",
-                      dest="output_filename",
-                      action="store",
-                      type="string",                      
-                      help="Output filename")
-    parser.add_option("--bravais",
-                      dest="is_bravais",
-                      action="store_true",
-                      help=("Show a Bravais cell where the lattice vectors and "
-                            "atomic points are refined. Used togather with -o "
-                            "option, the cell is stored in the file."))
-    parser.add_option("--primitive",
-                      dest="is_primitive",
-                      action="store_true",
-                      help=("Show a primitive cell where the lattice vectors "
-                            "and atomic points are not refined. Used togather "
-                            "with -o option, the cell is stored in the file."))
+    parser.set_defaults(
+        symprec=1e-5,
+        orbits=None,
+        output_filename=None,
+        show_details=False,
+        show_operations=False,
+        is_bravais=False,
+        is_primitive=False,
+    )
+    parser.add_option(
+        "-s",
+        "--tolerance",
+        dest="symprec",
+        type="float",
+        help="Symmetry tolerance to search",
+    )
+    parser.add_option(
+        "--orbits",
+        dest="orbits",
+        type="int",
+        help="Centring point where orbits are searched",
+    )
+    parser.add_option(
+        "-d",
+        "--detail",
+        dest="show_details",
+        action="store_true",
+        help="Show detailed information.",
+    )
+    parser.add_option(
+        "--op",
+        "--operations",
+        dest="show_operations",
+        action="store_true",
+        help="Show symmetry operations.",
+    )
+    parser.add_option(
+        "-o",
+        dest="output_filename",
+        action="store",
+        type="string",
+        help="Output filename",
+    )
+    parser.add_option(
+        "--bravais",
+        dest="is_bravais",
+        action="store_true",
+        help=(
+            "Show a Bravais cell where the lattice vectors and "
+            "atomic points are refined. Used togather with -o "
+            "option, the cell is stored in the file."
+        ),
+    )
+    parser.add_option(
+        "--primitive",
+        dest="is_primitive",
+        action="store_true",
+        help=(
+            "Show a primitive cell where the lattice vectors "
+            "and atomic points are not refined. Used togather "
+            "with -o option, the cell is stored in the file."
+        ),
+    )
     return parser
 
+
 def write_to_file(cell, filename, comment=None):
-    if filename.split('.')[-1] == 'cif':
+    if filename.split(".")[-1] == "cif":
         write_cif_P1(cell, filename)
     else:
         vasp_io.write_poscar(cell, filename=filename, comment=comment)
-    
+
 
 options, args = ui_utils.get_options(get_parser())
 tolerance = options.symprec
 cell = vasp_io.read_poscar(args[0])
 dataset = symmetry.get_symmetry_dataset(cell, tolerance)
 if dataset is None:
-    import sys
     print("Symmetry search failed.")
     sys.exit(1)
 
-spg_type = dataset['international']
-spg_number = dataset['number']
-hall_number = dataset['hall_number']
-hall_symbol = dataset['hall']
-pointgroup = dataset['pointgroup']
-tmat = dataset['transformation_matrix']
-shift = dataset['origin_shift']
-rots = dataset['rotations']
-trans = dataset['translations']
-wyckoffs = dataset['wyckoffs']
-eqiv_atoms = dataset['equivalent_atoms']
+spg_type = dataset["international"]
+spg_number = dataset["number"]
+hall_number = dataset["hall_number"]
+hall_symbol = dataset["hall"]
+pointgroup = dataset["pointgroup"]
+tmat = dataset["transformation_matrix"]
+shift = dataset["origin_shift"]
+rots = dataset["rotations"]
+trans = dataset["translations"]
+wyckoffs = dataset["wyckoffs"]
+eqiv_atoms = dataset["equivalent_atoms"]
 
 plat = cell.lattice
 blat = np.dot(plat, tmat)
 
-spg_info = "%s (%d) / %s (%d) / %s" % (spg_type,
-                                       spg_number,
-                                       hall_symbol,
-                                       hall_number,
-                                       pointgroup)
+spg_info = "%s (%d) / %s (%d) / %s" % (
+    spg_type,
+    spg_number,
+    hall_symbol,
+    hall_number,
+    pointgroup,
+)
 if not options.is_bravais:
     print(spg_info)
 
 if options.show_details:
-    print('')
+    print("")
     print("Original lattice vecs      Bravais lattice vecs")
     for vp, vb, arrow in zip(plat, blat, ("     ", " --> ", "     ")):
-        print("[%6.3f %6.3f %6.3f]%s[%6.3f %6.3f %6.3f]" %
-              (tuple(vp) + (arrow,) + tuple(vb)))
-    print('')
+        print(
+            "[%6.3f %6.3f %6.3f]%s[%6.3f %6.3f %6.3f]"
+            % (tuple(vp) + (arrow,) + tuple(vb))
+        )
+    print("")
     print("Transformation matrix:")
     for v in tmat:
         print("[%6.3f %6.3f %6.3f]" % tuple(v))
-    print('')
-    
+    print("")
+
     if not options.is_bravais:
         print("Wyckoff positions, and atomic points and the equivalence:")
-        for i, (w, p, e) in enumerate(
-            zip(wyckoffs, cell.get_points().T, eqiv_atoms)):
-            print("%4d: %s  %f %f %f -> %d" %
-                  ((i + 1, w) + tuple(p) + (e + 1,)))
-    
+        for i, (w, p, e) in enumerate(zip(wyckoffs, cell.get_points().T, eqiv_atoms)):
+            print("%4d: %s  %f %f %f -> %d" % ((i + 1, w) + tuple(p) + (e + 1,)))
+
 if options.show_operations:
     print("Symmetry operations:")
     for i, (r, t) in enumerate(zip(rots, trans)):
@@ -113,7 +146,7 @@ if options.show_operations:
         for v in r:
             print("%2d %2d %2d" % tuple(v))
         print("%8.6f %8.6f %8.6f" % tuple(t + 1e-8 - np.floor(t + 1e-8)))
-    print('')
+    print("")
 
 if options.is_bravais:
     brv_cell = symmetry.get_crystallographic_cell(cell, tolerance)
@@ -142,7 +175,7 @@ if options.orbits is not None:
         if (np.abs(diff - np.rint(diff)) < tolerance).all():
             site_sym.append((r, t))
 
-    print('')
+    print("")
     print("Orbits at site %d" % options.orbits)
     print("--------------------")
     for i, pos_i in enumerate(points.T):
@@ -154,6 +187,6 @@ if options.orbits is not None:
                 if (np.abs(diff - np.rint(diff)) < tolerance).all():
                     orbits.append(j)
         text = "%3d: [" % (i + 1)
-        text += ' '.join(["%d" % i for i in np.unique(orbits) + 1])
+        text += " ".join(["%d" % i for i in np.unique(orbits) + 1])
         text += "]"
         print(text)

@@ -1,7 +1,10 @@
 import sys
+
 import numpy as np
-from cogue.crystal.cell import Cell
+
 from cogue.crystal.atom import atomic_symbols, atomic_weights
+from cogue.crystal.cell import Cell
+
 
 class CellBuilder:
     def __init__(self, cell):
@@ -11,19 +14,14 @@ class CellBuilder:
         self._masses = cell.get_masses()
         self._numbers = cell.numbers
         self._lattice = cell.lattice
-        
-    def push(self,
-             point=None,
-             symbol=None,
-             magmom=None,
-             mass=None,
-             number=None):
+
+    def push(self, point=None, symbol=None, magmom=None, mass=None, number=None):
         if self._magmoms is not None and magmom is None:
             sys.stderr.write("Magmoms has to be set.\n")
         elif point is not None and (symbol or number):
-            self._points = np.append(self._points, [[point[0]],
-                                                    [point[1]],
-                                                    [point[2]]], axis=1)
+            self._points = np.append(
+                self._points, [[point[0]], [point[1]], [point[2]]], axis=1
+            )
             if symbol:
                 self._symbols.append(symbol)
             if number:
@@ -33,25 +31,25 @@ class CellBuilder:
             if not number:
                 self._numbers = np.append(self._numbers, atomic_symbols[symbol])
             if atomic_symbols[self._symbols[-1]] != self._numbers[-1]:
-                sys.stderr.write(
-                    "Symbol and number don't match. Symbol is taken.\n")
+                sys.stderr.write("Symbol and number don't match. Symbol is taken.\n")
                 self._numbers[-1] = atomic_symbols[symbol]
             if mass:
                 self._masses = np.append(self._masses, mass)
             else:
-                self._masses = np.append(self._masses,
-                                         atomic_weights[self._numbers[-1]][3])
+                self._masses = np.append(
+                    self._masses, atomic_weights[self._numbers[-1]][3]
+                )
 
             if magmom is not None:
                 if self._magmoms is None:
-                    sys.stderr.write(
-                        "Magmoms is not defined.\n")
+                    sys.stderr.write("Magmoms is not defined.\n")
                 else:
                     self._points = np.append(self._magmoms, [magmom], axis=0)
         else:
             sys.stderr.write(
                 "At least a pair of point and symbol or "
-                "a pair of point and number have to be set.\n")
+                "a pair of point and number have to be set.\n"
+            )
 
     def pop(self, index=None):
         if index is None:
@@ -66,10 +64,10 @@ class CellBuilder:
         self._numbers = np.delete(self._numbers, i)
 
     def get_cell(self):
-        return Cell(lattice=self._lattice,
-                    magmoms=self._magmoms,
-                    masses=self._masses,
-                    numbers=self._numbers,
-                    points=self._points)
-                    
-
+        return Cell(
+            lattice=self._lattice,
+            magmoms=self._magmoms,
+            masses=self._masses,
+            numbers=self._numbers,
+            points=self._points,
+        )

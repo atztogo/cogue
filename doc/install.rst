@@ -24,7 +24,7 @@ In the case of Ubuntu, the installation has be made as follows:
 
 ::
 
-   % sudo apt-get install python-dev python-numpy python-yaml python-paramiko python-h5py python-pip 
+   % sudo apt-get install python-dev python-numpy python-yaml python-paramiko python-h5py python-pip
    % pip install spur --user
    * pip install phonopy --user
    * pip install phono3py --user
@@ -45,7 +45,7 @@ Cogue automation system controls computer clusters via queueing
 system. It is supported that the following software are installed on
 your computer cluster::
 
-* Grid-engine queueing system 
+* Grid-engine queueing system
 * VASP (http://vasp.at)
 
 PBE-like queueing system is not yet prepared.
@@ -95,7 +95,7 @@ following line in your shell configuration file, e.g., ``.bashrc`` or ``.zshenv`
 
 where $DIR_PREFIX is the directory prefix, for instance home
 directory, ``/home/your_unix_name``.
-   
+
 All the ``POTCAR`` files for every atom and electronic configuration
 have to be extracted to plane text files. the filenames of the
 extracted files are used to notify pseudopotential files used in
@@ -111,4 +111,3 @@ In this example, the PAW potential files are created in
 to a VASP task using the keyword ``pseudo_potential_map`` like::
 
    pseudo_potential_map = { 'Si': 'Si_PBE', 'O': 'O_PBE' }
-

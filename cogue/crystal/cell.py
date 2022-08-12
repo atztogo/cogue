@@ -1,7 +1,9 @@
 """ """
-import numpy as np
-from cogue.crystal.atom import atomic_symbols, atomic_weights
 import warnings
+
+import numpy as np
+
+from cogue.crystal.atom import atomic_symbols, atomic_weights
 
 
 def symbols2formula(symbols):
@@ -20,7 +22,7 @@ def sort_cell_by_symbols(cell):
     symbols = cell.get_symbols()
     compressed_symbols = []
     for s in symbols:
-        if not s in compressed_symbols:
+        if s not in compressed_symbols:
             compressed_symbols.append(s)
 
     atom_order = []
@@ -34,11 +36,13 @@ def sort_cell_by_symbols(cell):
     else:
         magmoms = None
 
-    return Cell(lattice=cell.lattice,
-                points=(cell.get_points().T)[atom_order].T,
-                symbols=[symbols[i] for i in atom_order],
-                magmoms=magmoms,
-                masses=cell.get_masses()[atom_order])
+    return Cell(
+        lattice=cell.lattice,
+        points=(cell.get_points().T)[atom_order].T,
+        symbols=[symbols[i] for i in atom_order],
+        magmoms=magmoms,
+        masses=cell.get_masses()[atom_order],
+    )
 
 
 def get_strained_cells(cell_orig, strains):
@@ -49,8 +53,7 @@ def get_strained_cells(cell_orig, strains):
         if isinstance(strain, int) or isinstance(strain, float):
             cell.set_lattice(lattice * (1 + strain) ** (1.0 / 3))
         else:
-            cell.set_lattice(
-                np.dot(lattice, np.eye(3) + np.array(strain)))
+            cell.set_lattice(np.dot(lattice, np.eye(3) + np.array(strain)))
         cells.append(cell)
 
     return cells
@@ -58,28 +61,31 @@ def get_strained_cells(cell_orig, strains):
 
 class Cell(object):
     """ """
-    def __init__(self,
-                 lattice=None,
-                 points=None,
-                 symbols=None,
-                 magmoms=None,
-                 masses=None,
-                 numbers=None):
+
+    def __init__(
+        self,
+        lattice=None,
+        points=None,
+        symbols=None,
+        magmoms=None,
+        masses=None,
+        numbers=None,
+    ):
 
         if lattice is None:
             self._lattice = None
         else:
-            self._lattice = np.array(lattice, dtype='double', order='C')
+            self._lattice = np.array(lattice, dtype="double", order="C")
 
         if points is None:
             self._points = None
         else:
-            self._points = np.array(points, dtype='double', order='C')
+            self._points = np.array(points, dtype="double", order="C")
 
         if magmoms is None:
             self._magmoms = None
         else:
-            self._magmoms = np.array(mogmoms, dtype='double')
+            self._magmoms = np.array(magmoms, dtype="double")
 
         if symbols is None:
             self._symbols = None
@@ -89,12 +95,12 @@ class Cell(object):
         if masses is None:
             self._masses = None
         else:
-            self._masses = np.array(masses, dtype='double')
+            self._masses = np.array(masses, dtype="double")
 
         if numbers is None:
             self._numbers = None
         else:
-            self._numbers = np.array(numbers, dtype='intc')
+            self._numbers = np.array(numbers, dtype="intc")
 
         if self._numbers is None and self._symbols is not None:
             self._set_numbers_from_symbols()
@@ -112,7 +118,7 @@ class Cell(object):
 
     @lattice.setter
     def lattice(self, lattice):
-        self._lattice = np.array(lattice, dtype='double', order='C')
+        self._lattice = np.array(lattice, dtype="double", order="C")
 
     def set_lattice(self, lattice):
         """ """
@@ -142,7 +148,7 @@ class Cell(object):
     @points.setter
     def points(self, points):
         """ """
-        self._points = np.array(points, dtype='double', order='C')
+        self._points = np.array(points, dtype="double", order="C")
 
     def set_points(self, points):
         """ """
@@ -184,7 +190,7 @@ class Cell(object):
     @masses.setter
     def masses(self, masses):
         """ """
-        self._masses = np.array(masses, dtype='double')
+        self._masses = np.array(masses, dtype="double")
 
     def set_masses(self, masses):
         """ """
@@ -210,18 +216,16 @@ class Cell(object):
         if magmoms is None:
             self._magmoms = None
         else:
-            self._magmoms = np.array(magmoms, dtype='double')
+            self._magmoms = np.array(magmoms, dtype="double")
 
     def set_magnetic_moments(self, magmoms):
         """ """
-        warnings.warn("set_magnetic_moments method is deprecated.",
-                      DeprecationWarning)
+        warnings.warn("set_magnetic_moments method is deprecated.", DeprecationWarning)
         self.magnetic_moments = magmoms
 
     def get_magnetic_moments(self):
         """ """
-        warnings.warn("get_magnetic_moments method is deprecated.",
-                      DeprecationWarning)
+        warnings.warn("get_magnetic_moments method is deprecated.", DeprecationWarning)
         return self.magnetic_moments
 
     @property
@@ -231,7 +235,7 @@ class Cell(object):
     @numbers.setter
     def numbers(self, numbers):
         """ """
-        self._numbers = np.array(numbers, dtype='intc')
+        self._numbers = np.array(numbers, dtype="intc")
         self._set_symbols_from_numbers()
         self._set_masses_from_numbers()
 
@@ -247,26 +251,24 @@ class Cell(object):
 
     def copy(self):
         """ """
-        return Cell(lattice=self._lattice,
-                    points=self._points,
-                    numbers=self._numbers,
-                    magmoms=self._magmoms,
-                    masses=self._masses)
+        return Cell(
+            lattice=self._lattice,
+            points=self._points,
+            numbers=self._numbers,
+            magmoms=self._magmoms,
+            masses=self._masses,
+        )
 
     def get_yaml_lines(self):
         lines = []
         lines.append("lattice:")
-        for v, a in zip(self._lattice.T, ('a', 'b', 'c')):
-            lines.append("- [ %22.16f, %22.16f, %22.16f ] # %s" %
-                         (v[0], v[1], v[2], a))
+        for v, a in zip(self._lattice.T, ("a", "b", "c")):
+            lines.append("- [ %22.16f, %22.16f, %22.16f ] # %s" % (v[0], v[1], v[2], a))
 
         lines.append("points:")
-        for i, (s, v, m) in enumerate(zip(self._symbols,
-                                          self._points.T,
-                                          self._masses)):
+        for i, (s, v, m) in enumerate(zip(self._symbols, self._points.T, self._masses)):
             lines.append("- symbol: %-2s # %d" % (s, i + 1))
-            lines.append("  coordinates: [ %19.16f, %19.16f, %19.16f ]" %
-                         tuple(v))
+            lines.append("  coordinates: [ %19.16f, %19.16f, %19.16f ]" % tuple(v))
             lines.append("  mass: %f" % m)
 
         return lines
@@ -275,12 +277,14 @@ class Cell(object):
         return "\n".join(self.get_yaml_lines())
 
     def _set_numbers_from_symbols(self):
-        self._numbers = np.array([atomic_symbols[s] for s in self._symbols],
-                                 dtype='intc')
+        self._numbers = np.array(
+            [atomic_symbols[s] for s in self._symbols], dtype="intc"
+        )
 
     def _set_symbols_from_numbers(self):
         self._symbols = [atomic_weights[x][0] for x in self._numbers]
 
     def _set_masses_from_numbers(self):
-        self._masses = np.array([atomic_weights[x][3] for x in self._numbers],
-                                dtype='double')
+        self._masses = np.array(
+            [atomic_weights[x][3] for x in self._numbers], dtype="double"
+        )

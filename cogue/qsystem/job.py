@@ -14,8 +14,6 @@ class JobBase:
             self._status = "%s (job-id:%d)" % (status, jobid)
         else:
             self._status = status
-    
+
     def get_status(self):
         return self._status
-    
-    

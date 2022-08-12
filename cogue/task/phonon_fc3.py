@@ -1,8 +1,10 @@
 import sys
+
 import numpy as np
-from cogue.task import TaskElement
-from cogue.interface.vasp_io import write_poscar
+
 from cogue.crystal.converter import cell2atoms
+from cogue.interface.vasp_io import write_poscar
+from cogue.task import TaskElement
 
 try:
     from phonopy import Phonopy
@@ -15,38 +17,39 @@ except ImportError:
     print("You need to install phono3py.")
     sys.exit(1)
 
-from phonopy.file_IO import write_FORCE_SETS
-from phonopy.file_IO import write_disp_yaml
-from phono3py.file_IO import write_disp_fc3_yaml
-from phono3py.file_IO import write_FORCES_FC3
+from phono3py.file_IO import write_disp_fc3_yaml, write_FORCES_FC3
+from phonopy.file_IO import write_disp_yaml, write_FORCE_SETS
+
 
 class PhononFC3Base(TaskElement):
-    """PhononFC3Base class
+    """PhononFC3Base class.
 
     This is an interface to anharmonic phonopy.
 
     """
 
-    def __init__(self,
-                 directory=None,
-                 name=None,
-                 supercell_matrix=None,
-                 primitive_matrix=None,
-                 with_perfect=True,
-                 distance=None,
-                 is_diagonal=True,
-                 check_imaginary=True,
-                 cutoff_frequency=None,
-                 lattice_tolerance=None,
-                 force_tolerance=None,
-                 pressure_target=None,
-                 stress_tolerance=None,
-                 max_increase=None,
-                 max_iteration=None,
-                 min_iteration=None,
-                 is_cell_relaxed=False,
-                 traverse=False):
-
+    def __init__(
+        self,
+        directory=None,
+        name=None,
+        supercell_matrix=None,
+        primitive_matrix=None,
+        with_perfect=True,
+        distance=None,
+        is_diagonal=True,
+        check_imaginary=True,
+        cutoff_frequency=None,
+        lattice_tolerance=None,
+        force_tolerance=None,
+        pressure_target=None,
+        stress_tolerance=None,
+        max_increase=None,
+        max_iteration=None,
+        min_iteration=None,
+        is_cell_relaxed=False,
+        traverse=False,
+    ):
+        """Init method."""
         TaskElement.__init__(self)
 
         self._directory = directory
@@ -77,17 +80,17 @@ class PhononFC3Base(TaskElement):
 
         self._energy = None
         self._cell = None
-        self._phonon = None # Phonopy object
-        self._phonon_fc3 = None # Phono3py object
+        self._phonon = None  # Phonopy object
+        self._phonon_fc3 = None  # Phono3py object
         self._phonon_fc3_tasks = None
 
     def get_phonon(self):
         return self._phonon
 
     def get_phonon_fc3(self):
-        for i, task in enumerate(self._phonon_fc3_tasks[1:]):
-            forces_fc3.append(task.get_properties()['forces'][-1])
-        disp_dataset = self._phonon_fc3.get_displacement_dataset()
+        forces_fc3 = []
+        for _, task in enumerate(self._phonon_fc3_tasks[1:]):
+            forces_fc3.append(task.get_properties()["forces"][-1])
         self._phonon_fc3.produce_fc3(forces_fc3)
 
         return self._phonon_fc3
@@ -116,7 +119,7 @@ class PhononFC3Base(TaskElement):
             terminate = False
             for i, task in enumerate(self._tasks):
                 done &= task.done()
-                terminate |= (task.get_status() == "terminate")
+                terminate |= task.get_status() == "terminate"
 
             if done:
                 if terminate:
@@ -141,11 +144,13 @@ class PhononFC3Base(TaskElement):
         pass
 
     def done(self):
-        return (self._status == "terminate" or
-                self._status == "done" or
-                self._status == "max_iteration" or
-                self._status == "next" or
-                self._status == "imaginary_mode")
+        return (
+            self._status == "terminate"
+            or self._status == "done"
+            or self._status == "max_iteration"
+            or self._status == "next"
+            or self._status == "imaginary_mode"
+        )
 
     def __next__(self):
         return self.next()
@@ -155,8 +160,9 @@ class PhononFC3Base(TaskElement):
             if "next" in self._status:
                 self._energy = self._tasks[0].get_energy()
                 self._comment = "%s\\n%f" % (
-                    self._tasks[0].get_space_group()['international'],
-                    self._energy)
+                    self._tasks[0].get_space_group()["international"],
+                    self._energy,
+                )
                 self._set_stage1()
                 return self._tasks
             elif "terminate" in self._status and self._traverse == "restart":
@@ -168,12 +174,13 @@ class PhononFC3Base(TaskElement):
         elif self._stage == 1:
             if "next" in self._status:
                 disp_dataset = self._phonon_fc3.get_displacement_dataset()
-                for disp1, task in zip(disp_dataset['first_atoms'], self._tasks):
-                    disp1['forces'] = task.get_properties()['forces'][-1]
+                for disp1, task in zip(disp_dataset["first_atoms"], self._tasks):
+                    disp1["forces"] = task.get_properties()["forces"][-1]
                 write_FORCE_SETS(disp_dataset)
                 self._phonon.set_displacement_dataset(disp_dataset)
                 self._phonon.produce_force_constants(
-                    calculate_full_force_constants=False)
+                    calculate_full_force_constants=False
+                )
                 if self._exist_imaginary_mode():
                     self._status = "imaginary_mode"
                     self._write_yaml()
@@ -192,7 +199,7 @@ class PhononFC3Base(TaskElement):
                 self._status = "done"
                 forces_fc3 = []
                 for i, task in enumerate(self._phonon_fc3_tasks[1:]):
-                    forces_fc3.append(task.get_properties()['forces'][-1])
+                    forces_fc3.append(task.get_properties()["forces"][-1])
                 disp_dataset = self._phonon_fc3.get_displacement_dataset()
                 write_FORCES_FC3(disp_dataset, forces_fc3)
                 self._tasks = []
@@ -202,7 +209,7 @@ class PhononFC3Base(TaskElement):
                 return self._tasks
             else:
                 raise StopIteration
-        else: # stage2
+        else:  # stage2
             pass
 
     def _set_stage0(self):
@@ -218,7 +225,8 @@ class PhononFC3Base(TaskElement):
             self._status = "fc2_displacements"
             disp_dataset = self._phonon_fc3.get_displacement_dataset()
             self._tasks = self._get_displacement_tasks(
-                stop=len(disp_dataset['first_atoms']))
+                stop=len(disp_dataset["first_atoms"])
+            )
             self._phonon_fc3_tasks += self._tasks
         else:
             self._set_stage2()
@@ -230,8 +238,7 @@ class PhononFC3Base(TaskElement):
             if task.get_status() == "terminate":
                 disp_terminated.append(i)
         disp_dataset = self._phonon_fc3.get_displacement_dataset()
-        tasks = self._get_displacement_tasks(
-            stop=len(disp_dataset['first_atoms']))
+        tasks = self._get_displacement_tasks(stop=len(disp_dataset["first_atoms"]))
         self._tasks = []
         for i in disp_terminated:
             self._tasks.append(tasks[i])
@@ -243,7 +250,7 @@ class PhononFC3Base(TaskElement):
         self._status = "fc3_displacements"
         if self._check_imaginary:
             disp_dataset = self._phonon_fc3.get_displacement_dataset()
-            start_index = len(disp_dataset['first_atoms'])
+            start_index = len(disp_dataset["first_atoms"])
         else:
             start_index = 0
         self._tasks = self._get_displacement_tasks(start=start_index)
@@ -258,7 +265,7 @@ class PhononFC3Base(TaskElement):
 
         if self._check_imaginary:
             disp_dataset = self._phonon_fc3.get_displacement_dataset()
-            start_index = len(disp_dataset['first_atoms'])
+            start_index = len(disp_dataset["first_atoms"])
         else:
             start_index = 0
         tasks = self._get_displacement_tasks(start=start_index)
@@ -271,16 +278,21 @@ class PhononFC3Base(TaskElement):
     def _set_phonon_fc3(self):
         cell = self.get_cell()
         phonopy_cell = cell2atoms(cell)
-        self._phonon = Phonopy(phonopy_cell,
-                               self._supercell_matrix,
-                               primitive_matrix=self._primitive_matrix,
-                               dynamical_matrix_decimals=14,
-                               force_constants_decimals=14)
-        self._phonon_fc3 = Phono3py(phonopy_cell,
-                                    self._supercell_matrix,
-                                    primitive_matrix=self._primitive_matrix)
-        self._phonon_fc3.generate_displacements(distance=self._distance,
-                                                is_diagonal=self._is_diagonal)
+        self._phonon = Phonopy(
+            phonopy_cell,
+            self._supercell_matrix,
+            primitive_matrix=self._primitive_matrix,
+            dynamical_matrix_decimals=14,
+            force_constants_decimals=14,
+        )
+        self._phonon_fc3 = Phono3py(
+            phonopy_cell,
+            self._supercell_matrix,
+            primitive_matrix=self._primitive_matrix,
+        )
+        self._phonon_fc3.generate_displacements(
+            distance=self._distance, is_diagonal=self._is_diagonal
+        )
         supercell = self._phonon_fc3.get_supercell()
         disp_dataset = self._phonon_fc3.get_displacement_dataset()
         self._phonon.set_displacement_dataset(disp_dataset)
@@ -293,8 +305,7 @@ class PhononFC3Base(TaskElement):
             pmat = np.eye(3)
         else:
             pmat = self._primitive_matrix
-        exact_point_matrix = np.dot(np.linalg.inv(self._supercell_matrix),
-                                    pmat).T
+        exact_point_matrix = np.dot(np.linalg.inv(self._supercell_matrix), pmat).T
         max_integer = np.rint(np.amax(np.abs(np.linalg.inv(exact_point_matrix))))
         q_points = []
         for i in np.arange(-max_integer, max_integer + 1):
@@ -312,7 +323,7 @@ class PhononFC3Base(TaskElement):
             return False
 
     def _write_yaml(self):
-        w = open("%s.yaml" % self._directory, 'w')
+        w = open("%s.yaml" % self._directory, "w")
         if self._lattice_tolerance is not None:
             w.write("lattice_tolerance: %f\n" % self._lattice_tolerance)
         if self._stress_tolerance is not None:

@@ -68,7 +68,7 @@ configurations are as follows:
 
    * In "General Configuration" tab, the number of cores in an
      execution node is specified in "Slots" field.
-   
+
    * In "Use Access" tab, "arusers" is added to "Allow Access to"
      field.
 
@@ -79,7 +79,7 @@ configurations are as follows:
 
 The detailed information is found `here
 <http://docs.oracle.com/cd/E24901_01/index.htm>`_.
-`This web site <http://pka.engr.ccny.cuny.edu/~jmao/node/49>`_ is 
+`This web site <http://pka.engr.ccny.cuny.edu/~jmao/node/49>`_ is
 helpful when starting configuration for the first time.
 
 

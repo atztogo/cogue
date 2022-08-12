@@ -1,8 +1,9 @@
-import numpy as np
+"""Band structure base class."""
 from cogue.task import TaskElement
 
+
 class BandStructureBase(TaskElement):
-    """BandStructure class
+    """BandStructure class.
 
     Three stages:
     1. structure optimization of input cell
@@ -11,20 +12,22 @@ class BandStructureBase(TaskElement):
 
     """
 
-    def __init__(self,
-                 directory=None,
-                 name=None,
-                 paths=None,
-                 lattice_tolerance=None,
-                 force_tolerance=None,
-                 pressure_target=None,
-                 stress_tolerance=None,
-                 max_increase=None,
-                 max_iteration=None,
-                 min_iteration=None,
-                 is_cell_relaxed=False,
-                 traverse=False):
-
+    def __init__(
+        self,
+        directory=None,
+        name=None,
+        paths=None,
+        lattice_tolerance=None,
+        force_tolerance=None,
+        pressure_target=None,
+        stress_tolerance=None,
+        max_increase=None,
+        max_iteration=None,
+        min_iteration=None,
+        is_cell_relaxed=False,
+        traverse=False,
+    ):
+        """Init method."""
         TaskElement.__init__(self)
 
         self._directory = directory
@@ -91,10 +94,12 @@ class BandStructureBase(TaskElement):
             self._tasks = [self._bs_tasks[0]]
 
     def done(self):
-        return (self._status == "done" or
-                self._status == "terminate" or
-                self._status == "max_iteration" or
-                self._status == "next")
+        return (
+            self._status == "done"
+            or self._status == "terminate"
+            or self._status == "max_iteration"
+            or self._status == "next"
+        )
 
     def __next__(self):
         return self.next()
@@ -138,19 +143,22 @@ class BandStructureBase(TaskElement):
             eigs_path = []
             for kpt in kpoints:
                 task = self._tasks[count]
-                eigs_path.append(task.get_properties()['eigenvalues'][0][0])
+                eigs_path.append(task.get_properties()["eigenvalues"][0][0])
                 count += 1
             eigvals.append(eigs_path)
 
         from cogue.electron.band_structure import BandStructure as BS
+
         if self._bs_tasks[0] is None:
             cell = self._cell
         else:
             cell = self._bs_tasks[0].get_cell()
-        bs = BS(self._paths,
-                cell,
-                eigvals,
-                fermi_energy=self._bs_tasks[1].get_properties()['fermi-energy'])
+        bs = BS(
+            self._paths,
+            cell,
+            eigvals,
+            fermi_energy=self._bs_tasks[1].get_properties()["fermi-energy"],
+        )
         bs.write_yaml()
 
     def _set_stage1(self):
@@ -174,7 +182,7 @@ class BandStructureBase(TaskElement):
         self._tasks = tasks
 
     def _write_yaml(self):
-        w = open("%s.yaml" % self._directory, 'w')
+        w = open("%s.yaml" % self._directory, "w")
         if self._lattice_tolerance is not None:
             w.write("lattice_tolerance: %f\n" % self._lattice_tolerance)
         if self._stress_tolerance is not None:
@@ -201,14 +209,16 @@ class BandStructureBase(TaskElement):
             symbols = cell.get_symbols()
 
             w.write("lattice:\n")
-            for v, a in zip(lattice, ('a', 'b', 'c')) :
-                w.write("- [ %22.16f, %22.16f, %22.16f ] # %s\n" %
-                        (v[0], v[1], v[2], a))
+            for v, a in zip(lattice, ("a", "b", "c")):
+                w.write(
+                    "- [ %22.16f, %22.16f, %22.16f ] # %s\n" % (v[0], v[1], v[2], a)
+                )
 
             w.write("points:\n")
             for i, v in enumerate(points):
-                w.write("- [ %20.16f, %20.16f, %20.16f ] # %d\n" %
-                        (v[0], v[1], v[2], i + 1))
+                w.write(
+                    "- [ %20.16f, %20.16f, %20.16f ] # %d\n" % (v[0], v[1], v[2], i + 1)
+                )
 
             w.write("symbols:\n")
             for i, v in enumerate(symbols):

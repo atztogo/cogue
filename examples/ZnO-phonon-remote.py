@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 
 import numpy as np
+import spur
+
 import cogue
 import cogue.calculator.vasp as vasp
 import cogue.qsystem.gridengine as ge
-import spur
-
 
 poscar = """Zn O
    1.0
@@ -23,9 +23,8 @@ Direct
 task_name = "ZnO"
 
 # Vasp settings
-cell = vasp.parse_poscar(poscar.split('\n'))
-ps_map = {'Zn': 'Zn_PBE',
-          'O': 'O_PBE'}
+cell = vasp.parse_poscar(poscar.split("\n"))
+ps_map = {"Zn": "Zn_PBE", "O": "O_PBE"}
 incar = vasp.incar()
 incar.set_structure_optimization()
 incar.set_nsw(20)
@@ -34,33 +33,38 @@ incar_phonon = vasp.incar()
 incar_phonon.set_electronic_structure()
 
 # Grid engine job
-job = ge.job(script="mpirun vasp5212mpi",
-             shell="/bin/zsh",
-             jobname=task_name,
-             pe="mpi* 4",
-             stdout="std.log",
-             stderr="err.log")
+job = ge.job(
+    script="mpirun vasp5212mpi",
+    shell="/bin/zsh",
+    jobname=task_name,
+    pe="mpi* 4",
+    stdout="std.log",
+    stderr="err.log",
+)
 
 # VASP phonon task
-task = vasp.phonon(max_iteration=10,
-                   min_iteration=1,
-                   supercell_matrix=np.diag([2, 2, 2]),
-                   cell=cell,
-                   pseudo_potential_map=ps_map,
-                   incar=[incar, incar_phonon],
-                   k_mesh=[[6, 6, 4], [3, 3, 2]],
-                   k_shift=[[0.5, 0.5, 0], [0, 0, 0]],
-                   job=job)
+task = vasp.phonon(
+    max_iteration=10,
+    min_iteration=1,
+    supercell_matrix=np.diag([2, 2, 2]),
+    cell=cell,
+    pseudo_potential_map=ps_map,
+    incar=[incar, incar_phonon],
+    k_mesh=[[6, 6, 4], [3, 3, 2]],
+    k_shift=[[0.5, 0.5, 0], [0, 0, 0]],
+    job=job,
+)
 
 # Automation system
 calc = cogue.autocalc(name=task_name, verbose=True)
 
 # Register task(s)
-calc.append(task_name, task) # More tasks can be appended.
+calc.append(task_name, task)  # More tasks can be appended.
 
 # Register queue
-shell = spur.SshShell(hostname="remotehost",
-                      missing_host_key=spur.ssh.MissingHostKey.accept)
+shell = spur.SshShell(
+    hostname="remotehost", missing_host_key=spur.ssh.MissingHostKey.accept
+)
 queue = ge.queue(ssh_shell=shell, temporary_dir="/home/bob/coguetmp")
 calc.set_queue(queue)
 

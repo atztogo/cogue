@@ -1,8 +1,8 @@
 #ifndef __XTALCOMP_WRAPPER_H__
 #define __XTALCOMP_WRAPPER_H__
 
-#ifdef __cplusplus 
-extern "C" { 
+#ifdef __cplusplus
+extern "C" {
 #endif
   int xtalcomp(const int num_atom,
 	       double lattice1[3][3],
@@ -13,7 +13,7 @@ extern "C" {
 	       double positions2[][3],
 	       const double tolerance,
 	       const double angle_tolerance);
-#ifdef __cplusplus 
+#ifdef __cplusplus
 }
 #endif
 

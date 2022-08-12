@@ -1,24 +1,25 @@
 import unittest
 
 import numpy as np
+
 from cogue.crystal.cell import Cell, sort_cell_by_symbols
 
-class TestCell(unittest.TestCase):
 
+class TestCell(unittest.TestCase):
     def setUp(self):
-        symbols = ['Si', 'O', 'O', 'Si', 'O', 'O']
-        lattice = [[4.65, 0, 0],
-                   [0, 4.75, 0],
-                   [0, 0, 3.25]]
-        points=np.transpose([[0.0, 0.0, 0.0],
-                             [0.3, 0.3, 0.0],
-                             [0.7, 0.7, 0.0],
-                             [0.5, 0.5, 0.5],
-                             [0.2, 0.8, 0.5],
-                             [0.8, 0.2, 0.5]])
-        self._cell = Cell(lattice=lattice,
-                          points=points,
-                          symbols=symbols)
+        symbols = ["Si", "O", "O", "Si", "O", "O"]
+        lattice = [[4.65, 0, 0], [0, 4.75, 0], [0, 0, 3.25]]
+        points = np.transpose(
+            [
+                [0.0, 0.0, 0.0],
+                [0.3, 0.3, 0.0],
+                [0.7, 0.7, 0.0],
+                [0.5, 0.5, 0.5],
+                [0.2, 0.8, 0.5],
+                [0.8, 0.2, 0.5],
+            ]
+        )
+        self._cell = Cell(lattice=lattice, points=points, symbols=symbols)
 
     def tearDown(self):
         pass
@@ -86,7 +87,8 @@ class TestCell(unittest.TestCase):
         self._cell.get_volume()
         self.assertTrue(abs(volume - self._cell.get_volume()) < 1e-8)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     suite = unittest.TestLoader().loadTestsFromTestCase(TestCell)
     unittest.TextTestRunner(verbosity=2).run(suite)
     # unittest.main()

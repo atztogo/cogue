@@ -35,6 +35,8 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import sys
+from optparse import OptionParser
+
 import numpy as np
 
 try:
@@ -42,88 +44,118 @@ try:
 except ImportError:
     print("You need to install python-yaml.")
     sys.exit(1)
-    
+
 try:
     from yaml import CLoader as Loader
-    from yaml import CDumper as Dumper
 except ImportError:
-    from yaml import Loader, Dumper
-
-from phonopy.units import VaspToTHz
-
+    from yaml import Loader
 
 
 def get_plot_data(data):
     segment_positions = []
     eigenvalues = []
     distances = []
-    npoints = data['nkpoint'] / data['npath']
-    efermi = data['fermi-energy']
+    npoints = data["nkpoint"] / data["npath"]
+    efermi = data["fermi-energy"]
 
-    for j, v in enumerate(data['path']):
-        eigenvalues.append([f['eigenvalue'] - efermi for f in v['band']])
-        distances.append(v['distance'])
-        
+    for j, v in enumerate(data["path"]):
+        eigenvalues.append([f["eigenvalue"] - efermi for f in v["band"]])
+        distances.append(v["distance"])
+
         if j % npoints == 0:
-            segment_positions.append(v['distance'])
+            segment_positions.append(v["distance"])
 
     return distances, eigenvalues, segment_positions
 
 
-# Parse options
-from optparse import OptionParser
 parser = OptionParser()
-parser.set_defaults(e_max=None,
-                    e_min=None,
-                    is_gnuplot=False,
-                    is_points=False,
-                    is_vertial_line=False,
-                    output_filename=None,
-                    symbols=None,
-                    ylabel=None,
-                    show_legend=False,
-                    title=None)
-parser.add_option("--emax", dest="e_max", type="float",
-                  help="Maximum frequency plotted")
-parser.add_option("--emin", dest="e_min", type="float",
-                  help="Minimum frequency plotted")
-parser.add_option("--gnuplot", dest="is_gnuplot", action="store_true",
-                  help="Output in gnuplot data style")
-parser.add_option("--legend", dest="show_legend",
-                  action="store_true",
-                  help="Show legend")
-parser.add_option("--line", "-l", dest="is_vertial_line",
-                  action="store_true",
-                  help="Vertial line is drawn at between paths")
-parser.add_option("-o", "--output", dest="output_filename",
-                  action="store", type="string",
-                  help="Output filename of PDF plot")
-parser.add_option("--symbols", dest="symbols", action="store", type="string",
-                  help="Show symbols at band segments")
-parser.add_option("--ylabel", dest="ylabel", action="store", type="string",
-                  help="")
-parser.add_option("--points", dest="is_points",
-                  action="store_true",
-                  help="Draw points")
-parser.add_option("-t", "--title", dest="title", action="store",
-                  type="string", help="Title of plot")
+parser.set_defaults(
+    e_max=None,
+    e_min=None,
+    is_gnuplot=False,
+    is_points=False,
+    is_vertial_line=False,
+    output_filename=None,
+    symbols=None,
+    ylabel=None,
+    show_legend=False,
+    title=None,
+)
+parser.add_option(
+    "--emax", dest="e_max", type="float", help="Maximum frequency plotted"
+)
+parser.add_option(
+    "--emin", dest="e_min", type="float", help="Minimum frequency plotted"
+)
+parser.add_option(
+    "--gnuplot",
+    dest="is_gnuplot",
+    action="store_true",
+    help="Output in gnuplot data style",
+)
+parser.add_option(
+    "--legend", dest="show_legend", action="store_true", help="Show legend"
+)
+parser.add_option(
+    "--line",
+    "-l",
+    dest="is_vertial_line",
+    action="store_true",
+    help="Vertial line is drawn at between paths",
+)
+parser.add_option(
+    "-o",
+    "--output",
+    dest="output_filename",
+    action="store",
+    type="string",
+    help="Output filename of PDF plot",
+)
+parser.add_option(
+    "--symbols",
+    dest="symbols",
+    action="store",
+    type="string",
+    help="Show symbols at band segments",
+)
+parser.add_option("--ylabel", dest="ylabel", action="store", type="string", help="")
+parser.add_option("--points", dest="is_points", action="store_true", help="Draw points")
+parser.add_option(
+    "-t", "--title", dest="title", action="store", type="string", help="Title of plot"
+)
 (options, args) = parser.parse_args()
 
 if not options.is_gnuplot:
     import matplotlib.pyplot as plt
+
     if options.symbols:
         from matplotlib import rc
-        rc('text', usetex=True)
 
-colors = ['b-', 'g-', 'r-', 'c-', 'm-', 'y-', 'k-',
-          'b--', 'g--', 'r--', 'c--', 'm--', 'y--', 'k--']
+        rc("text", usetex=True)
+
+colors = [
+    "b-",
+    "g-",
+    "r-",
+    "c-",
+    "m-",
+    "y-",
+    "k-",
+    "b--",
+    "g--",
+    "r--",
+    "c--",
+    "m--",
+    "y--",
+    "k--",
+]
 if options.is_points:
-    colors = [x + 'o' for x in colors]
+    colors = [x + "o" for x in colors]
 
 count = 0
 
 if len(args) == 0:
-    filenames = ['band.yaml']
+    filenames = ["band.yaml"]
 else:
     filenames = args
 
@@ -141,10 +173,10 @@ for i, filename in enumerate(filenames):
             text += "%10.8f" % v
         text += "%10.8f" % distances[-1]
         print(text)
-        
+
     elif options.is_vertial_line and len(filenames) == 1:
         for v in segment_positions[1:]:
-            plt.axvline(x=v, linewidth=0.5, color='b')
+            plt.axvline(x=v, linewidth=0.5, color="b")
 
     for j, eigvals in enumerate(np.array(eigenvalues).T):
         if options.is_gnuplot:
@@ -152,7 +184,7 @@ for i, filename in enumerate(filenames):
                 print("%f %f" % (d, f))
             print("")
         else:
-            if j==0:
+            if j == 0:
                 plt.plot(distances, eigvals, colors[i], label=filename)
             else:
                 plt.plot(distances, eigvals, colors[i])
@@ -160,44 +192,42 @@ for i, filename in enumerate(filenames):
     if options.is_gnuplot:
         print("")
 
-    
+
 if not options.is_gnuplot:
     if options.ylabel:
         plt.ylabel(options.ylabel)
     else:
-        plt.ylabel('Energy')
-    plt.xlabel('Wave vector')
+        plt.ylabel("Energy")
+    plt.xlabel("Wave vector")
     plt.xlim(distances[0], distances[-1])
-    if not options.e_max == None:
-        plt.ylim(ymax = options.e_max)
-    if not options.e_min == None:
-        plt.ylim(ymin = options.e_min)
-    plt.axhline(y=0, linestyle=':', linewidth=0.5, color='b')
+    if options.e_max is not None:
+        plt.ylim(ymax=options.e_max)
+    if options.e_min is not None:
+        plt.ylim(ymin=options.e_min)
+    plt.axhline(y=0, linestyle=":", linewidth=0.5, color="b")
     if len(filenames) == 1:
         xticks = segment_positions + [distances[-1]]
         if options.symbols:
             symbols = [x for x in options.symbols.split()]
-            if len(symbols)==len(xticks):
+            if len(symbols) == len(xticks):
                 plt.xticks(xticks, symbols)
             else:
                 print("Numbers of symbols and band segments don't match.")
                 sys.exit(1)
         else:
-            plt.xticks(xticks, [''] * len(xticks))
+            plt.xticks(xticks, [""] * len(xticks))
     else:
         plt.xticks([])
-    
-    if not options.title == None:
+
+    if options.title is not None:
         plt.title(options.title)
 
     if options.show_legend:
         plt.legend()
-    
-    if not options.output_filename == None:
-        plt.rcParams['pdf.fonttype'] = 42
-        plt.rcParams['font.family'] = 'serif'
+
+    if options.output_filename is not None:
+        plt.rcParams["pdf.fonttype"] = 42
+        plt.rcParams["font.family"] = "serif"
         plt.savefig(options.output_filename)
     else:
         plt.show()
-    
-

@@ -1,6 +1,5 @@
-#!/usr/bin/env python
+r"""Tool to analyze phonon relax result.
 
-"""
 Usage:
 
 1. Remove unnecessary nodes from dot file
@@ -12,101 +11,109 @@ Usage:
      spgsym=`symPoscar -s 0.1 $pos_path|sed 's/\///'|awk '{print $1}'`;
      poscar2cif $pos_path > ~/No$i-$spgsym.cif;
    done
+
 """
 
-import sys
 import re
+
 
 def get_parser():
     from optparse import OptionParser
+
     parser = OptionParser()
-    parser.set_defaults(path=True,
-                        simplify=False,
-                        energy=False)
-    parser.add_option("--path",
-                      dest="path",
-                      action="store_true",
-                      help="Show path to POSCAR of tid")
-    parser.add_option("--simplify",
-                      dest="simplify",
-                      action="store_true",
-                      help="Remove redundant information from dot file")
-    parser.add_option("--energy",
-                      dest="energy",
-                      action="store_true",
-                      help="Show energy/atom")
+    parser.set_defaults(path=True, simplify=False, energy=False)
+    parser.add_option(
+        "--path", dest="path", action="store_true", help="Show path to POSCAR of tid"
+    )
+    parser.add_option(
+        "--simplify",
+        dest="simplify",
+        action="store_true",
+        help="Remove redundant information from dot file",
+    )
+    parser.add_option(
+        "--energy", dest="energy", action="store_true", help="Show energy/atom"
+    )
     return parser
 
-###### simplify_dot ######
-def get_tid(line):
-    return int(line.split()[0].replace('n', ''))
-    
-def collect_tids_to_remove(lines):    
+
+def _get_tid(line):
+    return int(line.split()[0].replace("n", ""))
+
+
+def _collect_tids_to_remove(lines):
     tids_to_remove = []
-    p = re.compile('(low_symmetry)|(submitted)|(running)')
+    p = re.compile("(low_symmetry)|(submitted)|(running)")
     for line in lines:
         if p.search(line):
-            tids_to_remove.append(get_tid(line))
+            tids_to_remove.append(_get_tid(line))
     return tids_to_remove
 
-def tid_in_line(tids_to_remove, line):
+
+def _tid_in_line(tids_to_remove, line):
     for tid in tids_to_remove:
-        if re.search('(^n%d\s+)|(-> n%d ;)' % (tid, tid), line):
+        if re.search(r"(^n%d\s+)|(-> n%d ;)" % (tid, tid), line):
             return True
     return False
-    
-def rewrite_dot(tids_to_remove, lines):
+
+
+def _rewrite_dot(tids_to_remove, lines):
     simplified_lines = []
     for line in lines:
-        if not tid_in_line(tids_to_remove, line):
+        if not _tid_in_line(tids_to_remove, line):
             simplified_lines.append(line)
 
     return simplified_lines
-    
-def simplify_dot(lines):
-    tids_to_remove = collect_tids_to_remove(lines)
-    simplified_lines = rewrite_dot(tids_to_remove, lines)
+
+
+def _simplify_dot(lines):
+    tids_to_remove = _collect_tids_to_remove(lines)
+    simplified_lines = _rewrite_dot(tids_to_remove, lines)
     return simplified_lines
 
-##### Connect relaxation path #####
-def get_previous_tid(tid, lines):
-    p = re.compile('-> n%d ;' % tid)
+
+def _get_previous_tid(tid, lines):
+    p = re.compile("-> n%d ;" % tid)
     for line in lines:
         if p.search(line):
-            return get_tid(line)
+            return _get_tid(line)
 
-def connect_path(tid, lines):
+
+def _connect_path(tid, lines):
     tpath = [tid]
     while tid != 1:
-        tid = get_previous_tid(tid, lines)
+        tid = _get_previous_tid(tid, lines)
         tpath.append(tid)
     return tpath[::-1]
 
-def search_line(tid, lines):
+
+def _search_line(tid, lines):
     for line in lines:
-        if re.search('^n%d\s+\[' % tid, line):
+        if re.search(r"^n%d\s+\[" % tid, line):
             return line
-    
-def collect_labels(tpath, lines):
+
+
+def _collect_labels(tpath, lines):
     labels = []
     for tid in tpath:
-        line = search_line(tid, lines)
-        m = re.search('label=\"(.+)\"', line)
+        line = _search_line(tid, lines)
+        m = re.search('label="(.+)"', line)
         labels.append(m.group(1))
     return labels
 
-def get_path_string(labels):
+
+def _get_path_string(labels):
     path = ""
     for label in labels:
-        path += label.split('\\n')[1].replace('\"', '')
-        path += '/'
+        path += label.split("\\n")[1].replace('"', "")
+        path += "/"
     return path
 
-##### Collect energy #####
-def get_enrergy(tid, lines):
-    energy_str = collect_labels([tid], lines)[0].split('\\n')[3]
-    energy = float(energy_str.split('/')[0])
-    num_atom = int(energy_str.split('/')[1])
+
+def _get_enrergy(tid, lines):
+    energy_str = _collect_labels([tid], lines)[0].split("\\n")[3]
+    energy = float(energy_str.split("/")[0])
+    num_atom = int(energy_str.split("/")[1])
     return energy, num_atom
 
 
@@ -115,7 +122,7 @@ options, args = get_parser().parse_args()
 if options.simplify:
     with open(args[0]) as f:
         lines = f.readlines()
-        simplified_lines = simplify_dot(lines)
+        simplified_lines = _simplify_dot(lines)
         text = ""
         for line in simplified_lines:
             text += line
@@ -124,16 +131,19 @@ elif options.energy:
     with open(args[0]) as f:
         lines = f.readlines()
         tid = int(args[1])
-        energy, num_atom = get_enrergy(tid, lines)
+        energy, num_atom = _get_enrergy(tid, lines)
         print("%f %d" % (energy / num_atom, num_atom))
 elif options.path:
     with open(args[0]) as f:
         lines = f.readlines()
         tid = int(args[1])
-        tpath = connect_path(tid, lines)
-        labels = collect_labels(tpath, lines)
-        path_string = get_path_string(labels)
-        first_directory = path_string.split('/')[0]
-        print(first_directory + "/" + path_string +
-              "phonon_relax_element/phonon-1/POSCAR-unitcell")
-    
+        tpath = _connect_path(tid, lines)
+        labels = _collect_labels(tpath, lines)
+        path_string = _get_path_string(labels)
+        first_directory = path_string.split("/")[0]
+        print(
+            first_directory
+            + "/"
+            + path_string
+            + "phonon_relax_element/phonon-1/POSCAR-unitcell"
+        )

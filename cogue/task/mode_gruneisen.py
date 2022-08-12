@@ -1,6 +1,8 @@
+import numpy as np
+
 from cogue.task import TaskElement
 from cogue.task.phonon import PhononYaml
-import numpy as np
+
 
 class ModeGruneisenBase(TaskElement, PhononYaml):
     """ModeGruneisen class
@@ -10,27 +12,29 @@ class ModeGruneisenBase(TaskElement, PhononYaml):
     2. create cells with, e.g. +1% and -1% volumes or strains, and optimize them
     3. calculate phonons for three cells
     4. calculate mode-Gruneisen parameters (This is not yet implemented.)
-    
+
     """
-    
-    def __init__(self,
-                 directory=None,
-                 name=None,
-                 delta_strain=None,
-                 strain=None,
-                 bias=None,
-                 supercell_matrix=None,
-                 primitive_matrix=None,
-                 distance=None,
-                 lattice_tolerance=None,
-                 force_tolerance=None,
-                 pressure_target=None,
-                 stress_tolerance=None,
-                 max_increase=None,
-                 max_iteration=None,
-                 min_iteration=None,
-                 is_cell_relaxed=False,
-                 traverse=False):
+
+    def __init__(
+        self,
+        directory=None,
+        name=None,
+        delta_strain=None,
+        strain=None,
+        bias=None,
+        supercell_matrix=None,
+        primitive_matrix=None,
+        distance=None,
+        lattice_tolerance=None,
+        force_tolerance=None,
+        pressure_target=None,
+        stress_tolerance=None,
+        max_increase=None,
+        max_iteration=None,
+        min_iteration=None,
+        is_cell_relaxed=False,
+        traverse=False,
+    ):
 
         TaskElement.__init__(self)
 
@@ -46,14 +50,16 @@ class ModeGruneisenBase(TaskElement, PhononYaml):
             self._delta_strain = 0.001
         else:
             self._delta_strain = delta_strain
-        (self._delta_strain_minus,
-         self._delta_strain_orig,
-         self._delta_strain_plus) = self._get_delta_strains()
+        (
+            self._delta_strain_minus,
+            self._delta_strain_orig,
+            self._delta_strain_plus,
+        ) = self._get_delta_strains()
         if strain is None:
             self._strain = np.eye(3)
         else:
             self._strain = self._get_strain(strain)
-        
+
         self._supercell_matrix = supercell_matrix
         self._primitive_matrix = primitive_matrix
         self._distance = distance
@@ -66,7 +72,7 @@ class ModeGruneisenBase(TaskElement, PhononYaml):
         self._min_iteration = min_iteration
         self._traverse = traverse
         self._is_cell_relaxed = is_cell_relaxed
-        
+
         self._stage = 0
         self._tasks = None
 
@@ -106,14 +112,16 @@ class ModeGruneisenBase(TaskElement, PhononYaml):
             self._tasks = [self._all_tasks[0]]
 
     def done(self):
-        return (self._status == "done" or
-                self._status == "terminate" or
-                self._status == "next")
+        return (
+            self._status == "done"
+            or self._status == "terminate"
+            or self._status == "next"
+        )
 
     def __next__(self):
         return self.next()
 
-    def next(self):    
+    def next(self):
         if self._stage == 0:
             if self._status == "next":
                 self._prepare_next(self._all_tasks[0].get_cell())
@@ -128,7 +136,7 @@ class ModeGruneisenBase(TaskElement, PhononYaml):
                 for i, task in enumerate(self._tasks):
                     if task.get_status() == "terminate":
                         terminated.append(i)
-                tasks = self._get_phonon_tasks(cell)
+                tasks = self._get_phonon_tasks(self._tasks[-1].get_cell())
                 self._tasks = []
                 for i in terminated:
                     self._tasks.append(tasks[i])
@@ -151,7 +159,7 @@ class ModeGruneisenBase(TaskElement, PhononYaml):
 
     def _calculate_mode_gruneisen(self):
         self._mode_gruneisen = None
-        
+
     def _prepare_next(self, cell):
         self._stage = 1
         self._status = "phonons"
@@ -160,19 +168,25 @@ class ModeGruneisenBase(TaskElement, PhononYaml):
         self._all_tasks += tasks
 
     def _get_delta_strains(self):
-        if self._bias is "plus":
-            return (np.eye(3),
-                    self._get_strain(self._delta_strain, factor=1),
-                    self._get_strain(self._delta_strain, factor=2))
-        elif self._bias is "minus":
-            return (self._get_strain(self._delta_strain, factor=-2),
-                    self._get_strain(self._delta_strain, factor=-1),       
-                    np.eye(3))
+        if self._bias == "plus":
+            return (
+                np.eye(3),
+                self._get_strain(self._delta_strain, factor=1),
+                self._get_strain(self._delta_strain, factor=2),
+            )
+        elif self._bias == "minus":
+            return (
+                self._get_strain(self._delta_strain, factor=-2),
+                self._get_strain(self._delta_strain, factor=-1),
+                np.eye(3),
+            )
         else:
-            return (self._get_strain(self._delta_strain, factor=-1),
-                    np.eye(3),
-                    self._get_strain(self._delta_strain, factor=1))
-        
+            return (
+                self._get_strain(self._delta_strain, factor=-1),
+                np.eye(3),
+                self._get_strain(self._delta_strain, factor=1),
+            )
+
     def _get_strain(self, strain, factor=1):
         if isinstance(strain, int) or isinstance(strain, float):
             return (1 + factor * strain) ** (1.0 / 3) * np.eye(3)
@@ -188,23 +202,24 @@ class ModeGruneisenBase(TaskElement, PhononYaml):
         cell_plus = cell.copy()
         cell_plus.set_lattice(np.dot(self._delta_strain_plus, lattice))
 
-        minus = self._get_phonon_task(cell_minus,
-                                      "minus",
-                                      is_cell_relaxed=(
-                                          self._is_cell_relaxed and
-                                          self._bias == "plus"))
+        minus = self._get_phonon_task(
+            cell_minus,
+            "minus",
+            is_cell_relaxed=(self._is_cell_relaxed and self._bias == "plus"),
+        )
 
-        orig = self._get_phonon_task(cell_orig,
-                                     "orig",
-                                     is_cell_relaxed=(
-                                         self._is_cell_relaxed and
-                                         self._bias != "plus" and
-                                         self._bias != "minus"))
+        orig = self._get_phonon_task(
+            cell_orig,
+            "orig",
+            is_cell_relaxed=(
+                self._is_cell_relaxed and self._bias != "plus" and self._bias != "minus"
+            ),
+        )
 
-        plus = self._get_phonon_task(cell_plus,
-                                     "plus",
-                                     is_cell_relaxed=(
-                                         self._is_cell_relaxed and
-                                         self._bias == "minus"))
+        plus = self._get_phonon_task(
+            cell_plus,
+            "plus",
+            is_cell_relaxed=(self._is_cell_relaxed and self._bias == "minus"),
+        )
 
         return orig, plus, minus

@@ -1,7 +1,10 @@
+from cogue.crystal.symmetry import (
+    get_crystallographic_cell,
+    get_primitive_cell,
+    get_symmetry_dataset,
+)
 from cogue.task import TaskElement
 from cogue.task.oneshot_calculation import OneShotCalculationYaml
-from cogue.crystal.symmetry import (get_symmetry_dataset, get_primitive_cell,
-                                    get_crystallographic_cell)
 
 
 class StructureOptimizationYaml(OneShotCalculationYaml):
@@ -34,19 +37,21 @@ class StructureOptimizationYaml(OneShotCalculationYaml):
 
 
 class StructureOptimizationBase(TaskElement, StructureOptimizationYaml):
-    def __init__(self,
-                 directory="structopt",
-                 name=None,
-                 lattice_tolerance=None,
-                 force_tolerance=None,
-                 pressure_target=None,
-                 stress_tolerance=None,
-                 max_increase=None,
-                 max_iteration=None,
-                 min_iteration=None,
-                 impose_symmetry=False,
-                 symmetry_tolerance=None,
-                 traverse=False):
+    def __init__(
+        self,
+        directory="structopt",
+        name=None,
+        lattice_tolerance=None,
+        force_tolerance=None,
+        pressure_target=None,
+        stress_tolerance=None,
+        max_increase=None,
+        max_iteration=None,
+        min_iteration=None,
+        impose_symmetry=False,
+        symmetry_tolerance=None,
+        traverse=False,
+    ):
 
         TaskElement.__init__(self)
 
@@ -125,10 +130,12 @@ class StructureOptimizationBase(TaskElement, StructureOptimizationYaml):
         self._write_yaml()
 
     def done(self):
-        return (self._status == "next" or
-                self._status == "done" or
-                self._status == "terminate" or
-                self._status == "max_iteration")
+        return (
+            self._status == "next"
+            or self._status == "done"
+            or self._status == "terminate"
+            or self._status == "max_iteration"
+        )
 
     def __next__(self):
         return self.next()
@@ -192,12 +199,9 @@ class StructureOptimizationBase(TaskElement, StructureOptimizationYaml):
         cell = self._all_tasks[-1].get_current_cell()
         lines += self._get_oneshot_yaml_lines(cell)
         if self._space_group:
-            lines.append("symmetry_tolerance: %s" %
-                         self._symmetry_tolerance)
-            lines.append("space_group_type: %s" %
-                         self._space_group['international'])
-            lines.append("space_group_number: %d" %
-                         self._space_group['number'])
+            lines.append("symmetry_tolerance: %s" % self._symmetry_tolerance)
+            lines.append("space_group_type: %s" % self._space_group["international"])
+            lines.append("space_group_number: %d" % self._space_group["number"])
 
         return lines
 
@@ -209,25 +213,26 @@ class StructureOptimizationBase(TaskElement, StructureOptimizationYaml):
         self._tasks = [task]
 
     def _get_symmetrized_cell(self, cell):
-        if ((type(self._impose_symmetry) is bool and
-             self._impose_symmetry is True) or
-            (type(self._impose_symmetry) is str and
-             self._impose_symmetry.lower() == 'primitive')):
-            next_cell = get_primitive_cell(
-                cell, tolerance=self._symmetry_tolerance)
+        if (type(self._impose_symmetry) is bool and self._impose_symmetry is True) or (
+            type(self._impose_symmetry) is str
+            and self._impose_symmetry.lower() == "primitive"
+        ):
+            next_cell = get_primitive_cell(cell, tolerance=self._symmetry_tolerance)
             self._comment = "primitive cell\n"
-        elif (type(self._impose_symmetry) is str and
-              self._impose_symmetry.lower() == 'standardized'):
+        elif (
+            type(self._impose_symmetry) is str
+            and self._impose_symmetry.lower() == "standardized"
+        ):
             next_cell = get_crystallographic_cell(
-                cell, tolerance=self._symmetry_tolerance)
+                cell, tolerance=self._symmetry_tolerance
+            )
             self._comment = "standardized cell\n"
         else:
             next_cell = cell.copy()
             self._comment = ""
 
-        self._space_group = get_symmetry_dataset(
-            next_cell, self._symmetry_tolerance)
+        self._space_group = get_symmetry_dataset(next_cell, self._symmetry_tolerance)
 
-        self._comment += self._space_group['international']
+        self._comment += self._space_group["international"]
 
         return next_cell

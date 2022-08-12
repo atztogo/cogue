@@ -1,6 +1,7 @@
 from cogue.task import TaskElement
 from cogue.task.structure_optimization import StructureOptimizationYaml
 
+
 class ElasticConstantsYaml(StructureOptimizationYaml):
     def _get_ec_yaml_lines(self, cell):
         lines = self._get_structopt_yaml_lines()
@@ -8,12 +9,13 @@ class ElasticConstantsYaml(StructureOptimizationYaml):
             lines.append("elastic_constants:")
             for v in self._elastic_constants:
                 lines.append(
-                    "- [ %12.4f, %12.4f, %12.4f, %12.4f, %12.4f, %12.4f ]"
-                    % tuple(v))
+                    "- [ %12.4f, %12.4f, %12.4f, %12.4f, %12.4f, %12.4f ]" % tuple(v)
+                )
         if cell:
             lines += cell.get_yaml_lines()
 
         return lines
+
 
 class ElasticConstantsBase(TaskElement, ElasticConstantsYaml):
     """ElasticConstantsBase class
@@ -24,18 +26,20 @@ class ElasticConstantsBase(TaskElement, ElasticConstantsYaml):
 
     """
 
-    def __init__(self,
-                 directory=None,
-                 name=None,
-                 lattice_tolerance=None,
-                 force_tolerance=None,
-                 pressure_target=None,
-                 stress_tolerance=None,
-                 max_increase=None,
-                 max_iteration=None,
-                 min_iteration=None,
-                 is_cell_relaxed=False,
-                 traverse=False):
+    def __init__(
+        self,
+        directory=None,
+        name=None,
+        lattice_tolerance=None,
+        force_tolerance=None,
+        pressure_target=None,
+        stress_tolerance=None,
+        max_increase=None,
+        max_iteration=None,
+        min_iteration=None,
+        is_cell_relaxed=False,
+        traverse=False,
+    ):
 
         TaskElement.__init__(self)
 
@@ -97,9 +101,11 @@ class ElasticConstantsBase(TaskElement, ElasticConstantsYaml):
             self._set_stage0()
 
     def done(self):
-        return (self._status == "done" or
-                self._status == "terminate" or
-                self._status == "next")
+        return (
+            self._status == "done"
+            or self._status == "terminate"
+            or self._status == "next"
+        )
 
     def __next__(self):
         return self.next()
@@ -110,14 +116,13 @@ class ElasticConstantsBase(TaskElement, ElasticConstantsYaml):
                 self._energy = self._tasks[0].get_energy()
                 self._set_stage1()
                 return self._tasks
-            elif (self._status == "terminate" and self._traverse == "restart"):
+            elif self._status == "terminate" and self._traverse == "restart":
                 self._traverse = False
                 self._set_stage0()
                 return self._tasks
         else:
             if self._status == "next":
-                self._elastic_constants = \
-                    self._all_tasks[1].get_elastic_constants()
+                self._elastic_constants = self._all_tasks[1].get_elastic_constants()
                 self._status = "done"
             elif self._status == "terminate" and self._traverse == "restart":
                 self._traverse = False

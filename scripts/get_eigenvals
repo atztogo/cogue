@@ -1,17 +1,19 @@
 #!/usr/bin/env python
 
+import argparse
 import io
+
 import numpy as np
+
 from cogue.interface.vasp_io import VasprunxmlExpat
 
-import argparse
 parser = argparse.ArgumentParser(description="Collect eigenvalues from vasprun.xml")
-parser.add_argument('filenames', nargs='*')
+parser.add_argument("filenames", nargs="*")
 args = parser.parse_args()
 
 for filename in args.filenames:
 
-    with io.open(filename, 'rb') as f:
+    with io.open(filename, "rb") as f:
         vasprun = VasprunxmlExpat(f)
         if vasprun.parse():
             VBM = 0
@@ -26,8 +28,7 @@ for filename in args.filenames:
             prev_eig = 0
             band_gap = 0
             set_band_gap = False
-            for i, (e, o) in enumerate(zip(eigvals[indices],
-                                           occupancies[indices])):
+            for i, (e, o) in enumerate(zip(eigvals[indices], occupancies[indices])):
                 if i > 0:
                     if np.abs(prev_occ - o) > 0.5:
                         band_gap = e - prev_eig

@@ -25,7 +25,7 @@ The order that these options work is ``--shift``, ``--tmat``, ``--r2h``, ``--dim
 
    poscar2poscar -h
    Usage: poscar2poscar [options]
-   
+
    Options:
      -h, --help          show this help message and exit
      --r2h               Transform primitive Rhombohedral to hexagonal

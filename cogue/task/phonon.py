@@ -1,17 +1,19 @@
 import sys
+
 import numpy as np
-from cogue.task import TaskElement
-from cogue.task.structure_optimization import StructureOptimizationYaml
-from cogue.interface.vasp_io import write_poscar, write_poscar_yaml
+
 from cogue.crystal.cell import sort_cell_by_symbols
 from cogue.crystal.converter import cell2atoms
 from cogue.crystal.supercell import estimate_supercell_matrix
 from cogue.crystal.symmetry import get_crystallographic_cell
+from cogue.interface.vasp_io import write_poscar, write_poscar_yaml
+from cogue.task import TaskElement
+from cogue.task.structure_optimization import StructureOptimizationYaml
 
 try:
     from phonopy import Phonopy
-    from phonopy.interface.phonopy_yaml import PhonopyYaml
     from phonopy.file_IO import write_FORCE_SETS
+    from phonopy.interface.phonopy_yaml import PhonopyYaml
 except ImportError:
     print("You need to install phonopy.")
     sys.exit(1)
@@ -44,29 +46,31 @@ class PhononBase(TaskElement, PhononYaml):
 
     """
 
-    def __init__(self,
-                 directory=None,
-                 name=None,
-                 supercell_matrix=None,
-                 primitive_matrix=None,
-                 nac=False,
-                 with_perfect=True,
-                 distance=None,
-                 displace_plusminus='auto',
-                 displace_diagonal=False,
-                 lattice_tolerance=None,
-                 force_tolerance=None,
-                 pressure_target=None,
-                 stress_tolerance=None,
-                 max_increase=None,
-                 max_iteration=None,
-                 min_iteration=None,
-                 is_cell_relaxed=False,
-                 max_num_atoms=None,
-                 impose_symmetry=False,
-                 stop_condition=None,
-                 symmetry_tolerance=None,
-                 traverse=False):
+    def __init__(
+        self,
+        directory=None,
+        name=None,
+        supercell_matrix=None,
+        primitive_matrix=None,
+        nac=False,
+        with_perfect=True,
+        distance=None,
+        displace_plusminus="auto",
+        displace_diagonal=False,
+        lattice_tolerance=None,
+        force_tolerance=None,
+        pressure_target=None,
+        stress_tolerance=None,
+        max_increase=None,
+        max_iteration=None,
+        min_iteration=None,
+        is_cell_relaxed=False,
+        max_num_atoms=None,
+        impose_symmetry=False,
+        stop_condition=None,
+        symmetry_tolerance=None,
+        traverse=False,
+    ):
 
         TaskElement.__init__(self)
 
@@ -78,7 +82,7 @@ class PhononBase(TaskElement, PhononYaml):
         self._task_type = "phonon"
         self._supercell_matrix = supercell_matrix
         if self._supercell_matrix is None:
-            self._primitive_matrix = np.eye(3, dtype='double')
+            self._primitive_matrix = np.eye(3, dtype="double")
         else:
             self._primitive_matrix = primitive_matrix
         self._nac = nac
@@ -146,8 +150,10 @@ class PhononBase(TaskElement, PhononYaml):
             terminate = False
             for i, task in enumerate(self._tasks):
                 done &= task.done()
-                if (task.get_status() == "terminate" or
-                    task.get_status() == "max_iteration"):
+                if (
+                    task.get_status() == "terminate"
+                    or task.get_status() == "max_iteration"
+                ):
                     terminate = True
             if done:
                 if terminate:
@@ -169,12 +175,14 @@ class PhononBase(TaskElement, PhononYaml):
             self._set_stage0()
 
     def done(self):
-        return (self._status == "terminate" or
-                self._status == "done" or
-                self._status == "max_iteration" or
-                self._status == "low_symmetry" or
-                self._status == "force_collection_failure" or
-                self._status == "next")
+        return (
+            self._status == "terminate"
+            or self._status == "done"
+            or self._status == "max_iteration"
+            or self._status == "low_symmetry"
+            or self._status == "force_collection_failure"
+            or self._status == "next"
+        )
 
     def __next__(self):
         return self.next()
@@ -184,11 +192,11 @@ class PhononBase(TaskElement, PhononYaml):
             if self._status == "next":
                 self._energy = self._tasks[0].get_energy()
                 num_atom = len(self._tasks[0].get_cell().get_symbols())
-                self._comment = self._space_group['international']
+                self._comment = self._space_group["international"]
                 self._comment += "\\n%f/%d" % (self._energy, num_atom)
                 self._set_stage1()
                 return self._tasks
-            elif (self._status == "terminate" and self._traverse == "restart"):
+            elif self._status == "terminate" and self._traverse == "restart":
                 self._traverse = False
                 self._set_stage0()
                 return self._tasks
@@ -204,8 +212,7 @@ class PhononBase(TaskElement, PhononYaml):
                 else:
                     if self._try_collect_forces:
                         self._status = "displacements"
-                        self._log += ("Collection of forces failed. "
-                                      "Try once more.\n")
+                        self._log += "Collection of forces failed. " "Try once more.\n"
                         self._try_collect_forces = False
                         raise StopIteration
                     else:
@@ -240,8 +247,7 @@ class PhononBase(TaskElement, PhononYaml):
 
     def _set_stage0(self):
         self._status = "equilibrium"
-        task = self._get_equilibrium_task(
-            impose_symmetry=self._impose_symmetry)
+        task = self._get_equilibrium_task(impose_symmetry=self._impose_symmetry)
         self._all_tasks = [task]
         self._tasks = [task]
 
@@ -265,7 +271,7 @@ class PhononBase(TaskElement, PhononYaml):
     def _collect_forces(self):
         forces = []
         for task in self._tasks:
-            forces.append(task.get_properties()['forces'][-1])
+            forces.append(task.get_properties()["forces"][-1])
         if self._with_perfect:
             f_per = forces.pop(0)
             for f in forces:
@@ -293,19 +299,19 @@ class PhononBase(TaskElement, PhononYaml):
             self._born = born
             self._epsilon = epsilon
             header = "# epsilon and Z* of atoms "
-            header += ' '.join(["%d" % (n + 1) for n in indep_atoms_u])
+            header += " ".join(["%d" % (n + 1) for n in indep_atoms_u])
             lines = [header]
             lines.append(("%13.8f" * 9) % tuple(epsilon.flatten()))
             for z in born[indep_atoms_u]:
                 lines.append(("%13.8f" * 9) % tuple(z.flatten()))
-            with open("BORN", 'w') as w:
-                w.write('\n'.join(lines))
+            with open("BORN", "w") as w:
+                w.write("\n".join(lines))
 
     def _evaluate_stop_condition(self):
         if self._stop_condition:
             if "symmetry_operations" in self._stop_condition:
-                num_ops = len(self._space_group['rotations'])
-                if num_ops < self._stop_condition['symmetry_operations']:
+                num_ops = len(self._space_group["rotations"])
+                if num_ops < self._stop_condition["symmetry_operations"]:
                     self._status = "low_symmetry"
                     return True
 
@@ -314,31 +320,36 @@ class PhononBase(TaskElement, PhononYaml):
     def _set_phonon(self):
         if self._supercell_matrix is None:
             cell = sort_cell_by_symbols(
-                get_crystallographic_cell(self.get_cell(),
-                                          tolerance=self._symmetry_tolerance))
+                get_crystallographic_cell(
+                    self.get_cell(), tolerance=self._symmetry_tolerance
+                )
+            )
             self._supercell_matrix = estimate_supercell_matrix(
-                cell,
-                max_num_atoms=self._max_num_atoms)
+                cell, max_num_atoms=self._max_num_atoms
+            )
         else:
             cell = self.get_cell()
 
         phonopy_cell = cell2atoms(cell)
-        self._phonon = Phonopy(phonopy_cell,
-                               self._supercell_matrix,
-                               primitive_matrix=self._primitive_matrix,
-                               dynamical_matrix_decimals=14,
-                               force_constants_decimals=14,
-                               symprec=self._symmetry_tolerance)
+        self._phonon = Phonopy(
+            phonopy_cell,
+            self._supercell_matrix,
+            primitive_matrix=self._primitive_matrix,
+            dynamical_matrix_decimals=14,
+            force_constants_decimals=14,
+            symprec=self._symmetry_tolerance,
+        )
         self._phonon.generate_displacements(
             distance=self._distance,
             is_plusminus=self._displace_plusminus,
-            is_diagonal=self._displace_diagonal)
+            is_diagonal=self._displace_diagonal,
+        )
 
         write_poscar(cell, filename="POSCAR-unitcell")
         write_poscar_yaml(cell, filename="POSCAR-unitcell.yaml")
-        phpy_yaml = PhonopyYaml(settings={'displacements': True})
+        phpy_yaml = PhonopyYaml(settings={"displacements": True})
         phpy_yaml.set_phonon_info(self._phonon)
-        with open("phonopy_disp.yaml", 'w') as w:
+        with open("phonopy_disp.yaml", "w") as w:
             w.write(str(phpy_yaml))
 
     def get_yaml_lines(self):

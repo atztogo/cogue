@@ -1,29 +1,34 @@
-import sys
+"""UI utiles."""
 import os
+import sys
+
 import numpy as np
+
 from cogue.crystal.converter import reduce_points
-from cogue.crystal.utility import frac2val
 from cogue.crystal.supercell import get_supercell
+from cogue.crystal.utility import frac2val
 
-r2h_observe_R3 = [[-1, 1, 1],
-                  [ 0,-1, 1],
-                  [ 1, 0, 1]]
+r2h_observe_R3 = [[-1, 1, 1], [0, -1, 1], [1, 0, 1]]
 
-h2r_observe_R3 = [[-1./3,-1./3, 2./3],
-                  [ 1./3,-2./3, 1./3],
-                  [ 1./3, 1./3, 1./3]]
+h2r_observe_R3 = [
+    [-1.0 / 3, -1.0 / 3, 2.0 / 3],
+    [1.0 / 3, -2.0 / 3, 1.0 / 3],
+    [1.0 / 3, 1.0 / 3, 1.0 / 3],
+]
 
-r2h_reverse_R3 = [[ 1,-1, 1],
-                  [ 0, 1, 1],
-                  [-1, 0, 1]]
+r2h_reverse_R3 = [[1, -1, 1], [0, 1, 1], [-1, 0, 1]]
 
-h2r_reverse_R3 = [[ 1./3, 1./3,-2./3],
-                  [-1./3, 2./3,-1./3],
-                  [ 1./3, 1./3, 1./3]]
+h2r_reverse_R3 = [
+    [1.0 / 3, 1.0 / 3, -2.0 / 3],
+    [-1.0 / 3, 2.0 / 3, -1.0 / 3],
+    [1.0 / 3, 1.0 / 3, 1.0 / 3],
+]
 
 r2h = r2h_observe_R3
 
+
 def get_options(parser=None):
+    """Get parser options."""
     if parser:
         (options, args) = parser.parse_args()
     else:
@@ -31,53 +36,69 @@ def get_options(parser=None):
 
     return options, args
 
+
 def get_parser():
+    """Get OptionParser object."""
     from optparse import OptionParser
 
     parser = OptionParser()
-    parser.set_defaults(is_r2h=False,
-                        is_bravais=False,
-                        is_verbose=False,
-                        output_filename=None,
-                        s_mat=None,
-                        t_mat=None,
-                        shift=None)
-    parser.add_option("--r2h",
-                      dest="is_r2h",
-                      action="store_true",
-                      help="Transform primitive Rhombohedral to hexagonal Rhombohedral. This has to be used exclusively to the other options.")
-    parser.add_option("--bravais",
-                      dest="is_bravais",
-                      action="store_true",
-                      help="Transform to cell with Bravais lattice.")
-    parser.add_option("--tmat",
-                      dest="t_mat",
-                      action="store",
-                      type="string",
-                      help="Multiply transformation matrix. Absolute value of determinant has to be 1 or less than 1.")
-    parser.add_option("--dim",
-                      dest="s_mat",
-                      action="store",
-                      type="string",
-                      help="Supercell matrix")
-    parser.add_option("--shift",
-                      dest="shift",
-                      action="store",
-                      type="string",
-                      help="Origin shift")
-    parser.add_option("-o",
-                      dest="output_filename",
-                      action="store",
-                      type="string",
-                      help="Output filename")
-    parser.add_option("-v",
-                      dest="is_verbose",
-                      action="store_true",
-                      help="More information is output.")
+    parser.set_defaults(
+        is_r2h=False,
+        is_bravais=False,
+        is_verbose=False,
+        output_filename=None,
+        s_mat=None,
+        t_mat=None,
+        shift=None,
+    )
+    parser.add_option(
+        "--r2h",
+        dest="is_r2h",
+        action="store_true",
+        help=(
+            "Transform primitive Rhombohedral to hexagonal Rhombohedral."
+            "This has to be used exclusively to the other options."
+        ),
+    )
+    parser.add_option(
+        "--bravais",
+        dest="is_bravais",
+        action="store_true",
+        help="Transform to cell with Bravais lattice.",
+    )
+    parser.add_option(
+        "--tmat",
+        dest="t_mat",
+        action="store",
+        type="string",
+        help=(
+            "Multiply transformation matrix. Absolute value of determinant "
+            "has to be 1 or less than 1."
+        ),
+    )
+    parser.add_option(
+        "--dim", dest="s_mat", action="store", type="string", help="Supercell matrix"
+    )
+    parser.add_option(
+        "--shift", dest="shift", action="store", type="string", help="Origin shift"
+    )
+    parser.add_option(
+        "-o",
+        dest="output_filename",
+        action="store",
+        type="string",
+        help="Output filename",
+    )
+    parser.add_option(
+        "-v", dest="is_verbose", action="store_true", help="More information is output."
+    )
     return parser
 
+
 def get_lines(filenames):
+    """Return lines."""
     import fileinput
+
     file_obj = fileinput.input(filenames)
     lines = []
     filelines = []
@@ -90,7 +111,9 @@ def get_lines(filenames):
     lines.append(filelines)
     return lines
 
+
 def set_shift(cell, options):
+    """Add shift to points."""
     shift = np.array([float(x) for x in options.shift.split()])
     if len(shift) == 3:
         points = cell.get_points()
@@ -99,7 +122,9 @@ def set_shift(cell, options):
     else:
         sys.stderr.write("Atomic position shift is not correctly set.\n")
 
+
 def transform_cell(cell_orig, options, is_shift=True):
+    """Transform cell."""
     cell = cell_orig.copy()
     if options.shift and is_shift:
         set_shift(cell, options)
@@ -107,8 +132,10 @@ def transform_cell(cell_orig, options, is_shift=True):
         cell = _get_tmat_cell(cell, options)
     if options.is_r2h:
         if options.is_verbose:
-            print("Transform cell by transformation matrix of rhombohedral "
-                  "to hexagonal:")
+            print(
+                "Transform cell by transformation matrix of rhombohedral "
+                "to hexagonal:"
+            )
             print(np.array(r2h))
         cell = get_supercell(cell, r2h)
     if options.s_mat:
@@ -116,8 +143,9 @@ def transform_cell(cell_orig, options, is_shift=True):
 
     return cell
 
-def write_cells(write_func, cells,
-                input_filenames=None, output_filename=None):
+
+def write_cells(write_func, cells, input_filenames=None, output_filename=None):
+    """Write cells."""
     for i, cell in enumerate(cells):
         if len(cells) > 1:
             if output_filename:
@@ -134,6 +162,7 @@ def write_cells(write_func, cells,
             else:
                 sys.stdout.write(write_func(cell))
 
+
 def _get_matrix(mat):
     if len(mat) == 3:
         return np.diag(mat)
@@ -142,6 +171,7 @@ def _get_matrix(mat):
         return mat
     else:
         return False
+
 
 def _get_tmat_cell(cell, options):
     t_mat = np.array([frac2val(x) for x in options.t_mat.split()])
@@ -154,6 +184,7 @@ def _get_tmat_cell(cell, options):
             print("Transform cell using transformation matrix:")
             print(t_mat)
         return reduce_points(t_mat, cell)
+
 
 def _get_smat_cell(cell, options):
     s_mat = np.array([int(x) for x in options.s_mat.split()])

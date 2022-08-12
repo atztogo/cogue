@@ -1,8 +1,10 @@
-from cogue.task import TaskElement
-from cogue.crystal.cell import get_strained_cells
-from cogue.task.structure_optimization import StructureOptimizationYaml
 from phonopy.qha import BulkModulus as PhonopyBulkModulus
 from phonopy.units import EVAngstromToGPa
+
+from cogue.crystal.cell import get_strained_cells
+from cogue.task import TaskElement
+from cogue.task.structure_optimization import StructureOptimizationYaml
+
 
 class BulkModulusBase(TaskElement, StructureOptimizationYaml):
     """BulkModulus class
@@ -11,26 +13,28 @@ class BulkModulusBase(TaskElement, StructureOptimizationYaml):
     1. Structure optimization of input cell
     2. Total energiy calculations with +1 and -1 % volumes
     3. Calculate bulk modulus from stress of two cells
-    or 
+    or
     1. Structure optimization of input cell
     2. Total energy calculations at strains specified
     3. Calculate bulk modulus by fitting EOS
-    
+
     """
-    
-    def __init__(self,
-                 directory=None,
-                 name=None,
-                 strains=None,
-                 lattice_tolerance=None,
-                 force_tolerance=None,
-                 pressure_target=None,
-                 stress_tolerance=None,
-                 max_increase=None,
-                 max_iteration=None,
-                 min_iteration=None,
-                 is_cell_relaxed=False,
-                 traverse=False):
+
+    def __init__(
+        self,
+        directory=None,
+        name=None,
+        strains=None,
+        lattice_tolerance=None,
+        force_tolerance=None,
+        pressure_target=None,
+        stress_tolerance=None,
+        max_increase=None,
+        max_iteration=None,
+        min_iteration=None,
+        is_cell_relaxed=False,
+        traverse=False,
+    ):
 
         TaskElement.__init__(self)
 
@@ -52,7 +56,7 @@ class BulkModulusBase(TaskElement, StructureOptimizationYaml):
         self._min_iteration = min_iteration
         self._traverse = traverse
         self._is_cell_relaxed = is_cell_relaxed
-        
+
         self._stage = 0
         self._tasks = None
 
@@ -60,7 +64,7 @@ class BulkModulusBase(TaskElement, StructureOptimizationYaml):
         self._bulk_modulus = None
         self._all_tasks = None
 
-        self._eos = None # Energy function of V, only for strains mode
+        self._eos = None  # Energy function of V, only for strains mode
 
     def get_bulk_modulus(self):
         return self._bulk_modulus
@@ -101,7 +105,7 @@ class BulkModulusBase(TaskElement, StructureOptimizationYaml):
                     self._status = "next"
 
         self._write_yaml()
-        
+
     def begin(self):
         if not self._job:
             print("set_job has to be executed.")
@@ -114,20 +118,22 @@ class BulkModulusBase(TaskElement, StructureOptimizationYaml):
             self._set_stage0()
 
     def done(self):
-        return (self._status == "done" or
-                self._status == "terminate" or
-                self._status == "max_iteration" or
-                self._status == "next")
+        return (
+            self._status == "done"
+            or self._status == "terminate"
+            or self._status == "max_iteration"
+            or self._status == "next"
+        )
 
     def __next__(self):
         return self.next()
 
-    def next(self):    
+    def next(self):
         if self._stage == 0:
             if self._status == "next":
                 self._prepare_next()
                 return self._tasks
-            elif (self._status == "terminate" and self._traverse == "restart"):
+            elif self._status == "terminate" and self._traverse == "restart":
                 self._traverse = False
                 self._set_stage0()
                 return self._tasks
@@ -139,7 +145,7 @@ class BulkModulusBase(TaskElement, StructureOptimizationYaml):
                     self._calculate_bulk_modulus_from_plus_minus()
                 else:
                     self._calculate_bulk_modulus_by_fit_to_vinet()
-            elif (self._status == "terminate" and self._traverse == "restart"):
+            elif self._status == "terminate" and self._traverse == "restart":
                 self._traverse = False
                 terminated = []
                 for i, task in enumerate(self._tasks):
@@ -167,13 +173,11 @@ class BulkModulusBase(TaskElement, StructureOptimizationYaml):
         s_p = self._all_tasks[1].get_stress()
         s_m = self._all_tasks[2].get_stress()
 
-        self._bulk_modulus = - (s_p - s_m).trace() / 3 * V / (V_p - V_m)
+        self._bulk_modulus = -(s_p - s_m).trace() / 3 * V / (V_p - V_m)
 
     def _calculate_bulk_modulus_by_fit_to_vinet(self):
-        energies = [task.get_energy()
-                    for task in self._all_tasks[1:]]
-        volumes = [task.get_cell().get_volume()
-                   for task in self._all_tasks[1:]]
+        energies = [task.get_energy() for task in self._all_tasks[1:]]
+        volumes = [task.get_cell().get_volume() for task in self._all_tasks[1:]]
 
         phonopy_bulk_modulus = PhonopyBulkModulus(volumes, energies)
         self._bulk_modulus = phonopy_bulk_modulus.get_bulk_modulus()
@@ -185,19 +189,18 @@ class BulkModulusBase(TaskElement, StructureOptimizationYaml):
 
         self._eos = eos
 
-        with open("e-v.dat", 'w') as w:
-            w.write("#   cell volume        energy of cell "
-                    "other than phonon\n")
+        with open("e-v.dat", "w") as w:
+            w.write("#   cell volume        energy of cell " "other than phonon\n")
             for e, v in zip(energies, volumes):
                 w.write("%20.13f %20.13f\n" % (v, e))
-        
+
     def _set_stage0(self):
         self._stage = 0
         self._status = "equilibrium"
         task = self._get_equilibrium_task()
         self._all_tasks = [task]
         self._tasks = [task]
-        
+
     def _prepare_next(self):
         cell = self.get_cell()
 
@@ -214,27 +217,30 @@ class BulkModulusBase(TaskElement, StructureOptimizationYaml):
 
     def _get_plus_minus_tasks(self, cell):
         cell_plus, cell_minus = get_strained_cells(cell, [0.01, -0.01])
-        plus = self._get_equilibrium_task(index=1,
-                                          cell=cell_plus,
-                                          max_iteration=3,
-                                          min_iteration=1,
-                                          directory="plus")
-        minus = self._get_equilibrium_task(index=1,
-                                           cell=cell_minus,
-                                           max_iteration=3,
-                                           min_iteration=1,
-                                           directory="minus")
+        plus = self._get_equilibrium_task(
+            index=1, cell=cell_plus, max_iteration=3, min_iteration=1, directory="plus"
+        )
+        minus = self._get_equilibrium_task(
+            index=1,
+            cell=cell_minus,
+            max_iteration=3,
+            min_iteration=1,
+            directory="minus",
+        )
         return plus, minus
 
     def _get_strained_cell_tasks(self, cell_orig):
         tasks = []
         for i, cell in enumerate(get_strained_cells(cell_orig, self._strains)):
             tasks.append(
-                self._get_equilibrium_task(index=1,
-                                           cell=cell,
-                                           max_iteration=3,
-                                           min_iteration=1,
-                                           directory="strain-%02d" % i))
+                self._get_equilibrium_task(
+                    index=1,
+                    cell=cell,
+                    max_iteration=3,
+                    min_iteration=1,
+                    directory="strain-%02d" % i,
+                )
+            )
         return tasks
 
     def get_yaml_lines(self):

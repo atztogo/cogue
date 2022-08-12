@@ -1,8 +1,13 @@
-import os
+"""Task base class."""
 import datetime
+import os
+
 
 class TaskBase:
+    """Task base class."""
+
     def __init__(self):
+        """Init method."""
         self._status = ""
         self._comment = ""
         self._log = ""
@@ -77,42 +82,42 @@ class TaskBase:
     def overwrite_settings(self):
         if os.path.exists(".coguerc"):
             with open(".coguerc") as yaml_file:
-                try:
-                    import yaml
-                    data = yaml.load(yaml_file)
-                    if data is not None:
-                        if 'max_iteration' in data:
-                            if '_max_iteration' in self.__dict__:
-                                self._max_iteration = data['max_iteration']
-                        if 'min_iteration' in data:
-                            if '_min_iteration' in self.__dict__:
-                                self._min_iteration = data['min_iteration']
-                        if 'traverse' in data:
-                            self._traverse = data['traverse']
-                        if 'status' in data:
-                            self._status = data['status']
-                except:
-                    print("Fail to parse .coguerc of tid %d" % self._tid)
-                os.rename(".coguerc", ".coguerc.%s" %
-                          datetime.datetime.now().strftime("%Y%m%d%H%M"))
+                import yaml
+
+                data = yaml.load(yaml_file)
+                if data is not None:
+                    if "max_iteration" in data:
+                        if "_max_iteration" in self.__dict__:
+                            self._max_iteration = data["max_iteration"]
+                    if "min_iteration" in data:
+                        if "_min_iteration" in self.__dict__:
+                            self._min_iteration = data["min_iteration"]
+                    if "traverse" in data:
+                        self._traverse = data["traverse"]
+                    if "status" in data:
+                        self._status = data["status"]
+                os.rename(
+                    ".coguerc",
+                    ".coguerc.%s" % datetime.datetime.now().strftime("%Y%m%d%H%M"),
+                )
 
     def _write_yaml(self, filename=None):
         if filename:
             w = open(filename)
         else:
-            w = open("%s.yaml" % self._task_type, 'w')
+            w = open("%s.yaml" % self._task_type, "w")
         w.write("\n".join(self.get_yaml_lines()))
         w.close()
+
 
 class TaskElement(TaskBase):
     def __init__(self):
         TaskBase.__init__(self)
         self._job = None
-        self._traverse = False # Do submit job
+        self._traverse = False  # Do submit job
 
     def set_job(self, job):
-        if (isinstance(self._job, list) or
-            isinstance(self._job, tuple)):
+        if isinstance(self._job, list) or isinstance(self._job, tuple):
             self._job = list(job)
         else:
             self._job = job
@@ -134,10 +139,9 @@ class TaskElement(TaskBase):
             lines.append("traverse:  %s" % self._traverse)
         return lines
 
+
 class TaskSet(TaskBase):
-    def __init__(self,
-                 directory=None,
-                 name=None):
+    def __init__(self, directory=None, name=None):
         """Container of tasks
 
         Parameters
@@ -178,8 +182,7 @@ class TaskSet(TaskBase):
         self._write_yaml()
 
     def done(self):
-        return (self._status == "done" or
-                self._status == "terminate")
+        return self._status == "done" or self._status == "terminate"
 
     def begin(self):
         self._status = "begin"

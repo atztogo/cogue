@@ -1,17 +1,20 @@
+"""Born effective charge class."""
+from cogue.crystal.converter import cell2atoms
 from cogue.task import TaskElement
 from cogue.task.structure_optimization import StructureOptimizationYaml
-from cogue.crystal.symmetry import get_symmetry_dataset
-from cogue.crystal.converter import cell2atoms
 
 try:
     from phonopy.structure.symmetry import symmetrize_borns_and_epsilon
 except ImportError:
     print("You need to install phonopy.")
     import sys
+
     sys.exit(1)
 
 
 class BornEffectiveChargeYaml(StructureOptimizationYaml):
+    """Mix-in of yaml output of Born effective charge."""
+
     def _get_bec_yaml_lines(self, cell):
         lines = self._get_structopt_yaml_lines()
         if self._born is not None and self._epsilon is not None:
@@ -29,8 +32,9 @@ class BornEffectiveChargeYaml(StructureOptimizationYaml):
 
         return lines
 
+
 class BornEffectiveChargeBase(TaskElement, BornEffectiveChargeYaml):
-    """BornEffectiveCharge class
+    """BornEffectiveCharge class.
 
     Calculate Born effective charge and dielectric constant
     1. Structure optimization to obtain equilibrium structure
@@ -39,20 +43,22 @@ class BornEffectiveChargeBase(TaskElement, BornEffectiveChargeYaml):
 
     """
 
-    def __init__(self,
-                 directory=None,
-                 name=None,
-                 lattice_tolerance=None,
-                 force_tolerance=None,
-                 pressure_target=None,
-                 stress_tolerance=None,
-                 max_increase=None,
-                 max_iteration=None,
-                 min_iteration=None,
-                 is_cell_relaxed=False,
-                 symmetry_tolerance=None,
-                 traverse=False):
-
+    def __init__(
+        self,
+        directory=None,
+        name=None,
+        lattice_tolerance=None,
+        force_tolerance=None,
+        pressure_target=None,
+        stress_tolerance=None,
+        max_increase=None,
+        max_iteration=None,
+        min_iteration=None,
+        is_cell_relaxed=False,
+        symmetry_tolerance=None,
+        traverse=False,
+    ):
+        """Init method."""
         TaskElement.__init__(self)
 
         self._directory = directory
@@ -118,9 +124,11 @@ class BornEffectiveChargeBase(TaskElement, BornEffectiveChargeYaml):
             self._set_stage0()
 
     def done(self):
-        return (self._status == "done" or
-                self._status == "terminate" or
-                self._status == "next")
+        return (
+            self._status == "done"
+            or self._status == "terminate"
+            or self._status == "next"
+        )
 
     def __next__(self):
         return self.next()
@@ -131,7 +139,7 @@ class BornEffectiveChargeBase(TaskElement, BornEffectiveChargeYaml):
                 self._energy = self._tasks[0].get_energy()
                 self._set_stage1()
                 return self._tasks
-            elif (self._status == "terminate" and self._traverse == "restart"):
+            elif self._status == "terminate" and self._traverse == "restart":
                 self._traverse = False
                 self._set_stage0()
                 return self._tasks
@@ -168,10 +176,8 @@ class BornEffectiveChargeBase(TaskElement, BornEffectiveChargeYaml):
         epsilon = self._all_tasks[1].get_dielectric_constant()
         cell = cell2atoms(self.get_cell())
         self._born, self._epsilon = symmetrize_borns_and_epsilon(
-            borns,
-            epsilon,
-            cell,
-            symprec=self._symmetry_tolerance)
+            borns, epsilon, cell, symprec=self._symmetry_tolerance
+        )
 
     def get_yaml_lines(self):
         lines = TaskElement.get_yaml_lines(self)

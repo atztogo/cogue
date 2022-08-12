@@ -12,4 +12,3 @@ Copy them to the top directory by
 % rsync -av _build/html/ .
 
 Togo
- 
