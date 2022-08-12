@@ -1,3 +1,4 @@
+"""Mayavi2 interface."""
 import numpy as np
 from mayavi import mlab
 
@@ -6,20 +7,25 @@ from cogue.crystal.utility import get_lattice_parameters
 
 
 def set_figure():
+    """Set 3D figure."""
     mlab.figure(bgcolor=(1, 1, 1))
 
 
 def show():
+    """Show 3D drawing."""
     mlab.show()
 
 
 def savefig(filename, size=None):
+    """Save 3D drawing."""
     mlab.savefig(filename, size=size)
 
 
-def plot_cell(cell, margin=1e-5, color=(1, 0, 0)):
+def plot_cell(cell, margin=1e-5, color=(1, 0, 0), with_axes=True):
+    """Plot cell."""
     _plot_lattice(cell.lattice, color=color)
-    _plot_axes(cell.lattice, color=color)
+    if with_axes:
+        _plot_axes(cell.lattice, color=color)
     _plot_atoms(cell, margin=margin)
 
 

@@ -39,59 +39,71 @@ def get_options(parser=None):
 
 def get_parser():
     """Get OptionParser object."""
-    from optparse import OptionParser
+    from argparse import ArgumentParser
 
-    parser = OptionParser()
-    parser.set_defaults(
-        is_r2h=False,
-        is_bravais=False,
-        is_verbose=False,
-        output_filename=None,
-        s_mat=None,
-        t_mat=None,
-        shift=None,
+    parser = ArgumentParser(description="Cogue tools.")
+    parser.add_argument(
+        "--bravais",
+        dest="is_bravais",
+        default=False,
+        action="store_true",
+        help="Transform to cell with Bravais lattice.",
     )
-    parser.add_option(
+    parser.add_argument(
+        "--dim",
+        dest="s_mat",
+        default=None,
+        help="Supercell matrix",
+    )
+    parser.add_argument(
+        "--noaxes",
+        dest="with_axes",
+        default=True,
+        action="store_false",
+        help=(
+            "Transform primitive Rhombohedral to hexagonal Rhombohedral."
+            "This has to be used exclusively to the other options."
+        ),
+    )
+    parser.add_argument(
+        "-o",
+        dest="output_filename",
+        default=None,
+        help="Output filename",
+    )
+    parser.add_argument(
         "--r2h",
         dest="is_r2h",
+        default=False,
         action="store_true",
         help=(
             "Transform primitive Rhombohedral to hexagonal Rhombohedral."
             "This has to be used exclusively to the other options."
         ),
     )
-    parser.add_option(
-        "--bravais",
-        dest="is_bravais",
-        action="store_true",
-        help="Transform to cell with Bravais lattice.",
+    parser.add_argument(
+        "--shift",
+        dest="shift",
+        default=None,
+        help="Origin shift",
     )
-    parser.add_option(
+    parser.add_argument(
         "--tmat",
         dest="t_mat",
-        action="store",
-        type="string",
+        default=None,
         help=(
             "Multiply transformation matrix. Absolute value of determinant "
             "has to be 1 or less than 1."
         ),
     )
-    parser.add_option(
-        "--dim", dest="s_mat", action="store", type="string", help="Supercell matrix"
+    parser.add_argument(
+        "-v",
+        dest="is_verbose",
+        default=False,
+        action="store_true",
+        help="More information is output.",
     )
-    parser.add_option(
-        "--shift", dest="shift", action="store", type="string", help="Origin shift"
-    )
-    parser.add_option(
-        "-o",
-        dest="output_filename",
-        action="store",
-        type="string",
-        help="Output filename",
-    )
-    parser.add_option(
-        "-v", dest="is_verbose", action="store_true", help="More information is output."
-    )
+    parser.add_argument("filenames", nargs="*", help="File names")
     return parser
 
 
