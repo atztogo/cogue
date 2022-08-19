@@ -49,7 +49,7 @@ if args.shift:
     ui_utils.set_shift(cell, args)
 
 mayavi2.set_figure()
-mayavi2.plot_cell(cell, margin=margin)
+mayavi2.plot_cell(cell, margin=margin, with_axes=args.with_axes)
 
 if args.t_mat or args.s_mat or args.is_r2h:
     transformed_cell = ui_utils.transform_cell(cell, args, is_shift=False)
