@@ -290,7 +290,6 @@ class RemoteQueueBase(QueueBase):
         with tarfile.open("cogue.tar") as tar:
 
             def is_within_directory(directory, target):
-
                 abs_directory = os.path.abspath(directory)
                 abs_target = os.path.abspath(target)
 
@@ -299,7 +298,6 @@ class RemoteQueueBase(QueueBase):
                 return prefix == abs_directory
 
             def safe_extract(tar, path=".", members=None, *, numeric_owner=False):
-
                 for member in tar.getmembers():
                     member_path = os.path.join(path, member.name)
                     if not is_within_directory(path, member_path):

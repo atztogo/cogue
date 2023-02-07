@@ -143,7 +143,6 @@ class Job(JobBase):
         stdout=None,
         stderr=None,
     ):
-
         JobBase.__init__(self)
 
         if not script:

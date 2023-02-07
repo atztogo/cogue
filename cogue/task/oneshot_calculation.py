@@ -28,7 +28,6 @@ class OneShotCalculationYaml:
 
 class OneShotCalculation(TaskElement, OneShotCalculationYaml):
     def __init__(self, directory=None, name=None, traverse=False):
-
         TaskElement.__init__(self)
 
         self._directory = directory
@@ -88,7 +87,6 @@ class OneShotCalculation(TaskElement, OneShotCalculationYaml):
 
 class ElectronicStructureBase(OneShotCalculation):
     def __init__(self, directory="electronic_structure", name=None, traverse=False):
-
         OneShotCalculation.__init__(
             self, directory=directory, name=name, traverse=traverse
         )
@@ -115,7 +113,6 @@ class ElectronicStructureBase(OneShotCalculation):
             for i, (e_spin, o_spin) in enumerate(
                 zip(self._properties["eigenvalues"], self._properties["occupancies"])
             ):
-
                 if e_spin is None or o_spin is None:
                     break
 
@@ -146,7 +143,6 @@ class StructureOptimizationElementBase(OneShotCalculation):
         max_increase=None,
         traverse=False,
     ):
-
         OneShotCalculation.__init__(
             self, directory=directory, name=name, traverse=traverse
         )
@@ -191,7 +187,6 @@ class ElasticConstantsElementBase(OneShotCalculation):
     def __init__(
         self, directory="elastic_constants_element", name=None, traverse=False
     ):
-
         OneShotCalculation.__init__(
             self, directory=directory, name=name, traverse=traverse
         )
@@ -212,7 +207,6 @@ class BornEffectiveChargeElementBase(OneShotCalculation):
     def __init__(
         self, directory="born_effective_charge_element", name=None, traverse=False
     ):
-
         OneShotCalculation.__init__(
             self, directory=directory, name=name, traverse=traverse
         )

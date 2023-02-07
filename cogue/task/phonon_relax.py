@@ -213,7 +213,7 @@ class PhononRelaxBase(TaskElement):
         mod_modes.sort(key=lambda mod_modes: -mod_modes[1])
         if self._max_offspring:
             mod_modes = mod_modes[: min(self._max_offspring, len(mod_modes))]
-        for (cell, freq, index) in mod_modes:
+        for cell, freq, index in mod_modes:
             self._tasks.append(
                 self._get_phonon_relax_task(
                     cell, self._ancestral_cells, "phonon_relax-%d" % (index + 1)

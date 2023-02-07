@@ -357,7 +357,6 @@ class Incar:
         sigma=None,
         symprec=None,
     ):
-
         self._tagnames = {
             "addgrid": "ADDGRID",
             "aggac": "AGGAC",
@@ -918,7 +917,6 @@ class Vasprunxml(object):
 
         try:
             for event, element in etree.iterparse(self._filename):
-
                 if element.tag != "calculation":
                     continue
 
@@ -961,7 +959,6 @@ class Vasprunxml(object):
     def parse_parameters(self):
         try:
             for event, element in etree.iterparse(self._filename):
-
                 if element.tag != "parameters":
                     continue
 
@@ -978,7 +975,6 @@ class Vasprunxml(object):
     def parse_efermi(self):
         try:
             for event, element in etree.iterparse(self._filename):
-
                 if element.tag != "dos":
                     continue
 
@@ -999,12 +995,10 @@ class Vasprunxml(object):
         occ2 = []
         try:
             for event, element in etree.iterparse(self._filename):
-
                 if element.tag != "eigenvalues":
                     continue
 
                 for array in element.findall("./array/set/set"):
-
                     if array.attrib["comment"] == "spin 1":
                         self._parse_eigenvalues_spin(array, spin1, occ1)
 
@@ -1027,7 +1021,6 @@ class Vasprunxml(object):
     def _parse_kpoints(self):
         try:
             for event, element in etree.iterparse(self._filename):
-
                 if element.tag != "kpoints":
                     continue
 

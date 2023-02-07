@@ -136,7 +136,6 @@ def get_parameters():
 
 
 def get_phonon(cell, supercell_dimension, fc, primitive_matrix=None):
-
     phonon = Phonopy(cell, np.diag(supercell_dimension))
 
     if primitive_matrix:
