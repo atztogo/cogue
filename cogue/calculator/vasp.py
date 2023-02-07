@@ -110,7 +110,6 @@ def electronic_structure(
     k_point=None,
     incar=None,
 ):
-
     es = ElectronicStructure(directory=directory, name=name, traverse=traverse)
 
     es.set_configurations(
@@ -151,7 +150,6 @@ def structure_optimization(
     k_point=None,
     incar=None,
 ):
-
     so = StructureOptimization(
         directory=directory,
         name=name,
@@ -205,7 +203,6 @@ def bulk_modulus(
     k_point=None,
     incar=None,
 ):
-
     bk = BulkModulus(
         directory=directory,
         name=name,
@@ -259,7 +256,6 @@ def band_structure(
     k_point=None,
     incar=None,
 ):
-
     bs = BandStructure(
         directory=directory,
         name=name,
@@ -313,7 +309,6 @@ def density_of_states(
     k_point=None,
     incar=None,
 ):
-
     dos = DensityOfStates(
         directory=directory,
         name=name,
@@ -377,7 +372,6 @@ def phonon(
     k_point=None,
     incar=None,
 ):
-
     ph = Phonon(
         directory=directory,
         name=name,
@@ -447,7 +441,6 @@ def phonon_fc3(
     k_point=None,
     incar=None,
 ):
-
     ph3 = PhononFC3(
         directory=directory,
         name=name,
@@ -505,7 +498,6 @@ def elastic_constants(
     k_point=None,
     incar=None,
 ):
-
     ec = ElasticConstants(
         directory=directory,
         name=name,
@@ -558,7 +550,6 @@ def born_effective_charge(
     k_point=None,
     incar=None,
 ):
-
     bec = BornEffectiveCharge(
         directory=directory,
         name=name,
@@ -617,7 +608,6 @@ def mode_gruneisen(
     k_point=None,
     incar=None,
 ):
-
     mg = ModeGruneisen(
         directory=directory,
         name=name,
@@ -686,7 +676,6 @@ def quasiharmonic_phonon(
     k_point=None,
     incar=None,
 ):
-
     qh = QuasiHarmonicPhonon(
         directory=directory,
         name=name,
@@ -754,7 +743,6 @@ def phonon_relax_element(
     k_point=None,
     incar=None,
 ):
-
     phre = PhononRelaxElement(
         directory=directory,
         name=name,
@@ -818,7 +806,6 @@ def phonon_relax(
     k_point=None,
     incar=None,
 ):
-
     phr = PhononRelax(
         directory=directory,
         name=name,
@@ -948,7 +935,7 @@ class TaskVasp:
         write_kpoints(mesh=k_mesh, shift=k_shift, gamma=k_gamma, kpoint=self._k_point)
         self._incar.write()
 
-        for (fsrc, fdst) in self._copy_files:
+        for fsrc, fdst in self._copy_files:
             shutil.copy(fsrc, fdst)
 
     def _choose_configuration(self, index=0):
@@ -1113,7 +1100,6 @@ class ElectronicStructure(TaskVasp, ElectronicStructureBase):
     """ """
 
     def __init__(self, directory="electronic_structure", name=None, traverse=False):
-
         ElectronicStructureBase.__init__(
             self, directory=directory, name=name, traverse=traverse
         )
@@ -1184,7 +1170,6 @@ class StructureOptimizationElement(TaskVasp, StructureOptimizationElementBase):
         max_increase=None,
         traverse=False,
     ):
-
         StructureOptimizationElementBase.__init__(
             self,
             directory=directory,
@@ -1361,7 +1346,6 @@ class StructureOptimization(TaskVasp, StructureOptimizationBase):
         symmetry_tolerance=0.1,
         traverse=False,
     ):
-
         StructureOptimizationBase.__init__(
             self,
             directory=directory,
@@ -1429,7 +1413,6 @@ class BulkModulus(TaskVasp, BulkModulusBase):
         is_cell_relaxed=False,
         traverse=False,
     ):
-
         BulkModulusBase.__init__(
             self,
             directory=directory,
@@ -1498,7 +1481,6 @@ class BandStructure(TaskVasp, BandStructureBase):
         is_cell_relaxed=False,
         traverse=False,
     ):
-
         BandStructureBase.__init__(
             self,
             directory=directory,
@@ -1565,7 +1547,6 @@ class DensityOfStates(TaskVasp, DensityOfStatesBase):
         is_cell_relaxed=False,
         traverse=False,
     ):
-
         DensityOfStatesBase.__init__(
             self,
             directory=directory,
@@ -1876,7 +1857,6 @@ class Phonon(TaskVasp, TaskVaspPhonon, PhononBase):
         symmetry_tolerance=None,
         traverse=False,
     ):
-
         PhononBase.__init__(
             self,
             directory=directory,
@@ -1929,7 +1909,6 @@ class PhononFC3(TaskVasp, TaskVaspPhonon, PhononFC3Base):
         is_cell_relaxed=False,
         traverse=False,
     ):
-
         PhononFC3Base.__init__(
             self,
             directory=directory,
@@ -1973,7 +1952,6 @@ class ElasticConstants(TaskVasp, ElasticConstantsBase):
         is_cell_relaxed=False,
         traverse=False,
     ):
-
         ElasticConstantsBase.__init__(
             self,
             directory=directory,
@@ -2018,7 +1996,6 @@ class ElasticConstantsElement(TaskVasp, ElasticConstantsElementBase):
     """ """
 
     def __init__(self, directory="elastic_constants", name=None, traverse=False):
-
         ElasticConstantsElementBase.__init__(
             self, directory=directory, name=name, traverse=traverse
         )
@@ -2068,7 +2045,6 @@ class BornEffectiveCharge(TaskVasp, BornEffectiveChargeBase):
         symmetry_tolerance=1.0e-5,
         traverse=False,
     ):
-
         BornEffectiveChargeBase.__init__(
             self,
             directory=directory,
@@ -2114,7 +2090,6 @@ class BornEffectiveChargeElement(TaskVasp, BornEffectiveChargeElementBase):
     """ """
 
     def __init__(self, directory="born_effective_charge", name=None, traverse=False):
-
         BornEffectiveChargeElementBase.__init__(
             self, directory=directory, name=name, traverse=traverse
         )
@@ -2184,7 +2159,6 @@ class ModeGruneisen(TaskVasp, TaskVaspQHA, ModeGruneisenBase):
         is_cell_relaxed=False,
         traverse=False,
     ):
-
         ModeGruneisenBase.__init__(
             self,
             directory=directory,
@@ -2235,7 +2209,6 @@ class QuasiHarmonicPhonon(TaskVasp, TaskVaspQHA, QuasiHarmonicPhononBase):
         first_phonon_index=0,
         traverse=False,
     ):
-
         QuasiHarmonicPhononBase.__init__(
             self,
             directory=directory,
@@ -2364,7 +2337,6 @@ class PhononRelax(TaskVasp, PhononRelaxBase):
         stop_condition=None,
         traverse=False,
     ):
-
         PhononRelaxBase.__init__(
             self,
             directory=directory,
@@ -2482,7 +2454,6 @@ class PhononRelaxElement(TaskVasp, PhononRelaxElementBase):
         stop_condition=None,
         traverse=False,
     ):
-
         PhononRelaxElementBase.__init__(
             self,
             directory=directory,

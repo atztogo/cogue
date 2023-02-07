@@ -8,7 +8,6 @@ from cogue.crystal.pair_distance import get_distance
 
 class RandomBuilder:
     def __init__(self, symbols, volume=None, min_distance=None, max_distance=None):
-
         self._symbols = symbols
         self._min_distance = min_distance
         if not volume:

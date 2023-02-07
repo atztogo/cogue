@@ -71,7 +71,6 @@ class Cell(object):
         masses=None,
         numbers=None,
     ):
-
         if lattice is None:
             self._lattice = None
         else:

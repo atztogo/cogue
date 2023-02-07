@@ -4,7 +4,6 @@ import cogue._xtalcomp as xcmp
 
 
 def compare(cell1, cell2, tolerance=0.01, angle_tolerance=0.1):
-
     result = xcmp.compare(
         np.array(cell1.lattice.T, dtype="double", order="C"),
         cell1.numbers,

@@ -71,7 +71,6 @@ class PhononBase(TaskElement, PhononYaml):
         symmetry_tolerance=None,
         traverse=False,
     ):
-
         TaskElement.__init__(self)
 
         self._directory = directory

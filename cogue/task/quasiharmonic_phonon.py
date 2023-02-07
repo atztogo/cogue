@@ -48,7 +48,6 @@ class QuasiHarmonicPhononBase(TaskElement, PhononYaml):
         first_phonon_index=None,
         traverse=False,
     ):
-
         TaskElement.__init__(self)
 
         self._directory = directory

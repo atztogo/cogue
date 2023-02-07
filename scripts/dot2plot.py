@@ -101,7 +101,6 @@ def draw_line2(x, y, style, t):
 def collect_points_lines(
     points, lines, tid_pos, tid, pos, energies, texts, tids, connections, ig_tids
 ):
-
     if tid not in tids or tid in ig_tids:
         return pos
 
@@ -109,7 +108,7 @@ def collect_points_lines(
     tid_pos[tid] = pos
 
     rights = []
-    for (left, right) in connections:
+    for left, right in connections:
         if left == tid:
             rights.append(right)
 

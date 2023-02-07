@@ -40,7 +40,6 @@ class ElasticConstantsBase(TaskElement, ElasticConstantsYaml):
         is_cell_relaxed=False,
         traverse=False,
     ):
-
         TaskElement.__init__(self)
 
         self._directory = directory
