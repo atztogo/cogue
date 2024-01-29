@@ -1,4 +1,5 @@
 """Test of structure optimization element task."""
+
 import unittest
 
 import cogue.calculator.vasp as vasp

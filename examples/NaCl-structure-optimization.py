@@ -1,4 +1,5 @@
 """NaCl structure optimization example."""
+
 import numpy as np
 
 import cogue

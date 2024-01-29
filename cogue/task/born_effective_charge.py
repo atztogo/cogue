@@ -1,4 +1,5 @@
 """Born effective charge class."""
+
 from cogue.crystal.converter import cell2atoms
 from cogue.task import TaskElement
 from cogue.task.structure_optimization import StructureOptimizationYaml

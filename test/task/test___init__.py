@@ -1,4 +1,5 @@
 """Test Task base classes."""
+
 import unittest
 
 from cogue.task import TaskBase, TaskElement, TaskSet

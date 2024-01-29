@@ -1,4 +1,5 @@
 """Utilities to handle crystal structure."""
+
 import numpy as np
 
 

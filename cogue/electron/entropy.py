@@ -1,4 +1,5 @@
 """Entropy related methods."""
+
 # Entropy of non-interacting electrons
 # S=-gk_{\mathrm{B}}\Sigma_i\[f_i \ln f_i + (1-f_i)\ln (1-f_i)\]
 # g: degree of degeneracy
