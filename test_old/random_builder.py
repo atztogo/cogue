@@ -1,4 +1,5 @@
 """Random structure builder."""
+
 import sys
 
 from cogue.crystal.pair_distance import get_distance

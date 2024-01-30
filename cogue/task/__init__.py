@@ -1,4 +1,5 @@
 """Task base class."""
+
 import datetime
 import os
 

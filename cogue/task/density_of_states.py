@@ -1,4 +1,5 @@
 """Phonon density of states."""
+
 from cogue.task import TaskElement
 
 

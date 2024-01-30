@@ -1,4 +1,5 @@
 """Band structure base class."""
+
 from cogue.task import TaskElement
 
 

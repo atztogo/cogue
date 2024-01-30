@@ -1,4 +1,5 @@
 """SnO2 bulk modulus example."""
+
 import numpy as np
 
 import cogue

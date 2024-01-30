@@ -1,4 +1,5 @@
 """Information of atoms."""
+
 # Pure Appl. Chem., Vol. 83, No. 2, pp. 359-396, 2011. is available but the
 # following list is from 2006.
 

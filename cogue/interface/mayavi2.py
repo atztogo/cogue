@@ -1,4 +1,5 @@
 """Mayavi2 interface."""
+
 import numpy as np
 from mayavi import mlab
 

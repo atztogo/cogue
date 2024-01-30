@@ -1,4 +1,5 @@
 """Supercell functions."""
+
 import numpy as np
 
 from cogue.crystal.cell import Cell

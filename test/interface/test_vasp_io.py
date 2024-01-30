@@ -1,4 +1,5 @@
 """Test VASP-io."""
+
 import io
 import unittest
 
