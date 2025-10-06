@@ -21,7 +21,7 @@ repos:
     - "--max-line-length=88"
     - "--ignore=E203,W503"
 
-- repo: https://github.com/psf/black
+- repo: https://github.com/psf/black-pre-commit-mirror
   rev: 25.9.0
   hooks:
   - id: black
@@ -34,7 +34,7 @@ repos:
 #   - id: pydocstyle
 
 - repo: https://github.com/pycqa/isort
-  rev: 6.0.1
+  rev: 6.1.0
   hooks:
     - id: isort
       name: isort (python)
