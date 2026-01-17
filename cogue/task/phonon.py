@@ -211,7 +211,7 @@ class PhononBase(TaskElement, PhononYaml):
                 else:
                     if self._try_collect_forces:
                         self._status = "displacements"
-                        self._log += "Collection of forces failed. " "Try once more.\n"
+                        self._log += "Collection of forces failed. Try once more.\n"
                         self._try_collect_forces = False
                         raise StopIteration
                     else:

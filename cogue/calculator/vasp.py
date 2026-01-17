@@ -74,7 +74,6 @@ def incar(
     sigma=None,
 ):
     """Returns Incar object"""
-
     return Incar(
         addgrid=addgrid,
         ediff=ediff,
@@ -1118,7 +1117,6 @@ class ElectronicStructure(TaskVasp, ElectronicStructureBase):
         self._log: Terminate log is stored.
 
         """
-
         if os.path.exists("POSCAR.yaml"):
             atom_order = get_atom_order_from_poscar_yaml("POSCAR.yaml")
         else:
@@ -1198,7 +1196,6 @@ class StructureOptimizationElement(TaskVasp, StructureOptimizationElementBase):
         self._log: Logs
 
         """
-
         if os.path.exists("POSCAR.yaml"):
             self._atom_order = get_atom_order_from_poscar_yaml("POSCAR.yaml")
         else:
@@ -2015,7 +2012,6 @@ class ElasticConstantsElement(TaskVasp, ElasticConstantsElementBase):
         self._log: Terminate log is stored.
 
         """
-
         if not os.path.exists("OUTCAR"):
             self._log += "    OUTCAR not exists.\n"
             self._status = "terminate"
@@ -2109,7 +2105,6 @@ class BornEffectiveChargeElement(TaskVasp, BornEffectiveChargeElementBase):
         self._log: Terminate log is stored.
 
         """
-
         if not os.path.exists("vasprun.xml"):
             self._log += "    vasprun.xml not exists.\n"
             self._status = "terminate"

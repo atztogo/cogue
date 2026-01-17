@@ -65,7 +65,7 @@ def job(
 
 class Qstat:
     def qstat(self):
-        """qstatout
+        """Qstatout
 
         Text of output of 'qjobs'
 
@@ -195,7 +195,6 @@ class Job(JobBase):
         module switch impi/4.0.3
         mpiexec.hydra vasp5.3.5
         """
-
         w = open(filename, "w")
         w.write("#!%s\n" % self._shell)
         w.write("#QSUB -q %s\n" % self._q)

@@ -14,7 +14,6 @@ class VisualizeBrillouinZone:
             Reciprocal basis vectors as row vectors.
 
         """
-
         self._magnitude = magnitude
         self._lattice = lattice * self._magnitude
 

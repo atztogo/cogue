@@ -189,7 +189,7 @@ class BulkModulusBase(TaskElement, StructureOptimizationYaml):
         self._eos = eos
 
         with open("e-v.dat", "w") as w:
-            w.write("#   cell volume        energy of cell " "other than phonon\n")
+            w.write("#   cell volume        energy of cell other than phonon\n")
             for e, v in zip(energies, volumes):
                 w.write("%20.13f %20.13f\n" % (v, e))
 

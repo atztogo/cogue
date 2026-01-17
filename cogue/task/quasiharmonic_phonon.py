@@ -249,8 +249,7 @@ class QuasiHarmonicPhononBase(TaskElement, PhononYaml):
                     self._sampling_mesh, is_gamma_center=self._is_gamma_center
                 ):
                     self._log += (
-                        "[quasiharmonic_phonon] Harmonic phonon "
-                        "calculation failed.\n"
+                        "[quasiharmonic_phonon] Harmonic phonon calculation failed.\n"
                     )
                     self._status = "phonon_for_qha_failed"
                     return False
@@ -310,7 +309,7 @@ class QuasiHarmonicPhononBase(TaskElement, PhononYaml):
                 or np.isnan(heat_capacities).any()
             ):
                 self._log += (
-                    "[quasiharmonic_phonon]\n" "nan is found in thermal property.\n"
+                    "[quasiharmonic_phonon]\nnan is found in thermal property.\n"
                 )
                 continue
 
@@ -322,7 +321,7 @@ class QuasiHarmonicPhononBase(TaskElement, PhononYaml):
             U.append(u)
 
         self._log += (
-            "[quasiharmonic_phonon]\n" "Number of QHA volume points is %d.\n" % len(U)
+            "[quasiharmonic_phonon]\nNumber of QHA volume points is %d.\n" % len(U)
         )
 
         if len(U) > 4:
@@ -473,7 +472,7 @@ class QuasiHarmonicPhononBase(TaskElement, PhononYaml):
         energies = [eos(v) for v in volumes]
 
         with open("estimated_e-v.dat", "w") as w:
-            w.write("#   cell volume        energy of cell " "other than phonon\n")
+            w.write("#   cell volume        energy of cell other than phonon\n")
             for e, v in zip(energies, volumes):
                 w.write("%20.13f %20.13f\n" % (v, e))
 

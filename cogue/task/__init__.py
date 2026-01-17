@@ -154,7 +154,6 @@ class TaskSet(TaskBase):
             Name of taskset. When ``None``, directory str is used as the name.
 
         """
-
         TaskBase.__init__(self)
 
         self._directory = directory

@@ -1,12 +1,69 @@
 [build-system]
-requires = ["setuptools", "wheel", "numpy"]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
 
-[tool.flake8]
-max-line-length = 88
-extend-ignore = "E203,W503"
+[project]
+name = "cogue"
+version = "0.1.0"
+description = "Crystal simulation tools"
+authors = [
+    {name = "Atsushi Togo", email = "atz.togo@gmail.com"}
+]
+readme = "README.md"
+requires-python = "<3.14"
+dependencies = [
+    "numpy",
+    "PyYAML",
+    "spglib",
+    "mayavi",
+    "phonopy",
+    "PyQt5"
+]
 
-[tool.black]
+[project.urls]
+Homepage = "https://github.com/atztogo/cogue"
+Repository = "https://github.com/atztogo/cogue"
+
+
+# [project.scripts]
+# crystalView = "cogue.scripts:crystalView"
+# poscar2poscar = "cogue.scripts:poscar2poscar"
+# poscar2cif = "cogue.scripts:poscar2cif"
+# poscar2vsim = "cogue.scripts:poscar2vsim"
+# poscar2sketch = "cogue.scripts:poscar2sketch"
+# vasprun2poscars = "cogue.scripts:vasprun2poscars"
+# symPoscar = "cogue.scripts:symPoscar"
+
+[tool.setuptools.packages.find]
+include = ["cogue*"]
+
+[tool.setuptools]
+script-files = [
+    "scripts/crystalView",
+    "scripts/poscar2poscar",
+    "scripts/poscar2cif",
+    "scripts/poscar2vsim",
+    "scripts/poscar2sketch",
+    "scripts/vasprun2poscars",
+    "scripts/symPoscar",
+]
+
+[tool.ruff]
 line-length = 88
+lint.select = [
+    "F", # Flake8
+    "B", # Black
+    "I", # isort
+    "E", # pycodestyle-errors
+    "D", # pydocstyle
+]
+lint.extend-ignore = ["D417", "D100", "D101", "D102", "D103", "D104", "D105", "D200", "D205", "D400", "D401", "D419", "B006", "B007", "B018", "B028", "B904", "B905", "E741"]
+exclude = [
+    "test/phonon/test_irreps.py",
+    "test/qha/test_electron.py",
+    "phonopy/interface/cp2k.py",
+    "cmake-format.py"
+]
 
-[tool.isort]
-profile = "black"
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"

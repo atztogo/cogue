@@ -146,8 +146,7 @@ def transform_cell(cell_orig, options, is_shift=True):
     if options.is_r2h:
         if options.is_verbose:
             print(
-                "Transform cell by transformation matrix of rhombohedral "
-                "to hexagonal:"
+                "Transform cell by transformation matrix of rhombohedral to hexagonal:"
             )
             print(np.array(r2h))
         cell = get_supercell(cell, r2h)

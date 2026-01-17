@@ -1116,7 +1116,6 @@ class VasprunxmlExpat(PhonopyVasprunExpat):
                io.open(filename, "rb")
 
         """
-
         PhonopyVasprunExpat.__init__(self, fileptr)
         self._log = ""
 

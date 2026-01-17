@@ -132,7 +132,7 @@ class Sketch:
                 r"special|\definecolor{%s_color}{rgb}{%f,%f,%f}|"
                 "[lay=under]\n" % ((s,) + tuple(color))
             )
-            text += "def %s_atoms dots[ball color=%s_color, " "dotsize=%f] " % (
+            text += "def %s_atoms dots[ball color=%s_color, dotsize=%f] " % (
                 s,
                 s,
                 radius,

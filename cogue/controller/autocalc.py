@@ -160,7 +160,6 @@ class AutoCalc:
         "something.dot" is created.
 
         """
-
         filename = "%s.cogue" % self._name
         if os.path.exists(filename):
             print("%s is found." % filename)

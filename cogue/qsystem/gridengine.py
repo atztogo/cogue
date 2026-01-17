@@ -71,7 +71,7 @@ class Qstat:
     """Qstat mix-in."""
 
     def qstat(self):
-        """qstatout.
+        """Qstatout.
 
         Text of output of 'qstat'
 
@@ -201,7 +201,6 @@ class Job(JobBase):
 
         mpirun vasp5212mpi
         """
-
         w = open(filename, "w")
         w.write("#$ -S %s\n" % self._shell)
 
